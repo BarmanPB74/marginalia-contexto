@@ -1,6 +1,6 @@
 # Marginalia — contexto maestro
 
-> Nombre provisional. Se puede cambiar en la Fase 0 (ver `docs/FASES.md`).
+> Nombre definitivo (ADR-005). Identificador Android: `io.github.barmanpb74.appnoti`.
 > Este archivo se carga en CADA sesión. Mantenlo corto (< 150 líneas). El detalle vive en `docs/`.
 
 ## 1. Qué es

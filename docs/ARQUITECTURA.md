@@ -62,5 +62,6 @@ Ver `docs/FORMATO_NOTAS.md`. Resumen: `.md` = verdad; SQLite (FTS5) = índice re
 | 001 | Web + Capacitor + Preact | Aceptada |
 | 002 | `.md` como fuente de verdad + índice SQLite reconstruible | Aceptada |
 | 003 | Solo YouTube IFrame Player oficial | Aceptada (ver LEGAL) |
-| 004 | Licencia MIT | Aceptada (revisar en F0 si el autor prefiere Apache-2.0) |
-| 005 | Nombre del proyecto | Provisional: "Marginalia" (decidir en F0) |
+| 004 | Licencia MIT | Aceptada (confirmada en F0, 2026-10-04) |
+| 005 | Nombre "Marginalia"; appId `io.github.barmanpb74.appnoti` | Aceptada (2026-10-04) |
+| 006 | TypeScript 6.0 hasta que `typescript-eslint` soporte TS 7 | Aceptada (2026-10-04) |
