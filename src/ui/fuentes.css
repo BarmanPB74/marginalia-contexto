@@ -1,0 +1,45 @@
+/*
+ * Fuentes empaquetadas en la app (combinación B, elegida por el autor el 2026-10-05).
+ * Licencia SIL OFL 1.1 (ver OFL.txt en cada carpeta). Archivos de @fontsource 5.3.0, subconjunto latino.
+ * Sin CDN: nunca se piden fuentes a la red.
+ */
+
+@font-face {
+  font-family: 'Newsreader';
+  src: url('../assets/fonts/newsreader/newsreader-latin-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Newsreader';
+  src: url('../assets/fonts/newsreader/newsreader-latin-400-italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Newsreader';
+  src: url('../assets/fonts/newsreader/newsreader-latin-600-normal.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Kalam';
+  src: url('../assets/fonts/kalam/kalam-latin-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('../assets/fonts/jetbrains-mono/jetbrains-mono-latin-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
