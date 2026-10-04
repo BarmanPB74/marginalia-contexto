@@ -7,7 +7,7 @@
 - **Fase actual:** F1 — Sistema de diseño y navegación
 - **Estado:** entregables completos y `/auditar` de F1 en verde (2026-10-05). Solo falta que el autor **revise las capturas** en `/sdcard/Documents/appnoti/capturas-f1/` (notas, calendario, musica, ajustes, galeria).
 - **Última sesión:** 2026-10-05
-- **Siguiente paso concreto:** si el autor aprueba las capturas → marcar F1 cerrada y hacer **push** (8 commits locales). Si pide cambios, hacerlos y regenerar con `node scripts/capturas.mjs` (app servida en :4173). Luego F2.
+- **Siguiente paso concreto:** si el autor aprueba las capturas → marcar F1 cerrada y hacer **push**. Si pide cambios, hacerlos y regenerar con `node scripts/capturas.mjs` (app servida en :4173). Luego F2.
 
 ## Decisiones tomadas (ADR en `docs/ARQUITECTURA.md`)
 - 001 Web + Capacitor + Preact · 002 `.md` fuente de verdad · 003 solo IFrame oficial · 004 MIT (Pablo, 2026) · 005 nombre "Marginalia", appId `io.github.barmanpb74.appnoti`
