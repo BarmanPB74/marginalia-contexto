@@ -13,4 +13,6 @@ export default tseslint.config(
       'no-restricted-properties': ['error', { property: 'innerHTML', message: 'Usa DOMPurify o JSX.' }],
     },
   },
+  // Scripts de mantenimiento: corren en Node, no en la app
+  { files: ['scripts/**'], languageOptions: { globals: { ...globals.node } } },
 );

@@ -4,5 +4,6 @@
   max-width: calc(var(--ancho-lectura) + 48px);
   min-height: 100vh;
   margin: 0 auto;
-  padding: 24px 24px 48px;
+  /* abajo deja sitio a la barra inferior fija */
+  padding: 24px 24px calc(48px + var(--alto-barra) + env(safe-area-inset-bottom));
 }

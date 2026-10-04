@@ -35,3 +35,5 @@ No afiliada ni respaldada por YouTube, Google ni Notion.
 
 ## Licencia
 [MIT](LICENSE) © 2026 Pablo
+
+La licencia MIT cubre el código. **El logo y la marca EK de Eisen-Kern** (`recursos/icono/` y los iconos del lanzador en `android/app/src/main/res/mipmap-*/`) **no** están incluidos: © 2026 Pablo, todos los derechos reservados. Si haces un fork, usa tu propio icono.

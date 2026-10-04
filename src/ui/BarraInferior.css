@@ -1,0 +1,38 @@
+.barra-inferior {
+  position: fixed;
+  inset: auto 0 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  min-height: var(--alto-barra);
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--textura) var(--papel);
+  border-top: 1px solid var(--separador);
+}
+
+.barra-inferior__enlace {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: var(--alto-barra);
+  color: var(--tinta-suave);
+  text-decoration: none;
+  transition: color var(--transicion);
+}
+
+.barra-inferior__enlace[aria-current='page'] {
+  color: var(--tinta);
+}
+
+.barra-inferior__etiqueta {
+  font-family: var(--letra-mano);
+  font-size: var(--texto-xs);
+  line-height: 1.2;
+}
+
+/* La sección actual se subraya con un trazo corto, como marcada a lápiz */
+.barra-inferior__enlace[aria-current='page'] .barra-inferior__etiqueta {
+  background: linear-gradient(currentcolor, currentcolor) center bottom / 70% var(--trazo) no-repeat;
+  padding-bottom: 3px;
+}

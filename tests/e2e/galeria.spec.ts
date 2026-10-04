@@ -7,7 +7,7 @@ test.beforeEach(async ({ page }) => {
 
 test('la galería muestra todos los componentes base', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1, name: 'Galería' })).toBeVisible();
-  for (const nombre of ['Tipografía', 'Boton', 'Etiqueta', 'Tarjeta', 'CampoTexto', 'Interruptor', 'CeldaDia']) {
+  for (const nombre of ['Tipografía', 'Icono', 'Boton', 'Etiqueta', 'Tarjeta', 'CampoTexto', 'Interruptor', 'CeldaDia']) {
     await expect(page.getByRole('heading', { level: 2, name: nombre })).toBeVisible();
   }
 });
@@ -28,11 +28,11 @@ test('no hay scroll horizontal a 390 px', async ({ page }) => {
   expect(desborde).toBe(0);
 });
 
-test('el interruptor cambia al tocarlo y "Volver" lleva al inicio', async ({ page }) => {
+test('el interruptor cambia al tocarlo y "Volver" lleva a Notas', async ({ page }) => {
   const interruptor = page.getByRole('switch', { name: 'Ejemplo apagado' });
   await expect(interruptor).toHaveAttribute('aria-checked', 'false');
   await interruptor.click();
   await expect(interruptor).toHaveAttribute('aria-checked', 'true');
   await page.getByRole('button', { name: 'Volver' }).click();
-  await expect(page.getByRole('heading', { name: 'Marginalia' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Notas' })).toBeVisible();
 });

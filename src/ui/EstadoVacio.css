@@ -1,0 +1,23 @@
+.estado-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 22vh;
+  text-align: center;
+}
+
+.estado-vacio p {
+  margin: 0;
+}
+
+.estado-vacio__mensaje {
+  font-family: var(--letra-mano);
+  font-size: var(--texto-l);
+}
+
+.estado-vacio__pista {
+  max-width: 28ch;
+  font-size: var(--texto-s);
+  color: var(--tinta-suave);
+}

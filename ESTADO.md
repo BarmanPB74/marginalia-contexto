@@ -5,9 +5,9 @@
 
 ## Ahora
 - **Fase actual:** F1 — Sistema de diseño y navegación
-- **Estado:** en curso. Hecho: tokens + textura, fuentes B, componentes base (Pagina, Encabezado, Boton, Tarjeta, Etiqueta, CampoTexto, Interruptor, CeldaDia) y galería en `#/galeria`. Falta: iconos SVG, BarraInferior + navegación de 4 secciones con estados vacíos, Reproductor y MiniReproductor estáticos, capturas finales de las 4 secciones.
+- **Estado:** en curso. Hecho: tokens + textura, fuentes B, componentes base, galería (`#/galeria`), iconos SVG propios, `BarraInferior` + navegación de 4 secciones con estado vacío, icono de la app = marca EK. Falta: Reproductor y MiniReproductor estáticos, capturas finales, `/auditar` de F1.
 - **Última sesión:** 2026-10-05
-- **Siguiente paso concreto:** iconos SVG propios + `BarraInferior` y navegación de 4 secciones (Notas, Calendario, Música, Ajustes) con estado vacío. **Push solo cuando F1 esté completa** (pedido del autor).
+- **Siguiente paso concreto:** `Reproductor` y `MiniReproductor` estáticos (sin sonido) en Música y en la galería; luego `/auditar` y cierre de F1 → push. **Push solo cuando F1 esté completa** (pedido del autor).
 
 ## Decisiones tomadas (ADR en `docs/ARQUITECTURA.md`)
 - 001 Web + Capacitor + Preact · 002 `.md` fuente de verdad · 003 solo IFrame oficial · 004 MIT (Pablo, 2026) · 005 nombre "Marginalia", appId `io.github.barmanpb74.appnoti`
@@ -18,11 +18,17 @@
 - Sin `@testing-library` por ahora: Preact `render` + `act` + jsdom bastan.
 - Vitest con `css: true`: sin eso los `.css` (incluso con `?raw`) llegan vacíos y las pruebas de tokens pasaban en falso.
 - Contraste: tinta y acento ≥ 7:1 (AAA); `--tinta-suave` solo para texto secundario, exigido ≥ 4.5:1 (AA). `theme-color` de `index.html` repite `--papel` porque una meta no puede leer variables CSS.
+- Fuentes (2026-10-05, elección del autor, combinación B): Newsreader (cuerpo) + Kalam (a mano) + JetBrains Mono (código). Locales en `src/assets/fonts/`, sin CDN.
+- Rutas por hash: `#/notas` (por defecto), `#/calendario`, `#/musica`, `#/ajustes`, `#/galeria` (interna, sin enlace). Funcionan igual en la WebView, en `vite preview` y en el navegador, sin configurar servidor; el botón atrás de Android recorre el historial.
+- Cada componente de `src/ui/` importa su propio CSS; los estilos globales (`a`, `mark`, `code`, foco visible) viven en `base.css`. Pantallas de sección en `src/features/<sección>/`.
+- Icono de la app (2026-10-05, pedido del autor): solo la marca EK de Eisen-Kern, sin texto, crema sobre negro. Fuente `recursos/icono/marca-ek.png`; regenerar con `node scripts/icono-android.mjs`. La marca **no** es MIT (README, LEGAL §4).
+- El spike del reproductor vive ahora en Música (se borra en F4).
 
 ## Pendiente de decidir con el autor
-- (nada)
+- **Pantalla de arranque (splash)**: sigue siendo la de Capacitor (X azul sobre blanco). ¿Marca EK sobre negro, papel liso, o nada? No se tocó porque se pidió solo el icono.
 
 ## Probar en el teléfono (lo que el entorno de Claude no puede verificar)
+- Icono del lanzador con la marca EK (círculo/squircle según el lanzador) y que la barra inferior respete la barra de gestos de Android (`safe-area-inset-bottom`).
 - Cuando F1 llegue al APK: que las fuentes y la galería (`#/galeria`) se vean como en `/sdcard/Documents/appnoti/capturas-f1/galeria.png`. · Cómo instalar un APK de CI: Actions → CI → artefacto `marginalia-debug-apk`.
 
 ## Resultado del spike del reproductor (F0, 2026-10-04, teléfono del autor)
@@ -51,6 +57,7 @@
 ## Historial de sesiones
 - 2026-10-04 · F0 · repo público, licencia y docs de seguridad, Vite+Preact+TS+Capacitor endurecido, CI verde con APK debug, CodeQL, gitleaks, dependency-review, Dependabot, push protection; spike del reproductor listo para probar.
 - 2026-10-04 · F0 cerrada · spike probado en el teléfono: A y B cargan y suenan.
+- 2026-10-05 · F1 · icono EK, iconos SVG, barra inferior y 4 secciones vacías; e2e de navegación, atrás y barra.
 - 2026-10-05 · F1 · componentes base + galería; e2e: táctil ≥ 48 px, sin scroll horizontal.
 - 2026-10-05 · F1 · fuentes B empaquetadas + e2e de carga bajo CSP y sin peticiones externas.
 - 2026-10-04 · F1 inicio · tokens.css + textura, base.css solo con tokens, pruebas de contraste y colores sueltos, 3 capturas de fuentes.

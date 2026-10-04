@@ -1,11 +1,18 @@
 import { useEffect, useState } from 'preact/hooks';
-import { SpikeReproductor } from '../spike/SpikeReproductor';
+import { PantallaAjustes } from '../features/ajustes/PantallaAjustes';
+import { PantallaCalendario } from '../features/calendario/PantallaCalendario';
+import { PantallaMusica } from '../features/musica/PantallaMusica';
+import { PantallaNotas } from '../features/notas/PantallaNotas';
+import { BarraInferior } from '../ui/BarraInferior';
 import { Galeria } from './Galeria';
+import { rutaActual } from './rutas';
 
-/** Ruta actual a partir del hash (#/galeria). El hash funciona igual en la WebView, en preview y en el navegador. */
-export function rutaActual(hash: string): 'inicio' | 'galeria' {
-  return hash === '#/galeria' ? 'galeria' : 'inicio';
-}
+const PANTALLAS = {
+  notas: PantallaNotas,
+  calendario: PantallaCalendario,
+  musica: PantallaMusica,
+  ajustes: PantallaAjustes,
+};
 
 function useRuta() {
   const [ruta, setRuta] = useState(() => rutaActual(location.hash));
@@ -18,12 +25,13 @@ function useRuta() {
 }
 
 export function App() {
-  if (useRuta() === 'galeria') return <Galeria />;
+  const ruta = useRuta();
+  if (ruta === 'galeria') return <Galeria />;
+  const Pantalla = PANTALLAS[ruta];
   return (
-    <main class="inicio">
-      <h1 class="titulo">Marginalia</h1>
-      <p class="subtitulo">cuaderno en construcción</p>
-      <SpikeReproductor />
-    </main>
+    <>
+      <Pantalla />
+      <BarraInferior actual={ruta} />
+    </>
   );
 }

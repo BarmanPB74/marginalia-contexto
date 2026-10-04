@@ -9,6 +9,7 @@ import { CampoTexto } from '../ui/CampoTexto';
 import { CeldaDia } from '../ui/CeldaDia';
 import { Encabezado } from '../ui/Encabezado';
 import { Etiqueta } from '../ui/Etiqueta';
+import { Icono, NOMBRES_ICONO } from '../ui/Icono';
 import { Interruptor } from '../ui/Interruptor';
 import { Pagina } from '../ui/Pagina';
 import { Tarjeta } from '../ui/Tarjeta';
@@ -43,7 +44,7 @@ export function Galeria() {
 
   return (
     <Pagina>
-      <Encabezado titulo="Galería" accion={{ etiqueta: 'Volver', alTocar: () => (location.hash = '') }} />
+      <Encabezado titulo="Galería" accion={{ etiqueta: 'Volver', alTocar: () => (location.hash = '#/notas') }} />
 
       <Muestra nombre="Tipografía">
         <p class="galeria-mano">Apuntes de armonía</p>
@@ -55,6 +56,14 @@ export function Galeria() {
         <p>
           <code>tempo = 92</code>
         </p>
+      </Muestra>
+
+      <Muestra nombre="Icono">
+        <div class="galeria-fila">
+          {NOMBRES_ICONO.map((nombre) => (
+            <Icono key={nombre} nombre={nombre} tamano={32} />
+          ))}
+        </div>
       </Muestra>
 
       <Muestra nombre="Boton">
