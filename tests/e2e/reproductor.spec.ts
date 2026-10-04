@@ -76,3 +76,16 @@ test('el mini y el grande comparten estado, y todo lo tocable mide ≥ 48 px', a
   await expect(page.getByRole('region', { name: 'Reproductor', exact: true }).getByRole('button', { name: 'Pausar' })).toBeVisible();
   await expect(mini(page)).toHaveCount(0);
 });
+
+test('las líneas de progreso y volumen se ven: tienen alto y casi todo el ancho', async ({ page }) => {
+  await page.goto('/#/musica');
+  const grande = page.getByRole('region', { name: 'Reproductor', exact: true });
+  const r = await grande.boundingBox();
+  if (!r) throw new Error('sin caja');
+  for (const nombre of ['Progreso', 'Volumen']) {
+    const caja = await grande.getByRole('progressbar', { name: nombre }).boundingBox();
+    if (!caja) throw new Error(`sin caja: ${nombre}`);
+    expect(caja.height, nombre).toBeGreaterThanOrEqual(1);
+    expect(caja.width, nombre).toBeGreaterThan(r.width * 0.5);
+  }
+});

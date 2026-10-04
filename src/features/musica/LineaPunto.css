@@ -1,6 +1,6 @@
 .linea-punto {
   position: relative;
-  flex: 1;
+  flex: none; /* en una columna, flex: 1 le dejaba alto 0 y la línea desaparecía */
   height: var(--trazo);
   margin: 8px 0;
   background: var(--tinta);
