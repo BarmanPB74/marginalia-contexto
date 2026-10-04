@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 110" fill="none" stroke="#1e1c19" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Marca EK de Eisen-Kern dibujada a mano para Marginalia. © 2026 Pablo, todos los derechos reservados (no MIT). -->
+  <!-- barra de arriba (corte inclinado) -->
+  <path d="M2.7 21.4Q29.5 22.1 56.4 21.8M55.7 21.4Q55.9 26.7 55.5 32.0M56.2 31.4Q33.9 31.0 11.6 31.3M13.2 32.1Q8.4 26.6 3.8 21.0"/>
+  <!-- barra del medio -->
+  <path d="M5.6 51.2Q31.1 51.3 56.6 51.1M55.6 50.5Q55.3 56.1 55.5 61.8M55.4 61.1Q30.5 60.9 5.5 61.2M6.2 61.6Q6.3 56.4 6.1 51.2"/>
+  <!-- barra de abajo (corte inclinado) -->
+  <path d="M4.5 84.3Q30.8 84.9 57.0 84.3M55.9 83.3Q59.5 89.5 62.7 95.9M63.0 94.5Q34.1 93.7 5.1 94.6M6.2 94.8Q5.8 88.9 5.7 82.9"/>
+  <!-- asta -->
+  <path d="M63.9 14.3Q69.0 8.9 74.7 3.9M73.7 2.8Q72.7 54.3 73.7 105.9M74.3 105.2Q69.1 99.6 63.8 94.3M64.4 96.5Q63.3 55.0 64.2 13.6"/>
+  <!-- brazo de la K -->
+  <path d="M95.0 21.9Q106.9 22.3 118.8 21.7M118.1 21.6Q99.2 39.8 79.8 57.4M80.7 56.9Q77.2 56.9 73.7 57.2M74.6 58.0Q84.8 38.8 96.3 20.4"/>
+  <!-- pierna de la K -->
+  <path d="M75.6 58.0Q78.9 58.1 82.2 57.9M80.7 57.7Q108.5 79.5 136.0 101.4M137.1 101.0Q128.4 100.5 119.6 100.5M121.2 101.4Q97.3 79.9 74.9 56.9"/>
+</svg>

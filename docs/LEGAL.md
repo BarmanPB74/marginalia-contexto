@@ -33,7 +33,7 @@ Si el reproductor incrustado no es viable en la WebView, se aplica el **Plan B**
 ## 4. Marcas y estilo
 - No usar los nombres "Notion", "YouTube", "Google" ni sus logos en el nombre o el icono de la app. En el README se pueden mencionar de forma descriptiva ("compatible con enlaces de YouTube Music") con la aclaración: *"No afiliada ni respaldada por YouTube, Google ni Notion."*
 - El diseño es propio: inspiración conceptual (páginas, árbol, notas), interfaz y marca distintas.
-- **Icono de la app = marca EK de Eisen-Kern**, del autor (decisión 2026-10-05). Fuente: `recursos/icono/marca-ek.png` (solo la marca, sin el texto "EISEN-KERN"); los PNG de `android/app/src/main/res/mipmap-*/ic_launcher*` se generan con `node scripts/icono-android.mjs`. **La marca no está bajo la licencia MIT**: todos los derechos reservados (ver README).
+- **Icono de la app = marca EK de Eisen-Kern**, del autor (decisión 2026-10-05). Fuente: `recursos/icono/marca-ek.svg` (solo la marca, sin el texto "EISEN-KERN", redibujada a mano en tinta sobre papel); los PNG de `android/app/src/main/res/mipmap-*/ic_launcher*` y las `splash.png` se generan con `node scripts/icono-android.mjs`. **La marca no está bajo la licencia MIT**: todos los derechos reservados (ver README).
 
 ## 5. Privacidad y datos
 - Sin recolección de datos. `PRIVACIDAD.md` en lenguaje claro (ver `docs/SEGURIDAD.md`, sección 7).
