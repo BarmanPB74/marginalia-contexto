@@ -1,0 +1,15 @@
+.etiqueta {
+  display: inline-block;
+  padding: 0 10px;
+  font-family: var(--letra-mano);
+  font-size: var(--texto-s);
+  line-height: 1.7;
+  color: var(--tinta);
+  border: var(--trazo) solid currentcolor;
+  border-radius: var(--radio);
+  white-space: nowrap;
+}
+
+.etiqueta--cancion {
+  color: var(--acento);
+}

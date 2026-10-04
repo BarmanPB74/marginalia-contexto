@@ -1,0 +1,27 @@
+.boton {
+  min-width: var(--toque);
+  min-height: var(--toque);
+  padding: 0 18px;
+  font-family: var(--letra-mano);
+  font-size: var(--texto-m);
+  color: var(--tinta);
+  background: none;
+  border: var(--trazo) solid transparent;
+  border-radius: var(--radio);
+  cursor: pointer;
+  transition: background-color var(--transicion);
+}
+
+.boton--contorno {
+  border-color: var(--tinta);
+}
+
+.boton:active:not(:disabled) {
+  background: var(--papel-2);
+}
+
+.boton:disabled {
+  color: var(--tinta-suave);
+  border-color: var(--separador);
+  cursor: default;
+}

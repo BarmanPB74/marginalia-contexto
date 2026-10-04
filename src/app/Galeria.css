@@ -1,0 +1,44 @@
+.muestra {
+  padding: 16px 0 20px;
+  border-top: 1px solid var(--separador);
+}
+
+.muestra__nombre {
+  margin: 0 0 12px;
+  font-family: var(--letra-codigo);
+  font-size: var(--texto-xs);
+  font-weight: 400;
+  color: var(--tinta-suave);
+}
+
+.muestra__contenido {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.muestra__contenido p {
+  margin: 0;
+}
+
+.galeria-mano {
+  font-family: var(--letra-mano);
+  font-size: var(--texto-l);
+}
+
+.galeria-secundario {
+  font-size: var(--texto-s);
+  color: var(--tinta-suave);
+}
+
+.galeria-fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.galeria-semana {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}

@@ -1,0 +1,44 @@
+.celda-dia {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  min-width: var(--toque);
+  min-height: var(--toque);
+  padding: 4px 0;
+  font-family: var(--letra-cuerpo);
+  font-size: var(--texto-s);
+  color: var(--tinta);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.celda-dia__numero {
+  min-width: 28px;
+  line-height: 1.5;
+  border-radius: var(--radio);
+}
+
+.celda-dia--hoy .celda-dia__numero {
+  background: var(--marca);
+}
+
+.celda-dia--fuera {
+  color: var(--tinta-suave);
+}
+
+.celda-dia__notas {
+  display: flex;
+  gap: 3px;
+  height: var(--trazo);
+}
+
+.celda-dia__nota {
+  width: 6px;
+  height: var(--trazo);
+  background: currentcolor;
+  border-radius: 1px;
+}

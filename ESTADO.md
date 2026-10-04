@@ -5,9 +5,9 @@
 
 ## Ahora
 - **Fase actual:** F1 — Sistema de diseño y navegación
-- **Estado:** en curso. Hecho: tokens + textura de papel, fuentes B empaquetadas, pruebas de contraste / colores sueltos / fuentes locales. Falta: componentes base, iconos SVG, navegación de 4 secciones, Reproductor y MiniReproductor estáticos, `/galeria`, capturas finales.
+- **Estado:** en curso. Hecho: tokens + textura, fuentes B, componentes base (Pagina, Encabezado, Boton, Tarjeta, Etiqueta, CampoTexto, Interruptor, CeldaDia) y galería en `#/galeria`. Falta: iconos SVG, BarraInferior + navegación de 4 secciones con estados vacíos, Reproductor y MiniReproductor estáticos, capturas finales de las 4 secciones.
 - **Última sesión:** 2026-10-05
-- **Siguiente paso concreto:** componentes base de `docs/DISENO.md` en `src/ui/` (Pagina, Tarjeta, Boton, Etiqueta…) + página `/galeria` para revisarlos. **Push solo cuando F1 esté completa** (pedido del autor).
+- **Siguiente paso concreto:** iconos SVG propios + `BarraInferior` y navegación de 4 secciones (Notas, Calendario, Música, Ajustes) con estado vacío. **Push solo cuando F1 esté completa** (pedido del autor).
 
 ## Decisiones tomadas (ADR en `docs/ARQUITECTURA.md`)
 - 001 Web + Capacitor + Preact · 002 `.md` fuente de verdad · 003 solo IFrame oficial · 004 MIT (Pablo, 2026) · 005 nombre "Marginalia", appId `io.github.barmanpb74.appnoti`
@@ -23,7 +23,7 @@
 - (nada)
 
 ## Probar en el teléfono (lo que el entorno de Claude no puede verificar)
-- (vacío) · Cómo instalar un APK de CI: Actions → CI → artefacto `marginalia-debug-apk`.
+- Cuando F1 llegue al APK: que las fuentes y la galería (`#/galeria`) se vean como en `/sdcard/Documents/appnoti/capturas-f1/galeria.png`. · Cómo instalar un APK de CI: Actions → CI → artefacto `marginalia-debug-apk`.
 
 ## Resultado del spike del reproductor (F0, 2026-10-04, teléfono del autor)
 - A `youtube-nocookie.com/embed` dentro de la WebView (origen `https://localhost`): **carga y suena**.
@@ -51,5 +51,6 @@
 ## Historial de sesiones
 - 2026-10-04 · F0 · repo público, licencia y docs de seguridad, Vite+Preact+TS+Capacitor endurecido, CI verde con APK debug, CodeQL, gitleaks, dependency-review, Dependabot, push protection; spike del reproductor listo para probar.
 - 2026-10-04 · F0 cerrada · spike probado en el teléfono: A y B cargan y suenan.
+- 2026-10-05 · F1 · componentes base + galería; e2e: táctil ≥ 48 px, sin scroll horizontal.
 - 2026-10-05 · F1 · fuentes B empaquetadas + e2e de carga bajo CSP y sin peticiones externas.
 - 2026-10-04 · F1 inicio · tokens.css + textura, base.css solo con tokens, pruebas de contraste y colores sueltos, 3 capturas de fuentes.

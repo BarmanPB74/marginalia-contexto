@@ -1,0 +1,5 @@
+.tarjeta {
+  padding: 16px;
+  border: var(--trazo) solid var(--tinta);
+  border-radius: var(--radio);
+}

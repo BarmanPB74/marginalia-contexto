@@ -1,7 +1,7 @@
 import { render } from 'preact';
 import { act } from 'preact/test-utils';
 import { afterEach, describe, expect, it } from 'vitest';
-import { App } from '../../src/app/App';
+import { App, rutaActual } from '../../src/app/App';
 import { urlEmbed } from '../../src/spike/SpikeReproductor';
 
 let contenedor: HTMLElement;
@@ -31,5 +31,13 @@ describe('App', () => {
   it('el spike solo apunta a dominios oficiales de YouTube por https', () => {
     expect(urlEmbed('nocookie')).toBe('https://www.youtube-nocookie.com/embed/M7lc1UVf-VE');
     expect(urlEmbed('youtube')).toBe('https://www.youtube.com/embed/M7lc1UVf-VE');
+  });
+});
+
+describe('ruta por hash', () => {
+  it('solo #/galeria abre la galería; cualquier otra cosa es el inicio', () => {
+    expect(rutaActual('#/galeria')).toBe('galeria');
+    expect(rutaActual('')).toBe('inicio');
+    expect(rutaActual('#/otra')).toBe('inicio');
   });
 });

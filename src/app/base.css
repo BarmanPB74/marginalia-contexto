@@ -13,7 +13,32 @@ body {
   background: var(--textura) var(--papel);
 }
 
-.pagina {
+/* Texto enriquecido básico */
+a {
+  color: var(--acento);
+}
+
+mark {
+  color: inherit;
+  background: var(--marca);
+}
+
+code {
+  padding: 1px 4px;
+  font-family: var(--letra-codigo);
+  font-size: var(--texto-xs);
+  background: var(--papel-2);
+  border-radius: 4px;
+}
+
+/* Foco visible para teclado y lectores de pantalla; el toque no lo muestra. */
+:focus-visible {
+  outline: var(--trazo) dashed var(--acento);
+  outline-offset: 3px;
+}
+
+/* Portada provisional (hasta que llegue la navegación de 4 secciones) */
+.inicio {
   box-sizing: border-box;
   min-height: 100vh;
   padding: 48px 24px;

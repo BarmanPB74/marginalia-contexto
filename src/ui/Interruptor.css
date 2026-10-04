@@ -1,0 +1,43 @@
+.interruptor {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  min-height: var(--toque);
+  padding: 0;
+  font: inherit;
+  font-size: var(--texto-m);
+  color: var(--tinta);
+  text-align: start;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.interruptor__pista {
+  position: relative;
+  flex: none;
+  width: 44px;
+  height: 24px;
+  border: var(--trazo) solid var(--tinta);
+  border-radius: 13px 11px 12px 12px / 12px 13px 11px 12px;
+}
+
+.interruptor__punto {
+  position: absolute;
+  top: 50%;
+  left: 4px;
+  width: 14px;
+  height: 14px;
+  border: var(--trazo) solid var(--tinta);
+  border-radius: 50%;
+  background: var(--papel);
+  translate: 0 -50%;
+  transition: left var(--transicion), background-color var(--transicion);
+}
+
+.interruptor[aria-checked='true'] .interruptor__punto {
+  left: 23px;
+  background: var(--tinta);
+}
