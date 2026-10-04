@@ -109,6 +109,6 @@ for (const carpeta of readdirSync(RES).filter((c) => c === 'drawable' || c.start
 
 writeFileSync(
   `${RES}/values/ic_launcher_background.xml`,
-  `<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <!-- Papel de Marginalia (--papel); generado por scripts/icono-android.mjs -->\n    <color name="ic_launcher_background">${PAPEL}</color>\n</resources>\n`,
+  `<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <!-- Papel de Marginalia (token papel); generado por scripts/icono-android.mjs -->\n    <color name="ic_launcher_background">${PAPEL}</color>\n</resources>\n`,
 );
 await navegador.close();
