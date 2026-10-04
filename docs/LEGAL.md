@@ -1,0 +1,42 @@
+# LEGAL — cumplimiento, licencias y límites
+
+> Notas técnicas de cumplimiento, no asesoría legal. Ante dudas serias sobre términos de servicio o licencias, consultar a un profesional y leer los textos oficiales vigentes (los términos cambian: verifícalos al llegar a la Fase 4 y a la Fase 6).
+
+## 1. YouTube / YouTube Music
+Permitido (vía oficial):
+- Incrustar el **YouTube IFrame Player** (API oficial) para reproducir videos que permiten embed.
+- Leer metadatos por **oEmbed** público.
+- Abrir YouTube Music con un **Intent** a la app oficial.
+- Mostrar el reproductor con su interfaz y atribución intactas (no ocultar ni tapar controles, marca o enlaces).
+
+Prohibido (no implementar, no sugerir, no "solo de prueba"):
+- Extraer, descargar, grabar o convertir audio/video (`yt-dlp`, NewPipe Extractor, `ytmusicapi`, scraping, servicios de terceros equivalentes).
+- Reproducir **solo audio** ocultando el video para evadir el reproductor, o forzar reproducción en segundo plano contra el diseño del reproductor.
+- Bloquear/omitir anuncios, o alterar el comportamiento del reproductor.
+- Usar credenciales de usuario de Google/YouTube o automatizar su cuenta.
+- Almacenar el contenido multimedia en la app. Solo se guardan: ID, título, artista y segundo (metadatos).
+
+Si el reproductor incrustado no es viable en la WebView, se aplica el **Plan B** de `docs/ARQUITECTURA.md` (Intent + Share Intent). Nunca se recurre a una vía no oficial.
+
+## 2. Licencia del proyecto
+- Código propio: **MIT** (`LICENSE`, con el nombre del autor y el año). Alternativa: Apache-2.0 (ADR-004).
+- Todas las dependencias deben tener licencia compatible (MIT, BSD, Apache-2.0, ISC, MPL-2.0 usada sin modificar). Evitar GPL/AGPL salvo decisión explícita del autor.
+- Auditar con `license-checker` (o similar) y guardar el resultado en `docs/seguridad/LICENCIAS.md`.
+- Mostrar "Licencias de terceros" en Ajustes.
+
+## 3. Fuentes, iconos e imágenes
+- Solo fuentes con licencia **OFL** (o equivalente libre), incluidas en el repo con su archivo de licencia.
+- Iconos: dibujados para el proyecto. No copiar iconos de Apple, Google o Notion.
+- La **imagen de referencia** (`docs/referencia/estilo-dibujo.jpg`) tiene origen y licencia desconocidos: **no se publica** (está en `.gitignore`) y la app no reproduce su contenido (textos de canción/artista, icono de AirPlay, etc.).
+- Capturas del README: solo de la propia app y con datos de ejemplo inventados (no canciones con letra visible, no datos personales).
+
+## 4. Marcas y estilo
+- No usar los nombres "Notion", "YouTube", "Google" ni sus logos en el nombre o el icono de la app. En el README se pueden mencionar de forma descriptiva ("compatible con enlaces de YouTube Music") con la aclaración: *"No afiliada ni respaldada por YouTube, Google ni Notion."*
+- El diseño es propio: inspiración conceptual (páginas, árbol, notas), interfaz y marca distintas.
+
+## 5. Privacidad y datos
+- Sin recolección de datos. `PRIVACIDAD.md` en lenguaje claro (ver `docs/SEGURIDAD.md`, sección 7).
+- No incluir notas, canciones ni datos reales del autor en el repositorio, en pruebas ni en capturas.
+
+## 6. Contenido público del repo
+Checklist antes de publicar (Fase 6): `LICENSE`, `README.md` (qué es, capturas, instalación del APK, límites conocidos), `SECURITY.md`, `PRIVACIDAD.md`, `CONTRIBUTING.md` corto, aviso de no afiliación, licencias de terceros, historial de git limpio de secretos.

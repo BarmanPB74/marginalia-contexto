@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "head -60 ESTADO.md 2>/dev/null || echo 'ESTADO.md no existe todavia: ejecuta /inicio y luego /fase 0'"
+          }
+        ]
+      }
+    ]
+  }
+}

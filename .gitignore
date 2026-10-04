@@ -1,0 +1,32 @@
+# Referencia visual: origen y licencia desconocidos, NO publicar
+docs/referencia/
+
+# Secretos y firmas
+.env
+.env.*
+*.keystore
+*.jks
+keystore.properties
+google-services.json
+
+# Node / build
+node_modules/
+dist/
+.vite/
+coverage/
+playwright-report/
+test-results/
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+*.apk
+*.aab
+
+# Sistema / editor
+.DS_Store
+.idea/
+.vscode/
+*.log
