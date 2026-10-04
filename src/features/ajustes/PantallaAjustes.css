@@ -1,0 +1,16 @@
+.ajustes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ajustes li {
+  padding: 4px 0 12px;
+  border-bottom: 1px solid var(--separador);
+}
+
+.ajustes__pista {
+  margin: -6px 0 0;
+  font-size: var(--texto-s);
+  color: var(--tinta-suave);
+}

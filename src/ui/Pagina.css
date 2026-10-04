@@ -4,6 +4,10 @@
   max-width: calc(var(--ancho-lectura) + 48px);
   min-height: 100vh;
   margin: 0 auto;
-  /* abajo deja sitio a la barra inferior fija */
-  padding: 24px 24px calc(48px + var(--alto-barra) + env(safe-area-inset-bottom));
+  /* abajo deja sitio a la barra inferior fija (y al mini reproductor si va anclado) */
+  padding: 24px 24px calc(48px + var(--alto-barra) + var(--reserva-mini, 0px) + env(safe-area-inset-bottom));
+}
+
+.con-mini-anclado {
+  --reserva-mini: calc(var(--alto-mini) + 8px);
 }

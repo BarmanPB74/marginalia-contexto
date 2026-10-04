@@ -1,0 +1,19 @@
+.linea-punto {
+  position: relative;
+  flex: 1;
+  height: var(--trazo);
+  margin: 8px 0;
+  background: var(--tinta);
+  border-radius: 1px;
+}
+
+.linea-punto__punto {
+  position: absolute;
+  top: 50%;
+  width: 11px;
+  height: 11px;
+  background: var(--papel);
+  border: var(--trazo) solid var(--tinta);
+  border-radius: 50%;
+  translate: -50% -50%;
+}

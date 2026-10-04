@@ -21,11 +21,13 @@
 - Fuentes (2026-10-05, elección del autor, combinación B): Newsreader (cuerpo) + Kalam (a mano) + JetBrains Mono (código). Locales en `src/assets/fonts/`, sin CDN.
 - Rutas por hash: `#/notas` (por defecto), `#/calendario`, `#/musica`, `#/ajustes`, `#/galeria` (interna, sin enlace). Funcionan igual en la WebView, en `vite preview` y en el navegador, sin configurar servidor; el botón atrás de Android recorre el historial.
 - Cada componente de `src/ui/` importa su propio CSS; los estilos globales (`a`, `mark`, `code`, foco visible) viven en `base.css`. Pantallas de sección en `src/features/<sección>/`.
-- Icono de la app (2026-10-05, pedido del autor): solo la marca EK de Eisen-Kern, sin texto, crema sobre negro. Fuente `recursos/icono/marca-ek.png`; regenerar con `node scripts/icono-android.mjs`. La marca **no** es MIT (README, LEGAL §4).
+- Icono y arranque (2026-10-05, pedido del autor): marca EK de Eisen-Kern redibujada a mano, tinta sobre papel, sin texto. El arranque (splash, también Android 12+) es la misma marca sobre papel. Fuente `recursos/icono/marca-ek.svg` (el PNG negro original queda en el historial de git); regenerar con `node scripts/icono-android.mjs`. La marca **no** es MIT (README, LEGAL §4).
 - El spike del reproductor vive ahora en Música (se borra en F4).
 
+- Mini reproductor (2026-10-05, pedido del autor): anclado sobre la barra por defecto; en Ajustes, "Reproductor flotante" lo vuelve arrastrable por el asa, sin salir de la pantalla ni tapar la barra. En Música no se muestra (ya está el grande). Estado compartido en `src/app/estado.tsx`; en F1 suena una canción de muestra (`demo.ts`), sin sonido.
+
 ## Pendiente de decidir con el autor
-- **Pantalla de arranque (splash)**: sigue siendo la de Capacitor (X azul sobre blanco). ¿Marca EK sobre negro, papel liso, o nada? No se tocó porque se pidió solo el icono.
+- (nada)
 
 ## Probar en el teléfono (lo que el entorno de Claude no puede verificar)
 - Icono del lanzador con la marca EK (círculo/squircle según el lanzador) y que la barra inferior respete la barra de gestos de Android (`safe-area-inset-bottom`).

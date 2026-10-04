@@ -35,6 +35,7 @@
   /* Espacio y tacto */
   --toque: 48px;
   --alto-barra: 64px;
+  --alto-mini: 60px;
 
   /* Movimiento: casi nulo */
   --transicion: 140ms ease-out;

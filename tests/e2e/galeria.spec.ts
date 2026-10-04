@@ -7,8 +7,8 @@ test.beforeEach(async ({ page }) => {
 
 test('la galería muestra todos los componentes base', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1, name: 'Galería' })).toBeVisible();
-  for (const nombre of ['Tipografía', 'Icono', 'Boton', 'Etiqueta', 'Tarjeta', 'CampoTexto', 'Interruptor', 'CeldaDia']) {
-    await expect(page.getByRole('heading', { level: 2, name: nombre })).toBeVisible();
+  for (const nombre of ['Tipografía', 'Icono', 'Boton', 'Etiqueta', 'Tarjeta', 'CampoTexto', 'Interruptor', 'CeldaDia', 'Reproductor', 'MiniReproductor']) {
+    await expect(page.getByRole('heading', { level: 2, name: nombre, exact: true })).toBeVisible();
   }
 });
 

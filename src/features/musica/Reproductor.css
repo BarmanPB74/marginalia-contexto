@@ -1,0 +1,84 @@
+.reproductor {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px 20px 16px;
+  border: var(--trazo) solid var(--tinta);
+  border-radius: var(--radio);
+}
+
+.reproductor__cabecera {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.reproductor__portada {
+  flex: none;
+  width: 72px;
+  height: 72px;
+  border: var(--trazo) solid var(--tinta);
+  border-radius: 7px 5px 8px 4px / 5px 8px 4px 7px;
+}
+
+.reproductor__datos {
+  min-width: 0;
+}
+
+.reproductor__datos p {
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+.reproductor__titulo {
+  font-family: var(--letra-mano);
+  font-size: var(--texto-l);
+}
+
+.reproductor__artista {
+  font-family: var(--letra-mano);
+  font-size: var(--texto-m);
+  color: var(--tinta-suave);
+}
+
+.reproductor__tiempos {
+  display: flex;
+  justify-content: space-between;
+  margin-top: -4px;
+  font-family: var(--letra-mano);
+  font-size: var(--texto-xs);
+}
+
+.reproductor__controles {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin: 8px 0;
+}
+
+.reproductor__control {
+  display: grid;
+  place-items: center;
+  min-width: 56px;
+  min-height: 56px;
+  padding: 0;
+  color: var(--tinta);
+  background: none;
+  border: 0;
+  border-radius: var(--radio);
+  cursor: pointer;
+}
+
+.reproductor__control:active {
+  background: var(--papel-2);
+}
+
+.reproductor__volumen {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
