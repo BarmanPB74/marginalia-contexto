@@ -5,9 +5,9 @@
 
 ## Ahora
 - **Fase actual:** F1 — Sistema de diseño y navegación
-- **Estado:** en curso. Hecho: tokens + textura, fuentes B, componentes base, galería (`#/galeria`), iconos SVG propios, `BarraInferior` + navegación de 4 secciones con estado vacío, icono de la app = marca EK. Falta: Reproductor y MiniReproductor estáticos, capturas finales, `/auditar` de F1.
+- **Estado:** entregables completos y `/auditar` de F1 en verde (2026-10-05). Solo falta que el autor **revise las capturas** en `/sdcard/Documents/appnoti/capturas-f1/` (notas, calendario, musica, ajustes, galeria).
 - **Última sesión:** 2026-10-05
-- **Siguiente paso concreto:** `Reproductor` y `MiniReproductor` estáticos (sin sonido) en Música y en la galería; luego `/auditar` y cierre de F1 → push. **Push solo cuando F1 esté completa** (pedido del autor).
+- **Siguiente paso concreto:** si el autor aprueba las capturas → marcar F1 cerrada y hacer **push** (8 commits locales). Si pide cambios, hacerlos y regenerar con `node scripts/capturas.mjs` (app servida en :4173). Luego F2.
 
 ## Decisiones tomadas (ADR en `docs/ARQUITECTURA.md`)
 - 001 Web + Capacitor + Preact · 002 `.md` fuente de verdad · 003 solo IFrame oficial · 004 MIT (Pablo, 2026) · 005 nombre "Marginalia", appId `io.github.barmanpb74.appnoti`
@@ -57,6 +57,7 @@
 - (vacío)
 
 ## Historial de sesiones
+- 2026-10-05 · F1 · línea de progreso invisible arreglada (+e2e), script de capturas, capturas finales, `/auditar` F1 ✅ (gitleaks solo en CI).
 - 2026-10-04 · F0 · repo público, licencia y docs de seguridad, Vite+Preact+TS+Capacitor endurecido, CI verde con APK debug, CodeQL, gitleaks, dependency-review, Dependabot, push protection; spike del reproductor listo para probar.
 - 2026-10-04 · F0 cerrada · spike probado en el teléfono: A y B cargan y suenan.
 - 2026-10-05 · F1 · icono EK, iconos SVG, barra inferior y 4 secciones vacías; e2e de navegación, atrás y barra.
