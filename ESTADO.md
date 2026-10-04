@@ -4,10 +4,10 @@
 > Lo actualiza `/cierre`. Si algo aquí contradice el código, arréglalo aquí.
 
 ## Ahora
-- **Fase actual:** F1 — Sistema de diseño y navegación
-- **Estado:** entregables completos y `/auditar` de F1 en verde (2026-10-05). Solo falta que el autor **revise las capturas** en `/sdcard/Documents/appnoti/capturas-f1/` (notas, calendario, musica, ajustes, galeria).
+- **Fase actual:** F2 — Notas Markdown locales (F1 cerrada el 2026-10-05, capturas aprobadas por el autor)
+- **Estado:** sin empezar.
 - **Última sesión:** 2026-10-05
-- **Siguiente paso concreto:** si el autor aprueba las capturas → marcar F1 cerrada y hacer **push**. Si pide cambios, hacerlos y regenerar con `node scripts/capturas.mjs` (app servida en :4173). Luego F2.
+- **Siguiente paso concreto:** `/inicio` de F2 (leer su sección en `docs/FASES.md` y proponer plan). El autor prueba el APK de F1 en el teléfono.
 
 ## Decisiones tomadas (ADR en `docs/ARQUITECTURA.md`)
 - 001 Web + Capacitor + Preact · 002 `.md` fuente de verdad · 003 solo IFrame oficial · 004 MIT (Pablo, 2026) · 005 nombre "Marginalia", appId `io.github.barmanpb74.appnoti`
@@ -57,6 +57,7 @@
 - (vacío)
 
 ## Historial de sesiones
+- 2026-10-05 · F1 cerrada · capturas aprobadas por el autor; push.
 - 2026-10-05 · F1 · línea de progreso invisible arreglada (+e2e), script de capturas, capturas finales, `/auditar` F1 ✅ (gitleaks solo en CI).
 - 2026-10-04 · F0 · repo público, licencia y docs de seguridad, Vite+Preact+TS+Capacitor endurecido, CI verde con APK debug, CodeQL, gitleaks, dependency-review, Dependabot, push protection; spike del reproductor listo para probar.
 - 2026-10-04 · F0 cerrada · spike probado en el teléfono: A y B cargan y suenan.
