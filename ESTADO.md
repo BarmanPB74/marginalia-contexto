@@ -5,9 +5,9 @@
 
 ## Ahora
 - **Fase actual:** F1 — Sistema de diseño y navegación
-- **Estado:** no iniciada. F0 cerrada el 2026-10-04 (CI verde + APK probado en el teléfono del autor).
+- **Estado:** en curso. Hecho: `src/ui/tokens.css` (+ textura de papel) y pruebas de contraste / cero colores sueltos. 3 capturas de fuentes generadas, **esperando elección del autor**.
 - **Última sesión:** 2026-10-04
-- **Siguiente paso concreto:** `/fase 1` — empezar por `src/ui/tokens.css` y las 3 capturas de combinaciones de fuentes
+- **Siguiente paso concreto:** el autor elige A, B o C → copiar solo esas `.woff2` (latin) + licencia OFL a `src/assets/fonts/`, fijar `--letra-*` en tokens. Luego: componentes base + `/galeria`.
 
 ## Decisiones tomadas (ADR en `docs/ARQUITECTURA.md`)
 - 001 Web + Capacitor + Preact · 002 `.md` fuente de verdad · 003 solo IFrame oficial · 004 MIT (Pablo, 2026) · 005 nombre "Marginalia", appId `io.github.barmanpb74.appnoti`
@@ -16,9 +16,11 @@
 - El APK **solo se compila en GitHub Actions**: el SDK de Android (sdkmanager, aapt2) solo existe para x86_64 y el teléfono es aarch64. Lint, tests unitarios y e2e (Playwright) sí corren en el teléfono.
 - Acciones de GitHub fijadas por SHA; token de CI con permisos mínimos.
 - Sin `@testing-library` por ahora: Preact `render` + `act` + jsdom bastan.
+- Vitest con `css: true`: sin eso los `.css` (incluso con `?raw`) llegan vacíos y las pruebas de tokens pasaban en falso.
+- Contraste: tinta y acento ≥ 7:1 (AAA); `--tinta-suave` solo para texto secundario, exigido ≥ 4.5:1 (AA). `theme-color` de `index.html` repite `--papel` porque una meta no puede leer variables CSS.
 
 ## Pendiente de decidir con el autor
-- (nada)
+- **Fuentes** (capturas 390×844 en `/sdcard/Documents/appnoti/capturas-f1/`): A Source Serif 4 + Patrick Hand · B Newsreader + Kalam · C Newsreader + Patrick Hand. Todas + JetBrains Mono, OFL-1.1 (`@fontsource` 5.3.0, se copian los archivos, no se añade dependencia). Nota: en Patrick Hand la `@` sale muy pequeña.
 
 ## Probar en el teléfono (lo que el entorno de Claude no puede verificar)
 - (vacío) · Cómo instalar un APK de CI: Actions → CI → artefacto `marginalia-debug-apk`.
@@ -48,3 +50,4 @@
 ## Historial de sesiones
 - 2026-10-04 · F0 · repo público, licencia y docs de seguridad, Vite+Preact+TS+Capacitor endurecido, CI verde con APK debug, CodeQL, gitleaks, dependency-review, Dependabot, push protection; spike del reproductor listo para probar.
 - 2026-10-04 · F0 cerrada · spike probado en el teléfono: A y B cargan y suenan.
+- 2026-10-04 · F1 inicio · tokens.css + textura, base.css solo con tokens, pruebas de contraste y colores sueltos, 3 capturas de fuentes.
