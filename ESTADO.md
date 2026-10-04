@@ -4,10 +4,10 @@
 > Lo actualiza `/cierre`. Si algo aquí contradice el código, arréglalo aquí.
 
 ## Ahora
-- **Fase actual:** F0 — Cimientos
-- **Estado:** construida y CI en verde; **falta la verificación en el teléfono** (criterio de aceptación + resultado del spike)
+- **Fase actual:** F1 — Sistema de diseño y navegación
+- **Estado:** no iniciada. F0 cerrada el 2026-10-04 (CI verde + APK probado en el teléfono del autor).
 - **Última sesión:** 2026-10-04
-- **Siguiente paso concreto:** el autor instala el APK y reporta el spike A/B → anotar resultado aquí, cerrar F0 y pasar a `/fase 1`
+- **Siguiente paso concreto:** `/fase 1` — empezar por `src/ui/tokens.css` y las 3 capturas de combinaciones de fuentes
 
 ## Decisiones tomadas (ADR en `docs/ARQUITECTURA.md`)
 - 001 Web + Capacitor + Preact · 002 `.md` fuente de verdad · 003 solo IFrame oficial · 004 MIT (Pablo, 2026) · 005 nombre "Marginalia", appId `io.github.barmanpb74.appnoti`
@@ -21,11 +21,12 @@
 - (nada)
 
 ## Probar en el teléfono (lo que el entorno de Claude no puede verificar)
-1. Instalar `Download/marginalia-debug.apk` (o desde Actions → CI → artefacto `marginalia-debug-apk`). Android pedirá permitir "instalar apps desconocidas".
-2. Abrir: ¿se ve la pantalla de papel crema con "Marginalia"?
-3. Tocar **Probar A (nocookie)** y darle play al video. ¿Suena? ¿Sale "Error 152/153" u otro?
-4. Cerrar y repetir con **Probar B (youtube.com)**.
-5. Reportar A y B: carga sí/no, reproduce sí/no, texto exacto del error si lo hay.
+- (vacío) · Cómo instalar un APK de CI: Actions → CI → artefacto `marginalia-debug-apk`.
+
+## Resultado del spike del reproductor (F0, 2026-10-04, teléfono del autor)
+- A `youtube-nocookie.com/embed` dentro de la WebView (origen `https://localhost`): **carga y suena**.
+- B `youtube.com/embed`: **carga y suena**.
+- Conclusión: el iframe oficial es viable; **no hace falta el Plan B**. F4 usará `youtube-nocookie.com` (privacidad) y borrará `src/spike/`. Falta comprobar en F4 la IFrame API (control por JS, `origin`) y videos de YouTube Music.
 
 ## Permisos Android autorizados
 - `INTERNET` (reproductor). Verificado en el manifiesto compilado del APK de CI.
@@ -37,7 +38,7 @@
 - Auditoría de licencias (2026-10-04): todas compatibles; MPL-2.0 solo en `lightningcss` (herramienta de build, sin modificar).
 
 ## Riesgos abiertos
-- Embed de YouTube en WebView (errores de origen/Referer) — spike listo en `src/spike/`, falta probarlo en el teléfono. Resolución en F4.
+- IFrame API de YouTube (script externo: exige ajustar la CSP `script-src`) — sin probar aún; se valida al inicio de F4.
 - `npm audit` (dev): 3 moderadas en `@capacitor/cli` → `xcode` → `uuid` (herramienta de iOS, no se usa; producción limpia). Revisar cuando salga un CLI corregido.
 - Build *release* sin minificación ni firma todavía (corresponde a F6).
 
@@ -46,3 +47,4 @@
 
 ## Historial de sesiones
 - 2026-10-04 · F0 · repo público, licencia y docs de seguridad, Vite+Preact+TS+Capacitor endurecido, CI verde con APK debug, CodeQL, gitleaks, dependency-review, Dependabot, push protection; spike del reproductor listo para probar.
+- 2026-10-04 · F0 cerrada · spike probado en el teléfono: A y B cargan y suenan.
