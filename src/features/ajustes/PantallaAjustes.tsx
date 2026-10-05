@@ -19,10 +19,13 @@ const VISTAS: { valor: VistaNotas; etiqueta: string }[] = [
 
 /** Lista plana, sin tarjetas (DISENO.md). */
 export function PantallaAjustes() {
-  const { flotante, setFlotante, tema, vistaNotas, miniEscondido, cambiarAjustes } = useEstado();
+  const { flotante, setFlotante, tema, vistaNotas, miniEscondido, cambiarAjustes, abrirComandos } = useEstado();
   return (
     <Pagina>
-      <Encabezado titulo="Ajustes" />
+      <Encabezado
+        titulo="Ajustes"
+        iconos={[{ icono: 'buscar', etiqueta: 'Buscar y comandos', alTocar: () => abrirComandos(true) }]}
+      />
       <ul class="ajustes">
         <li>
           <p class="ajustes__titulo">

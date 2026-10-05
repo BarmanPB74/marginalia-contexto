@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useEstadoOpcional } from '../../app/estado';
 import {
   cuadriculaMes,
   diaDe,
@@ -43,6 +44,7 @@ function sumarMeses({ anio, mes }: Mes, n: number): Mes {
  */
 export function PantallaCalendario({ dia = null, hoy = diaDe(new Date()) }: { dia?: Dia | null; hoy?: Dia }) {
   const repo = useRepositorio();
+  const estado = useEstadoOpcional();
   const [notas, setNotas] = useState<Nota[] | null>(null);
   const [mes, setMes] = useState<Mes>(() => mesDe(dia ?? hoy));
   const [direccion, setDireccion] = useState<'antes' | 'despues' | null>(null);
@@ -92,6 +94,7 @@ export function PantallaCalendario({ dia = null, hoy = diaDe(new Date()) }: { di
     <Pagina>
       <Encabezado
         titulo="Calendario"
+        iconos={estado ? [{ icono: 'buscar', etiqueta: 'Buscar y comandos', alTocar: () => estado.abrirComandos(true) }] : []}
         accion={{
           etiqueta: 'Hoy',
           alTocar: () => {

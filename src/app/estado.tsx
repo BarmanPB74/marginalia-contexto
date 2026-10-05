@@ -1,5 +1,6 @@
 import { createContext, type ComponentChildren } from 'preact';
 import { useContext, useEffect, useState } from 'preact/hooks';
+import type { Comando } from '../features/comandos/comandos';
 import { aplicarTema, guardarAjustes, leerAjustes, type Ajustes } from './ajustes';
 
 interface EstadoApp extends Ajustes {
@@ -12,6 +13,9 @@ interface EstadoApp extends Ajustes {
   /** Paleta de comandos abierta. */
   comandosAbiertos: boolean;
   abrirComandos: (abierta: boolean) => void;
+  /** Comandos de la pantalla actual (p. ej. los de la nota abierta), además de los globales. */
+  comandosLocales: Comando[];
+  setComandosLocales: (comandos: Comando[]) => void;
 }
 
 const Contexto = createContext<EstadoApp | null>(null);
@@ -20,6 +24,19 @@ export function ProveedorEstado({ children }: { children: ComponentChildren }) {
   const [ajustes, setAjustes] = useState<Ajustes>(leerAjustes);
   const [sonando, setSonando] = useState(false);
   const [comandosAbiertos, abrirComandos] = useState(false);
+  const [comandosLocales, setComandosLocales] = useState<Comando[]>([]);
+
+  // Ctrl+K (o ⌘K) abre la paleta desde cualquier pantalla con teclado físico.
+  useEffect(() => {
+    const alTeclear = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        abrirComandos(true);
+      }
+    };
+    addEventListener('keydown', alTeclear);
+    return () => removeEventListener('keydown', alTeclear);
+  }, []);
 
   useEffect(() => {
     aplicarTema(ajustes.tema);
@@ -49,6 +66,8 @@ export function ProveedorEstado({ children }: { children: ComponentChildren }) {
         alternar: () => setSonando((s) => !s),
         comandosAbiertos,
         abrirComandos,
+        comandosLocales,
+        setComandosLocales,
       }}
     >
       {children}

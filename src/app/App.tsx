@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { PantallaAjustes } from '../features/ajustes/PantallaAjustes';
 import { PantallaCalendario } from '../features/calendario/PantallaCalendario';
+import { Paleta } from '../features/comandos/Paleta';
 import { CANCION_DEMO } from '../features/musica/demo';
 import { MiniReproductor } from '../features/musica/MiniReproductor';
 import { PantallaMusica } from '../features/musica/PantallaMusica';
@@ -29,7 +30,7 @@ function useHash() {
 }
 
 function Secciones({ ruta, idNota, dia }: { ruta: IdSeccion; idNota: string | null; dia: string | null }) {
-  const { flotante, sonando, alternar, miniEscondido, cambiarAjustes } = useEstado();
+  const { flotante, sonando, alternar, miniEscondido, cambiarAjustes, comandosAbiertos } = useEstado();
   const Pantalla = PANTALLAS[ruta];
   // En Música ya está el reproductor grande. F1: siempre hay una canción de muestra; en F4, solo si hay algo cargado.
   const conMini = ruta !== 'musica';
@@ -56,6 +57,7 @@ function Secciones({ ruta, idNota, dia }: { ruta: IdSeccion; idNota: string | nu
         />
       )}
       <BarraInferior actual={ruta} />
+      {comandosAbiertos && <Paleta />}
     </div>
   );
 }

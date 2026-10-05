@@ -1,6 +1,9 @@
 import type { EditorView } from '@codemirror/view';
 import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEstadoOpcional } from '../../app/estado';
+import { diaDe } from '../../core/notas/fechas';
 import type { Nota } from '../../core/notas/nota';
+import type { Comando } from '../comandos/comandos';
 import { Boton } from '../../ui/Boton';
 import { EstadoVacio } from '../../ui/EstadoVacio';
 import { Icono } from '../../ui/Icono';
@@ -8,6 +11,7 @@ import { Pagina } from '../../ui/Pagina';
 import { useRepositorio } from './contexto';
 import { BarraFormato } from './editor/BarraFormato';
 import { EditorMarkdown } from './editor/EditorMarkdown';
+import { alternarLista, alternarNegrita, alternarTarea, insertarEnlace, insertarFecha } from './editor/formato';
 import { Lectura } from './Lectura';
 import { SelectorPlantilla } from './SelectorPlantilla';
 import './PantallaNota.css';
@@ -39,6 +43,9 @@ export function PantallaNota({ id }: { id: string }) {
   const actual = useRef<Nota | null>(null);
   const sucia = useRef(false);
   const temporizador = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const estado = useEstadoOpcional();
+  // Lo que hacen los comandos de esta nota, siempre con el estado más reciente (sin volver a registrarlos en cada tecla)
+  const acciones = useRef<Record<string, () => void | Promise<void>>>({});
 
   async function guardarYa() {
     clearTimeout(temporizador.current);
@@ -83,6 +90,37 @@ export function PantallaNota({ id }: { id: string }) {
     return () => document.documentElement.classList.remove('escribiendo');
   }, [escribiendo]);
 
+  // Comandos de la paleta mientras esta nota está abierta.
+  const setComandosLocales = estado?.setComandosLocales;
+  const hayNota = Boolean(nota);
+  useEffect(() => {
+    if (!setComandosLocales || !hayNota) return;
+    const de = (id: string, nombre: string, palabras: string, icono?: Comando['icono']): Comando => ({
+      id,
+      nombre,
+      grupo: 'Esta nota',
+      palabras,
+      ...(icono ? { icono } : {}),
+      ejecutar: () => acciones.current[id]?.(),
+    });
+    const lista: Comando[] = [
+      de('alternar-modo', modo === 'leer' ? 'Editar esta nota' : 'Leer esta nota', 'modo lectura escritura'),
+      de('fecha-hoy', 'Insertar la fecha de hoy', 'calendario dia @', 'calendario'),
+      de('subpagina', 'Nueva subpágina', 'crear hija pagina', 'mas'),
+      de('borrar', 'Borrar esta nota', 'eliminar quitar papelera'),
+    ];
+    if (modo === 'editar') {
+      lista.push(
+        de('negrita', 'Negrita', 'formato resaltar'),
+        de('lista', 'Lista', 'formato viñetas', 'lista'),
+        de('tarea', 'Tarea', 'formato casilla pendiente'),
+        de('enlace', 'Enlace', 'formato link url'),
+      );
+    }
+    setComandosLocales(lista);
+    return () => setComandosLocales([]);
+  }, [setComandosLocales, hayNota, modo]);
+
   function cambiar(parcial: Pick<Nota, 'titulo'> | Pick<Nota, 'cuerpo'>) {
     if (!actual.current) return;
     const nueva = { ...actual.current, ...parcial };
@@ -109,6 +147,28 @@ export function PantallaNota({ id }: { id: string }) {
     // replace: que "atrás" no vuelva a una nota que ya no existe
     location.replace(nota.padre ? `#/notas/${nota.padre}` : '#/notas');
   }
+
+  function enEditor(accion: (e: EditorView['state']) => Parameters<EditorView['dispatch']>[0]) {
+    const editor = vista.current;
+    if (!editor) return;
+    editor.dispatch(accion(editor.state));
+    editor.focus();
+  }
+
+  acciones.current = {
+    'alternar-modo': () => setModo((m) => (m === 'leer' ? 'editar' : 'leer')),
+    'fecha-hoy': () => {
+      const hoy = diaDe(new Date());
+      if (modo === 'editar' && vista.current) enEditor((e) => insertarFecha(e, hoy));
+      else if (actual.current) cambiar({ cuerpo: `${actual.current.cuerpo.trimEnd()}\n\n@${hoy}\n` });
+    },
+    subpagina: () => setEligiendo(true),
+    borrar: () => borrar(),
+    negrita: () => enEditor(alternarNegrita),
+    lista: () => enEditor(alternarLista),
+    tarea: () => enEditor(alternarTarea),
+    enlace: () => enEditor(insertarEnlace),
+  };
 
   if (nota === undefined) return <Pagina>{null}</Pagina>;
   if (nota === null) {
