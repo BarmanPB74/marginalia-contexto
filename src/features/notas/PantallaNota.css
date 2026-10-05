@@ -69,6 +69,41 @@
 
 .nota__acciones {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.nota__estados {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nota__cifrada {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--texto-xs);
+  color: var(--tinta-suave);
+}
+
+.nota__aviso,
+.nota__pista {
+  margin: 8px 0 0;
+  font-size: var(--texto-s);
+  color: var(--tinta-suave);
+}
+
+.nota__formatos {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nota__formatos .boton {
+  width: 100%;
+  padding-left: 0;
+  text-align: left;
 }
 
 .nota__estado {

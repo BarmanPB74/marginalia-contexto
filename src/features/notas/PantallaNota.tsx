@@ -2,7 +2,10 @@ import type { EditorView } from '@codemirror/view';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { useEstadoOpcional } from '../../app/estado';
 import { diaDe } from '../../core/notas/fechas';
+import { exportar, FORMATOS, nombreArchivo, type Formato } from '../../core/exportar/formatos';
+import { guardarExportado } from '../../core/exportar/guardar';
 import type { Nota } from '../../core/notas/nota';
+import { Hoja } from '../../ui/Hoja';
 import type { Comando } from '../comandos/comandos';
 import { Boton } from '../../ui/Boton';
 import { EstadoVacio } from '../../ui/EstadoVacio';
@@ -39,6 +42,8 @@ export function PantallaNota({ id }: { id: string }) {
   const [eligiendo, setEligiendo] = useState(false);
   const [modo, setModo] = useState<Modo>('editar');
   const [escribiendo, setEscribiendo] = useState(false);
+  const [exportando, setExportando] = useState(false);
+  const [aviso, setAviso] = useState('');
   const vista = useRef<EditorView | null>(null);
   const actual = useRef<Nota | null>(null);
   const sucia = useRef(false);
@@ -107,6 +112,9 @@ export function PantallaNota({ id }: { id: string }) {
       de('alternar-modo', modo === 'leer' ? 'Editar esta nota' : 'Leer esta nota', 'modo lectura escritura'),
       de('fecha-hoy', 'Insertar la fecha de hoy', 'calendario dia @', 'calendario'),
       de('subpagina', 'Nueva subpágina', 'crear hija pagina', 'mas'),
+      ...FORMATOS.map((f) =>
+        de(`exportar-${f.id}`, `Exportar esta nota como ${f.nombre}`, 'guardar compartir descifrar archivo', 'exportar'),
+      ),
       de('borrar', 'Borrar esta nota', 'eliminar quitar papelera'),
     ];
     if (modo === 'editar') {
@@ -155,7 +163,24 @@ export function PantallaNota({ id }: { id: string }) {
     editor.focus();
   }
 
+  async function exportarComo(formato: Formato) {
+    setExportando(false);
+    await guardarYa();
+    const n = actual.current;
+    const f = FORMATOS.find((x) => x.id === formato);
+    if (!n || !f) return;
+    try {
+      const donde = await guardarExportado(nombreArchivo(n.titulo, formato), exportar(n, formato), f.tipo);
+      setAviso(`Exportada sin cifrar en ${donde}`);
+    } catch {
+      setAviso('No se pudo exportar. En Android 10 o anterior, la carpeta Documentos necesita un permiso que la app no pide.');
+    }
+  }
+
   acciones.current = {
+    'exportar-md': () => exportarComo('md'),
+    'exportar-txt': () => exportarComo('txt'),
+    'exportar-html': () => exportarComo('html'),
     'alternar-modo': () => setModo((m) => (m === 'leer' ? 'editar' : 'leer')),
     'fecha-hoy': () => {
       const hoy = diaDe(new Date());
@@ -235,10 +260,19 @@ export function PantallaNota({ id }: { id: string }) {
       )}
       {modo === 'editar' && escribiendo && <BarraFormato vista={vista} />}
       <footer class="nota__pie">
-        <span class="nota__estado" role="status">
-          {guardado === 'pendiente' ? 'Guardando…' : guardado === 'error' ? 'No se pudo guardar' : 'Guardado'}
+        <span class="nota__estados">
+          <span class="nota__estado" role="status">
+            {guardado === 'pendiente' ? 'Guardando…' : guardado === 'error' ? 'No se pudo guardar' : 'Guardado'}
+          </span>
+          <span class="nota__cifrada" title="El archivo se guarda cifrado en este teléfono">
+            <Icono nombre="candado" tamano={16} />
+            cifrada
+          </span>
         </span>
         <span class="nota__acciones">
+          <Boton variante="texto" alTocar={() => setExportando(true)}>
+            Exportar
+          </Boton>
           <Boton variante="texto" alTocar={() => setEligiendo(true)}>
             Subpágina
           </Boton>
@@ -247,6 +281,27 @@ export function PantallaNota({ id }: { id: string }) {
           </Boton>
         </span>
       </footer>
+      {aviso && (
+        <p class="nota__aviso" aria-live="polite">
+          {aviso}
+        </p>
+      )}
+      {exportando && (
+        <Hoja titulo="Exportar sin cifrar" alCerrar={() => setExportando(false)}>
+          <p class="nota__pista">
+            La copia se guarda descifrada, para abrirla con cualquier app. La nota de aquí sigue cifrada.
+          </p>
+          <ul class="nota__formatos">
+            {FORMATOS.map((f) => (
+              <li key={f.id}>
+                <Boton variante="texto" alTocar={() => void exportarComo(f.id)}>
+                  {f.nombre}
+                </Boton>
+              </li>
+            ))}
+          </ul>
+        </Hoja>
+      )}
       {eligiendo && (
         <SelectorPlantilla
           titulo="Nueva subpágina desde…"

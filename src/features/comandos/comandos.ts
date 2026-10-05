@@ -1,4 +1,6 @@
 import type { Ajustes } from '../../app/ajustes';
+import { exportar, nombreArchivo } from '../../core/exportar/formatos';
+import { guardarExportado } from '../../core/exportar/guardar';
 import { diaDe } from '../../core/notas/fechas';
 import { PLANTILLAS } from '../../core/notas/plantillas';
 import type { RepositorioNotas } from '../../core/notas/repositorio';
@@ -50,6 +52,24 @@ export function comandosGlobales({ repo, ajustes, cambiarAjustes, sonando, alter
       icono: 'mas',
       ejecutar: () => abrir({ plantilla: p.id }),
     })),
+    {
+      id: 'exportar-todas',
+      nombre: 'Exportar todas las notas (Markdown, sin cifrar)',
+      grupo: 'Herramientas',
+      palabras: 'copia respaldo backup guardar descifrar obsidian',
+      icono: 'exportar',
+      ejecutar: async () => {
+        const { notas } = await repo.listar();
+        const usados = new Set<string>();
+        for (const n of notas) {
+          // Dos notas con el mismo título no se pisan: la segunda lleva su id
+          let nombre = nombreArchivo(n.titulo, 'md');
+          if (usados.has(nombre)) nombre = nombreArchivo(`${n.titulo} ${n.id}`, 'md');
+          usados.add(nombre);
+          await guardarExportado(nombre, exportar(n, 'md'), 'text/markdown', `notas-${dia}`);
+        }
+      },
+    },
     {
       id: 'calendario-hoy',
       nombre: 'Ver hoy en el calendario',
