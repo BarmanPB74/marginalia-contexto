@@ -1,0 +1,49 @@
+/* Lienzo casi vacío: el editor se ve como el papel, sin bordes ni números de línea. */
+.editor-markdown {
+  min-height: 55vh;
+}
+
+.editor-markdown .cm-editor {
+  min-height: 55vh;
+  font-family: var(--letra-cuerpo);
+  font-size: var(--texto-m);
+  line-height: var(--interlineado);
+  color: var(--tinta);
+  background: none;
+}
+
+.editor-markdown .cm-editor.cm-focused {
+  outline: none;
+}
+
+.editor-markdown .cm-scroller {
+  font-family: inherit;
+  line-height: inherit;
+  /* crece con el texto: se desplaza la página, no el editor */
+  overflow: visible;
+}
+
+.editor-markdown .cm-content {
+  min-height: 55vh;
+  padding: 0;
+  caret-color: var(--tinta);
+}
+
+.editor-markdown .cm-line {
+  padding: 0;
+}
+
+.editor-markdown .cm-placeholder {
+  color: var(--tinta-suave);
+}
+
+.editor-markdown .cm-cursor {
+  border-left-color: var(--tinta);
+}
+
+/* Selección con el mismo resaltador amarillo de "hoy" (DISENO.md: --marca) */
+.editor-markdown .cm-editor .cm-selectionBackground,
+.editor-markdown .cm-editor.cm-focused .cm-selectionBackground,
+.editor-markdown .cm-content ::selection {
+  background: var(--marca);
+}

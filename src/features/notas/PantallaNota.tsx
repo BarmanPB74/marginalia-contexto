@@ -1,3 +1,4 @@
+import type { EditorView } from '@codemirror/view';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { Nota } from '../../core/notas/nota';
 import { Boton } from '../../ui/Boton';
@@ -5,6 +6,9 @@ import { EstadoVacio } from '../../ui/EstadoVacio';
 import { Icono } from '../../ui/Icono';
 import { Pagina } from '../../ui/Pagina';
 import { useRepositorio } from './contexto';
+import { BarraFormato } from './editor/BarraFormato';
+import { EditorMarkdown } from './editor/EditorMarkdown';
+import { Lectura } from './Lectura';
 import { SelectorPlantilla } from './SelectorPlantilla';
 import './PantallaNota.css';
 
@@ -12,10 +16,16 @@ import './PantallaNota.css';
 export const ESPERA_GUARDADO = 600;
 
 type Guardado = 'guardado' | 'pendiente' | 'error';
+type Modo = 'leer' | 'editar';
+
+/** Recién creada o vacía → a escribir; si ya tiene cambios → a leer. */
+function modoInicial(n: Nota): Modo {
+  return n.creado === n.editado || !n.cuerpo.trim() ? 'editar' : 'leer';
+}
 
 /**
  * Una página abierta: título y cuerpo con autoguardado.
- * El cuerpo es un <textarea> provisional; el editor CodeMirror lo reemplaza en el siguiente bloque de F2.
+ * Leer/Editar con un toque; mientras se escribe, barra de formato sobre el teclado.
  */
 export function PantallaNota({ id }: { id: string }) {
   const repo = useRepositorio();
@@ -23,6 +33,9 @@ export function PantallaNota({ id }: { id: string }) {
   const [madre, setMadre] = useState<Nota | null>(null);
   const [guardado, setGuardado] = useState<Guardado>('guardado');
   const [eligiendo, setEligiendo] = useState(false);
+  const [modo, setModo] = useState<Modo>('editar');
+  const [escribiendo, setEscribiendo] = useState(false);
+  const vista = useRef<EditorView | null>(null);
   const actual = useRef<Nota | null>(null);
   const sucia = useRef(false);
   const temporizador = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -47,6 +60,7 @@ export function PantallaNota({ id }: { id: string }) {
       async (n) => {
         if (!vigente) return;
         actual.current = n;
+        if (n) setModo(modoInicial(n));
         setNota(n);
         const m = n?.padre ? await repo.obtener(n.padre) : null;
         if (vigente) setMadre(m);
@@ -62,6 +76,12 @@ export function PantallaNota({ id }: { id: string }) {
       void guardarYa();
     };
   }, [repo, id]);
+
+  // Mientras se escribe se esconden la barra de secciones y el mini reproductor (BarraFormato.css).
+  useEffect(() => {
+    document.documentElement.classList.toggle('escribiendo', escribiendo);
+    return () => document.documentElement.classList.remove('escribiendo');
+  }, [escribiendo]);
 
   function cambiar(parcial: Pick<Nota, 'titulo'> | Pick<Nota, 'cuerpo'>) {
     if (!actual.current) return;
@@ -123,6 +143,15 @@ export function PantallaNota({ id }: { id: string }) {
             </>
           )}
         </nav>
+        <Boton
+          variante="texto"
+          alTocar={() => {
+            setEscribiendo(false);
+            setModo(modo === 'leer' ? 'editar' : 'leer');
+          }}
+        >
+          {modo === 'leer' ? 'Editar' : 'Leer'}
+        </Boton>
       </div>
       <header class="nota__encabezado">
         <input
@@ -133,13 +162,18 @@ export function PantallaNota({ id }: { id: string }) {
           onInput={(e) => cambiar({ titulo: e.currentTarget.value })}
         />
       </header>
-      <textarea
-        class="nota__cuerpo"
-        aria-label="Contenido"
-        value={nota.cuerpo}
-        placeholder="Escribe en Markdown…"
-        onInput={(e) => cambiar({ cuerpo: e.currentTarget.value })}
-      />
+      {modo === 'editar' ? (
+        <EditorMarkdown
+          valor={nota.cuerpo}
+          alCambiar={(cuerpo) => cambiar({ cuerpo })}
+          alEnfocar={setEscribiendo}
+          vista={vista}
+          enfocarAlAbrir
+        />
+      ) : (
+        <Lectura texto={nota.cuerpo} />
+      )}
+      {modo === 'editar' && escribiendo && <BarraFormato vista={vista} />}
       <footer class="nota__pie">
         <span class="nota__estado" role="status">
           {guardado === 'pendiente' ? 'Guardando…' : guardado === 'error' ? 'No se pudo guardar' : 'Guardado'}

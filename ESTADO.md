@@ -5,9 +5,9 @@
 
 ## Ahora
 - **Fase actual:** F2 — Notas Markdown locales (F1 cerrada el 2026-10-05, capturas aprobadas por el autor)
-- **Estado:** ~50 %. Hecho: almacén atómico, formato de nota, repositorio/árbol, plantillas y **pantalla de Notas** (árbol, nueva desde plantilla, nota con autoguardado, subpáginas, borrar). APK de avance desde la rama `f2-avance` (CI manual); `main` sigue en F1 hasta cerrar F2.
+- **Estado:** ~70 %. Hecho: almacén atómico, formato de nota, repositorio/árbol, plantillas, pantalla de Notas, **editor CodeMirror + modo lectura sanitizado + barra de formato**, XSS probado. Falta: búsqueda y exportar/importar ZIP. APK de avance desde la rama `f2-avance` (CI manual); `main` sigue en F1 hasta cerrar F2.
 - **Última sesión:** 2026-10-05
-- **Siguiente paso concreto:** editor CodeMirror 6 en lugar del `<textarea>` provisional + modo lectura (markdown-it + DOMPurify) con pruebas de XSS. Luego: búsqueda, ZIP (fflate), y ubicar los pedidos del autor.
+- **Siguiente paso concreto:** búsqueda de texto (índice en memoria, ADR-007) en la lista de Notas. Luego ZIP (fflate) → cierre de F2. Ubicar los pedidos del autor.
 
 ## Decisiones tomadas (ADR en `docs/ARQUITECTURA.md`)
 - 001 Web + Capacitor + Preact · 002 `.md` fuente de verdad · 003 solo IFrame oficial · 004 MIT (Pablo, 2026) · 005 nombre "Marginalia", appId `io.github.barmanpb74.appnoti`
@@ -27,6 +27,9 @@
 - Almacén: `Disco` (crudo) + `Almacen` (atómico). En Android, `Filesystem.rename` borra el destino y luego mueve; por eso, si falta `x.md` y hay `x.md.tmp`, se promueve el temporal. Carpeta `Directory.Data` (privada, sin permisos).
 - ULID propio (`src/core/notas/ulid.ts`) en vez del paquete `ulid`. Frontmatter YAML con esquema `core`; las listas se escriben con guiones, como Obsidian.
 - Borrar una página sube sus hijas al nivel de la borrada; nunca se borran en cascada.
+- Bordes del sistema: Capacitor 8 dibuja bajo la barra de estado y la de gestos e inyecta `--safe-area-inset-*`; los tokens `--margen-arriba/--margen-abajo` los usan (con `env()` de respaldo). "Volver" en una nota sube un nivel (madre o lista).
+- Editor: CodeMirror 6 con `@lezer/markdown` + GFM directo (sin `@codemirror/lang-markdown`, que arrastra analizadores de HTML/CSS/JS). Lectura: `markdown-it` con `html: false` + DOMPurify con lista blanca de etiquetas; cada barrera sola frena las 22 cargas de XSS de `tests/unit/render.test.ts`. Enlaces externos con `target=_blank rel=noopener noreferrer`.
+- Modo al abrir: recién creada o vacía → Editar; con cambios → Leer. Mientras se escribe (`.escribiendo` en `<html>`) se esconden la barra de secciones y el mini, y aparece la barra de formato sobre el teclado.
 - Plantillas estilo Obsidian (`{{titulo}}`, `{{fecha}}`, `{{hora}}`), de serie: en blanco, rápida, bitácora, reunión.
 
 - Mini reproductor (2026-10-05, pedido del autor): anclado sobre la barra por defecto; en Ajustes, "Reproductor flotante" lo vuelve arrastrable por el asa, sin salir de la pantalla ni tapar la barra. En Música no se muestra (ya está el grande). Estado compartido en `src/app/estado.tsx`; en F1 suena una canción de muestra (`demo.ts`), sin sonido.
@@ -39,6 +42,7 @@
   4. Ventana de comandos (paleta escrita) para usar la app y crear desde plantillas.
 
 ## Probar en el teléfono (lo que el entorno de Claude no puede verificar)
+- F2 bloque 3: el título y "Volver" no quedan bajo la barra de notificaciones (en Chromium se simuló con 32 px). Escribir con el teclado de Android en CodeMirror (autocorrector, tildes, dictado por voz). La barra Negrita/Lista/Tarea/Enlace queda pegada encima del teclado y el teclado no se cierra al tocarla. Un enlace en modo lectura abre el navegador del sistema, no dentro de la app. Abrir una nota no se siente lento (bundle de 583 kB).
 - F2 (APK de `f2-avance`): crear nota desde cada plantilla, escribir, **forzar cierre** de la app y reabrir → todo sigue. Escribir y cambiar de app enseguida → se guardó. "Borrar nota" muestra el diálogo de confirmación de Android. El cuerpo crece con el texto (`field-sizing`, WebView ≥ 123); si no, hace scroll por dentro.
 - Icono del lanzador con la marca EK (círculo/squircle según el lanzador) y que la barra inferior respete la barra de gestos de Android (`safe-area-inset-bottom`).
 - Cuando F1 llegue al APK: que las fuentes y la galería (`#/galeria`) se vean como en `/sdcard/Documents/appnoti/capturas-f1/galeria.png`. · Cómo instalar un APK de CI: Actions → CI → artefacto `marginalia-debug-apk`.
@@ -54,12 +58,14 @@
 
 ## Dependencias justificadas
 - `preact` 11 · UI de 4 kB · MIT · `@capacitor/core` + `@capacitor/android` 8.5 · puente y proyecto Android · MIT
+- CodeMirror: `@codemirror/state` 6.7.6, `view` 6.43.13, `commands` 6.11.1, `language` 6.12.4, `@lezer/markdown` 1.7.2, `@lezer/highlight` 1.2.5 · editor · MIT · `markdown-it` 15.0.2 · lectura · MIT (trae `entities` BSD-2 → atribución en F6; `argparse` PSF-2.0 solo en su CLI, no entra al bundle) · `dompurify` 3.4.16 · sanitizar · MPL-2.0 o Apache-2.0 (usamos Apache-2.0)
 - `@capacitor/filesystem` 8.1.4 · leer/escribir notas en la carpeta privada · MIT · no añade permisos (manifiesto vacío) · `yaml` 2.9.1 · frontmatter · ISC · sin dependencias
 - Fuentes (no son paquetes npm): Newsreader 400/400i/600, Kalam 400, JetBrains Mono 400 · @fontsource 5.3.0, latino · OFL-1.1 con `OFL.txt` en cada carpeta · 120 kB en total
 - Dev: `vite` 8 (build) MIT · `@preact/preset-vite` MIT · `typescript` 6.0 Apache-2.0 · `eslint` 10 + `@eslint/js` + `typescript-eslint` + `globals` MIT · `vitest` 5 + `jsdom` MIT · `@playwright/test` Apache-2.0 · `@capacitor/cli` MIT
 - Auditoría de licencias (2026-10-04): todas compatibles; MPL-2.0 solo en `lightningcss` (herramienta de build, sin modificar).
 
 ## Riesgos abiertos
+- Bundle JS 583 kB (202 kB gzip) tras CodeMirror + markdown-it. Presupuesto: arranque en frío < 2 s. Si el autor nota lentitud al abrir, cargar editor y lectura con `import()` al abrir una nota.
 - IFrame API de YouTube (script externo: exige ajustar la CSP `script-src`) — sin probar aún; se valida al inicio de F4.
 - `npm audit` (dev): 3 moderadas en `@capacitor/cli` → `xcode` → `uuid` (herramienta de iOS, no se usa; producción limpia). Revisar cuando salga un CLI corregido.
 - Build *release* sin minificación ni firma todavía (corresponde a F6).
@@ -68,6 +74,7 @@
 - (vacío)
 
 ## Historial de sesiones
+- 2026-10-05 · F2 · bordes del sistema (barra de estado) + Volver; editor CodeMirror, lectura sanitizada, barra de formato; 22 cargas XSS bloqueadas (unit + e2e).
 - 2026-10-05 · F2 · pantalla de Notas (árbol, plantillas, autoguardado, subpáginas, borrar) + e2e de recarga con IndexedDB; APK de avance por rama `f2-avance`.
 - 2026-10-05 · F2 · Almacen atómico + formato de nota + ULID + repositorio/árbol + plantillas; 63 pruebas nuevas (XSS queda para el render).
 - 2026-10-05 · F1 cerrada · capturas aprobadas por el autor; push.

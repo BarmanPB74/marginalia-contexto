@@ -1,3 +1,4 @@
+import { EditorView } from '@codemirror/view';
 import { render, type ComponentChild } from 'preact';
 import { act } from 'preact/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -41,6 +42,14 @@ function campo(c: HTMLElement, selector: string) {
   const el = c.querySelector<HTMLInputElement | HTMLTextAreaElement>(selector);
   if (!el) throw new Error(`No hay ${selector}`);
   return el;
+}
+
+/** Reemplaza el texto del editor CodeMirror como lo haría el teclado. */
+function escribirCuerpo(c: HTMLElement, texto: string) {
+  const contenido = c.querySelector<HTMLElement>('.cm-content');
+  const vista = contenido ? EditorView.findFromDOM(contenido) : null;
+  if (!vista) throw new Error('No hay editor');
+  vista.dispatch({ changes: { from: 0, to: vista.state.doc.length, insert: texto } });
 }
 
 function escribir(campo: HTMLInputElement | HTMLTextAreaElement, valor: string) {
@@ -145,7 +154,7 @@ describe('PantallaNota', () => {
     const c = await montar(<PantallaNota id={nota.id} />, repo);
     vi.useFakeTimers();
     act(() => escribir(campo(c, '.nota__titulo'), 'Nuevo título'));
-    act(() => escribir(campo(c, '.nota__cuerpo'), '# Hola\n\n**negrita**'));
+    act(() => escribirCuerpo(c, '# Hola\n\n**negrita**'));
     expect(c.querySelector('[role="status"]')?.textContent).toBe('Guardando…');
     expect((await repo.obtener(nota.id))?.cuerpo).toBe('');
     await act(async () => {
@@ -163,7 +172,7 @@ describe('PantallaNota', () => {
     const repo = repoNuevo();
     const nota = await repo.crear({ titulo: 'x' });
     const c = await montar(<PantallaNota id={nota.id} />, repo);
-    act(() => escribir(campo(c, '.nota__cuerpo'), 'escrito justo antes de salir'));
+    act(() => escribirCuerpo(c, 'escrito justo antes de salir'));
     act(() => render(null, c));
     await esperar();
     expect((await repo.obtener(nota.id))?.cuerpo).toBe('escrito justo antes de salir');
@@ -173,7 +182,7 @@ describe('PantallaNota', () => {
     const repo = repoNuevo();
     const nota = await repo.crear({ titulo: 'x' });
     const c = await montar(<PantallaNota id={nota.id} />, repo);
-    act(() => escribir(campo(c, '.nota__cuerpo'), 'antes de cambiar de app'));
+    act(() => escribirCuerpo(c, 'antes de cambiar de app'));
     vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
     act(() => {
       document.dispatchEvent(new Event('visibilitychange'));
@@ -235,5 +244,59 @@ describe('Volver', () => {
     const d = await montar(<PantallaNota id={madre.id} />, repo);
     act(() => d.querySelector<HTMLButtonElement>('button[aria-label="Volver"]')?.click());
     expect(location.hash).toBe('#/notas');
+  });
+});
+
+describe('editor y modo lectura', () => {
+  it('una nota recién creada abre en edición con el editor Markdown', async () => {
+    const repo = repoNuevo();
+    const nota = await repo.crear({ plantilla: 'reunion' });
+    const c = await montar(<PantallaNota id={nota.id} />, repo);
+    expect(c.querySelector('.cm-content')?.getAttribute('aria-label')).toBe('Contenido');
+    expect(c.querySelector('.cm-content')?.textContent).toContain('## Acuerdos');
+    expect(boton(c, 'Leer')).toBeTruthy();
+  });
+
+  it('una nota ya editada abre en lectura, con el Markdown pintado y sanitizado', async () => {
+    let ahora = new Date('2026-10-05T08:00:00');
+    const repo = new RepositorioNotas(crearAlmacen(new DiscoMemoria()), () => ahora);
+    const nota = await repo.crear({ titulo: 'x' });
+    ahora = new Date('2026-10-05T09:00:00');
+    await repo.guardar({ ...nota, cuerpo: '# Acta\n\n**hecho** <img src=x onerror=alert(1)>' });
+    const c = await montar(<PantallaNota id={nota.id} />, repo);
+    expect(c.querySelector('.cm-content')).toBeNull();
+    expect(c.querySelector('.lectura h1')?.textContent).toBe('Acta');
+    expect(c.querySelector('.lectura strong')?.textContent).toBe('hecho');
+    expect(c.querySelector('.lectura img')).toBeNull();
+    expect(boton(c, 'Editar')).toBeTruthy();
+  });
+
+  it('Leer ↔ Editar con un toque conserva lo escrito', async () => {
+    const repo = repoNuevo();
+    const nota = await repo.crear({ titulo: 'x' });
+    const c = await montar(<PantallaNota id={nota.id} />, repo);
+    act(() => escribirCuerpo(c, '- [ ] tarea pendiente'));
+    act(() => boton(c, 'Leer').click());
+    expect(c.querySelector<HTMLInputElement>('.lectura input[type="checkbox"]')?.checked).toBe(false);
+    act(() => boton(c, 'Editar').click());
+    expect(c.querySelector('.cm-content')?.textContent).toBe('- [ ] tarea pendiente');
+  });
+
+  it('mientras se escribe aparece la barra de formato y se esconden barra y mini', async () => {
+    const repo = repoNuevo();
+    const nota = await repo.crear({ titulo: 'x' });
+    const c = await montar(<PantallaNota id={nota.id} />, repo);
+    const vista = EditorView.findFromDOM(c.querySelector<HTMLElement>('.cm-content') ?? document.body);
+    act(() => {
+      vista?.focus();
+      vista?.contentDOM.dispatchEvent(new FocusEvent('focus'));
+    });
+    await esperar();
+    expect(c.querySelector('[role="toolbar"][aria-label="Formato"]')).toBeTruthy();
+    expect(document.documentElement.classList.contains('escribiendo')).toBe(true);
+    act(() => boton(c, 'Negrita').click());
+    expect(vista?.state.doc.toString()).toBe('****');
+    act(() => boton(c, 'Leer').click());
+    expect(document.documentElement.classList.contains('escribiendo')).toBe(false);
   });
 });

@@ -24,6 +24,7 @@
 }
 
 .nota__ruta {
+  flex: 1;
   min-width: 0;
   font-family: var(--letra-mano);
   font-size: var(--texto-s);
@@ -53,28 +54,8 @@
   outline: none;
 }
 
-.nota__titulo::placeholder,
-.nota__cuerpo::placeholder {
+.nota__titulo::placeholder {
   color: var(--tinta-suave);
-}
-
-/* Lienzo casi vacío: sin borde ni fondo, solo texto sobre el papel */
-.nota__cuerpo {
-  box-sizing: border-box;
-  display: block;
-  width: 100%;
-  min-height: 55vh;
-  /* crece con el texto: se desplaza la página, no el campo (WebView ≥ 123; si no, scroll interno) */
-  field-sizing: content;
-  padding: 0;
-  font-family: var(--letra-cuerpo);
-  font-size: var(--texto-m);
-  line-height: var(--interlineado);
-  color: var(--tinta);
-  background: none;
-  border: 0;
-  outline: none;
-  resize: none;
 }
 
 .nota__pie {
