@@ -98,6 +98,30 @@ export class RepositorioNotas {
     return { notas, danadas };
   }
 
+  /**
+   * Trae notas de una copia (ZIP) sin perder nada:
+   * - id nuevo para este teléfono → se guarda tal cual (cifrada, como todas);
+   * - mismo id y mismo contenido → ya estaba, se salta;
+   * - mismo id y contenido distinto → se conserva la de aquí y la importada entra como copia
+   *   con id nuevo y « (importada)» en el título.
+   */
+  async importar(notas: readonly Nota[]): Promise<{ nuevas: number; iguales: number; copias: number }> {
+    const resultado = { nuevas: 0, iguales: 0, copias: 0 };
+    for (const nota of notas) {
+      const actual = await this.obtener(nota.id);
+      if (!actual) {
+        await this.escribir(nota);
+        resultado.nuevas++;
+      } else if (escribirNota(actual) === escribirNota(nota)) {
+        resultado.iguales++;
+      } else {
+        await this.escribir({ ...nota, id: ulid(this.reloj().getTime()), titulo: `${nota.titulo} (importada)` });
+        resultado.copias++;
+      }
+    }
+    return resultado;
+  }
+
   /** Borra la nota; sus hijas pasan a la página madre de la borrada (o a la raíz). */
   async borrar(id: string): Promise<void> {
     const nota = await this.obtener(id);
