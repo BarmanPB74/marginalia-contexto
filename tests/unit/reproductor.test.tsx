@@ -52,6 +52,10 @@ describe('limitarPosicion', () => {
     expect(limitarPosicion({ x: -100, y: -100 }, caja, pantalla)).toEqual({ x: 8, y: 8 });
     expect(limitarPosicion({ x: 999, y: 999 }, caja, pantalla)).toEqual({ x: 390 - 200 - 8, y: 844 - 64 - 64 - 8 });
   });
+
+  it('tampoco se mete bajo la barra de estado de Android', () => {
+    expect(limitarPosicion({ x: 50, y: 0 }, caja, { ...pantalla, reservaSuperior: 32 })).toEqual({ x: 50, y: 40 });
+  });
 });
 
 describe('Reproductor', () => {

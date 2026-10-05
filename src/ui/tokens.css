@@ -32,6 +32,14 @@
   --interlineado: 1.6;
   --ancho-lectura: 68ch;
 
+  /*
+   * Bordes del sistema: barra de estado arriba, barra de gestos abajo. Capacitor 8 (SystemBars)
+   * dibuja la app bajo esas barras e inyecta sus medidas en --safe-area-inset-*; en el navegador
+   * no existen y se usa env().
+   */
+  --margen-arriba: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --margen-abajo: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+
   /* Espacio y tacto */
   --toque: 48px;
   --alto-barra: 64px;

@@ -14,7 +14,7 @@
 .mini--anclado {
   position: fixed;
   right: 12px;
-  bottom: calc(var(--alto-barra) + env(safe-area-inset-bottom) + 8px);
+  bottom: calc(var(--alto-barra) + var(--margen-abajo) + 8px);
   left: 12px;
   max-width: calc(var(--ancho-lectura) + 24px);
   margin: 0 auto;

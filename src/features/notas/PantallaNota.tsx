@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import type { Nota } from '../../core/notas/nota';
 import { Boton } from '../../ui/Boton';
 import { EstadoVacio } from '../../ui/EstadoVacio';
+import { Icono } from '../../ui/Icono';
 import { Pagina } from '../../ui/Pagina';
 import { useRepositorio } from './contexto';
 import { SelectorPlantilla } from './SelectorPlantilla';
@@ -103,15 +104,26 @@ export function PantallaNota({ id }: { id: string }) {
 
   return (
     <Pagina>
-      <nav class="nota__ruta" aria-label="Ubicación">
-        <a href="#/notas">Notas</a>
-        {madre && (
-          <>
-            {' / '}
-            <a href={`#/notas/${madre.id}`}>{madre.titulo}</a>
-          </>
-        )}
-      </nav>
+      <div class="nota__arriba">
+        <button
+          type="button"
+          class="nota__volver-boton"
+          aria-label="Volver"
+          // Sube un nivel: a la página madre o a la lista
+          onClick={() => (location.hash = nota.padre ? `#/notas/${nota.padre}` : '#/notas')}
+        >
+          <Icono nombre="atras" />
+        </button>
+        <nav class="nota__ruta" aria-label="Ubicación">
+          <a href="#/notas">Notas</a>
+          {madre && (
+            <>
+              {' / '}
+              <a href={`#/notas/${madre.id}`}>{madre.titulo}</a>
+            </>
+          )}
+        </nav>
+      </div>
       <header class="nota__encabezado">
         <input
           class="nota__titulo"

@@ -27,12 +27,17 @@ function reservaInferior(): number {
   return document.querySelector('.barra-inferior')?.getBoundingClientRect().height ?? 0;
 }
 
+/** Alto de la barra de estado (lo inyecta Capacitor; en el navegador es 0). */
+function reservaSuperior(): number {
+  return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-top')) || 0;
+}
+
 function limitar(punto: { x: number; y: number }, caja: HTMLElement) {
   const { width, height } = caja.getBoundingClientRect();
   return limitarPosicion(
     punto,
     { ancho: width, alto: height },
-    { ancho: innerWidth, alto: innerHeight, reservaInferior: reservaInferior() },
+    { ancho: innerWidth, alto: innerHeight, reservaInferior: reservaInferior(), reservaSuperior: reservaSuperior() },
   );
 }
 

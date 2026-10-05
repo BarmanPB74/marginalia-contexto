@@ -1,5 +1,30 @@
+.nota__arriba {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: -8px 0 4px -12px;
+}
+
+.nota__volver-boton {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--toque);
+  height: var(--toque);
+  padding: 0;
+  color: var(--tinta);
+  background: none;
+  border: 0;
+  border-radius: var(--radio);
+  cursor: pointer;
+}
+
+.nota__volver-boton:active {
+  background: var(--papel-2);
+}
+
 .nota__ruta {
-  margin-bottom: 8px;
+  min-width: 0;
   font-family: var(--letra-mano);
   font-size: var(--texto-s);
   color: var(--tinta-suave);

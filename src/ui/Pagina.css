@@ -5,7 +5,8 @@
   min-height: 100vh;
   margin: 0 auto;
   /* abajo deja sitio a la barra inferior fija (y al mini reproductor si va anclado) */
-  padding: 24px 24px calc(48px + var(--alto-barra) + var(--reserva-mini, 0px) + env(safe-area-inset-bottom));
+  padding: calc(24px + var(--margen-arriba)) 24px
+    calc(48px + var(--alto-barra) + var(--reserva-mini, 0px) + var(--margen-abajo));
 }
 
 .con-mini-anclado {

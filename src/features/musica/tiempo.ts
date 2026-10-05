@@ -20,6 +20,8 @@ interface Medidas {
 interface Pantalla extends Medidas {
   /** alto ocupado abajo (barra inferior + zona de gestos) que el flotante no debe tapar */
   reservaInferior: number;
+  /** alto de la barra de estado de Android, arriba */
+  reservaSuperior?: number;
 }
 
 const MARGEN = 8;
@@ -30,6 +32,6 @@ export function limitarPosicion(punto: Punto, caja: Medidas, pantalla: Pantalla)
   const maxY = pantalla.alto - pantalla.reservaInferior - caja.alto - MARGEN;
   return {
     x: Math.max(MARGEN, Math.min(punto.x, maxX)),
-    y: Math.max(MARGEN, Math.min(punto.y, maxY)),
+    y: Math.max(MARGEN + (pantalla.reservaSuperior ?? 0), Math.min(punto.y, maxY)),
   };
 }

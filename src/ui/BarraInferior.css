@@ -4,7 +4,7 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   min-height: var(--alto-barra);
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: var(--margen-abajo);
   background: var(--textura) var(--papel);
   border-top: 1px solid var(--separador);
 }

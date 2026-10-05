@@ -220,3 +220,20 @@ describe('PantallaNota', () => {
     expect(location.hash).toBe(`#/notas/${madre.id}`);
   });
 });
+
+describe('Volver', () => {
+  it('sube un nivel: de una subpágina a su madre y de ahí a la lista', async () => {
+    const repo = repoNuevo();
+    const madre = await repo.crear({ titulo: 'Madre' });
+    const hija = await repo.crear({ titulo: 'Hija', padre: madre.id });
+    const c = await montar(<PantallaNota id={hija.id} />, repo);
+    const volver = c.querySelector<HTMLButtonElement>('button[aria-label="Volver"]');
+    act(() => volver?.click());
+    expect(location.hash).toBe(`#/notas/${madre.id}`);
+
+    render(null, c);
+    const d = await montar(<PantallaNota id={madre.id} />, repo);
+    act(() => d.querySelector<HTMLButtonElement>('button[aria-label="Volver"]')?.click());
+    expect(location.hash).toBe('#/notas');
+  });
+});
