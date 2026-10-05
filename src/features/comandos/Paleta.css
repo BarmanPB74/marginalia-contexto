@@ -128,3 +128,8 @@
   padding: 16px;
   color: var(--tinta-suave);
 }
+
+/* La caja ya se ve activa (cursor y teclado): sin el trazo de foco de base.css */
+.paleta__entrada:focus-visible {
+  outline: none;
+}

@@ -85,6 +85,7 @@
 }
 
 .musica__mini {
+  display: block;
   flex: none;
   width: 64px;
   height: 36px;

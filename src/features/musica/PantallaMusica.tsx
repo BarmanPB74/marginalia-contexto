@@ -6,6 +6,7 @@ import { Boton } from '../../ui/Boton';
 import { Encabezado } from '../../ui/Encabezado';
 import { EstadoVacio } from '../../ui/EstadoVacio';
 import { Pagina } from '../../ui/Pagina';
+import { Miniatura } from './Miniatura';
 import { Reproductor } from './Reproductor';
 import { VideoOficial } from './VideoOficial';
 import './PantallaMusica.css';
@@ -102,15 +103,10 @@ export function PantallaMusica() {
           <h2 class="musica__subtitulo">Guardadas</h2>
           <ul class="musica__lista">
             {e.canciones.map((c: Cancion) => {
-              const img = miniatura(c.enlace);
               return (
                 <li key={c.clave} class={c.clave === actual?.clave ? 'musica__fila musica__fila--actual' : 'musica__fila'}>
                   <button type="button" class="musica__elegir" onClick={() => e.elegirCancion(c)}>
-                    {img ? (
-                      <img class="musica__mini" src={img} alt="" loading="lazy" referrerpolicy="no-referrer" />
-                    ) : (
-                      <span class="musica__mini" aria-hidden="true" />
-                    )}
+                    <Miniatura src={miniatura(c.enlace)} clase="musica__mini" />
                     <span class="musica__datos">
                       <span class="musica__titulo">{c.titulo}</span>
                       {c.artista && <span class="musica__artista">{c.artista}</span>}

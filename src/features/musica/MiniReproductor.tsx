@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import type { LadoEscondido } from '../../app/ajustes';
 import { Icono } from '../../ui/Icono';
+import { Miniatura } from './Miniatura';
 import { ladoParaEsconder, limitarPosicion } from './tiempo';
 import './MiniReproductor.css';
 
@@ -199,11 +200,7 @@ export function MiniReproductor({
           <Icono nombre="mover" />
         </button>
       )}
-      {portada ? (
-        <img class="mini__portada" src={portada} alt="" referrerpolicy="no-referrer" />
-      ) : (
-        <div class="mini__portada" aria-hidden="true" />
-      )}
+      <Miniatura src={portada} clase="mini__portada" />
       <a class="mini__datos" href="#/musica">
         <span class="mini__titulo">{titulo}</span>
         <span class="mini__artista">{artista}</span>
