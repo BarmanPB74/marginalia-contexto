@@ -88,12 +88,9 @@ export function PantallaAjustes() {
               variante="texto"
               desactivado={ocupado}
               alTocar={() => {
-                // El selector se abre ya, dentro del toque; lo demás espera al archivo
-                const eleccion = elegirZip();
-                void trabajar(async () => {
-                  const archivo = await eleccion;
-                  return archivo ? importarCopia(repo, archivo) : '';
-                });
+                // El selector se abre ya, dentro del toque. Mientras se elige no se bloquea nada:
+                // si el sistema no avisa de "cancelar", los botones no se quedan desactivados.
+                void elegirZip().then((archivo) => archivo && trabajar(() => importarCopia(repo, archivo)));
               }}
             >
               Importar notas (ZIP)

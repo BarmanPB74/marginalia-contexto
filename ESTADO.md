@@ -4,10 +4,10 @@
 > Lo actualiza `/cierre`. Si algo aquí contradice el código, arréglalo aquí.
 
 ## Ahora
-- **Fase actual:** F2 — Notas Markdown locales (F1 cerrada el 2026-10-05).
-- **Estado:** F2 ~80 % (búsqueda hecha por la paleta de comandos; falta importar/exportar ZIP). El autor pidió el 2026-10-05 adelantar partes de F3 (calendario), F4 (YouTube Music), F5 (cifrado) y un rediseño: **hechas en la rama `ccr-4bb4aef6-3n6fty`** (sobre `f2-avance`), pendientes de su revisión en el teléfono.
-- **Última sesión:** 2026-10-05
-- **Siguiente paso concreto:** el autor prueba el APK de esa rama (lista de abajo) y decide los pendientes; luego ZIP (fflate) → cierre de F2.
+- **Fase actual:** F2 — Notas Markdown locales. **Entregables completos**; falta solo probar en el teléfono para cerrarla.
+- **Estado:** todo en la rama `ccr-4bb4aef6-3n6fty` (sobre `f2-avance`, con los pedidos del autor del 2026-10-05: rediseño, tarjetas, calendario, paleta, cifrado, YouTube Music). **PR #2 a `main`**, CI/CodeQL/dependencias en verde.
+- **Última sesión:** 2026-10-05 — copia ZIP (historia 7) y búsqueda por `#etiqueta`/fecha (historia 6); `/auditar` F2 ✅.
+- **Siguiente paso concreto:** el autor prueba el APK del PR #2 (lista de abajo); si todo va bien, fusionar y `/fase 3` (lo que falta de F3: filtro por etiqueta, autocompletar `#`/`@`, selector de fecha).
 
 ## Decisiones tomadas (ADR en `docs/ARQUITECTURA.md`)
 - 001 Web + Capacitor + Preact · 002 `.md` fuente de verdad · 003 solo IFrame oficial · 004 MIT (Pablo, 2026) · 005 nombre "Marginalia", appId `io.github.barmanpb74.appnoti`
@@ -42,14 +42,13 @@
 - **Rama `ccr-4bb4aef6-3n6fty`** (APK por Actions → CI manual): tema Sistema/Claro/Oscuro y que la barra de estado cambie de color de iconos; animaciones fluidas (no a tirones) en un gama media.
 - Notas en tarjetas: deslizar de lado, que encajen al centro y la del centro se vea grande. Paleta: la lupa abre, el teclado sale, buscar "bit" → «Bitácora de hoy».
 - Calendario: tocar un día → hoja; «Nueva bitácora» abre la nota con `@fecha`; en lectura, tocar la `@fecha` vuelve al día; deslizar cambia de mes.
+- Copia: Ajustes → Exportar notas (ZIP) → aparece en Documentos/Marginalia; Importar abre el selector de archivos de Android y trae las notas (importar dos veces no duplica).
 - Cifrado: notas de la versión anterior siguen abriéndose (se cifran al arrancar). Exportar → aparece en Archivos › Documentos › Marginalia y se abre con otra app (Android 10 o anterior: puede fallar sin permiso).
 - Música: en YouTube Music «Compartir → Copiar enlace», pegarlo → suena en el reproductor oficial; pausa/anterior/siguiente dibujados responden; la línea de progreso avanza; álbum/lista también. Globo: esconderlo a cada lado y traerlo.
 - Pendiente de antes: barra de formato sobre el teclado; forzar cierre y reabrir conserva todo; icono EK (ahora sobre blanco).
 
-## Resultado del spike del reproductor (F0, 2026-10-04, teléfono del autor)
-- A `youtube-nocookie.com/embed` dentro de la WebView (origen `https://localhost`): **carga y suena**.
-- B `youtube.com/embed`: **carga y suena**.
-- Conclusión: el iframe oficial es viable; **no hace falta el Plan B**. F4 usará `youtube-nocookie.com` (privacidad) y borrará `src/spike/`. Falta comprobar en F4 la IFrame API (control por JS, `origin`) y videos de YouTube Music.
+## Resultado del spike del reproductor (F0, 2026-10-04)
+- `youtube-nocookie.com/embed` y `youtube.com/embed` cargan y suenan en la WebView (origen `https://localhost`): no hace falta el Plan B. Ya usado en Música (ADR-010).
 
 ## Permisos Android autorizados
 - `INTERNET` (reproductor). Verificado en el manifiesto compilado del APK de CI.
@@ -58,14 +57,15 @@
 ## Dependencias justificadas
 - `preact` 11 · UI de 4 kB · MIT · `@capacitor/core` + `@capacitor/android` 8.5 · puente y proyecto Android · MIT
 - CodeMirror: `@codemirror/state` 6.7.6, `view` 6.43.13, `commands` 6.11.1, `language` 6.12.4, `@lezer/markdown` 1.7.2, `@lezer/highlight` 1.2.5 · editor · MIT · `markdown-it` 15.0.2 · lectura · MIT (trae `entities` BSD-2 → atribución en F6; `argparse` PSF-2.0 solo en su CLI, no entra al bundle) · `dompurify` 3.4.16 · sanitizar · MPL-2.0 o Apache-2.0 (usamos Apache-2.0)
-- `@capacitor/filesystem` 8.1.4 · notas en la carpeta privada y exportar a Documentos · MIT · no añade permisos · `yaml` 2.9.1 · frontmatter · ISC · Cifrado, búsqueda, enlaces de música: **sin dependencias nuevas** (WebCrypto, código propio)
+- `@capacitor/filesystem` 8.1.4 · notas en la carpeta privada y exportar a Documentos · MIT · no añade permisos · `yaml` 2.9.1 · frontmatter · ISC · Cifrado, búsqueda, enlaces de música: **sin dependencias nuevas** (WebCrypto, código propio) · `fflate` 0.8.3 · ZIP de copia · MIT · sin dependencias · ~8 kB en el bundle
 - Fuentes (no son paquetes npm): Newsreader 400/400i/600, Kalam 400, JetBrains Mono 400 · @fontsource 5.3.0, latino · OFL-1.1 con `OFL.txt` en cada carpeta · 120 kB en total
 - Dev: `vite` 8 (build) MIT · `@preact/preset-vite` MIT · `typescript` 6.0 Apache-2.0 · `eslint` 10 + `@eslint/js` + `typescript-eslint` + `globals` MIT · `vitest` 5 + `jsdom` MIT · `@playwright/test` Apache-2.0 · `@capacitor/cli` MIT
 - Auditoría de licencias (2026-10-04): todas compatibles; MPL-2.0 solo en `lightningcss` (herramienta de build, sin modificar).
 
 ## Riesgos abiertos
-- Bundle JS 583 kB (202 kB gzip) tras CodeMirror + markdown-it. Presupuesto: arranque en frío < 2 s. Si el autor nota lentitud al abrir, cargar editor y lectura con `import()` al abrir una nota.
+- Bundle JS 636 kB (≈215 kB gzip) tras CodeMirror + markdown-it. Presupuesto: arranque en frío < 2 s. Si el autor nota lentitud al abrir, cargar editor y lectura con `import()` al abrir una nota.
 - Control del reproductor por `postMessage` probado solo en Chromium (sin red): falta el teléfono. Si algún video no permite incrustarse, solo queda «Abrir en YouTube Music».
+- `gitleaks` no está en el entorno de Claude: solo corre en CI (verde en el PR #2). El selector de archivos depende del `WebChromeClient` de Capacitor: probar en el teléfono.
 - Exportar a `Documentos` en Android ≤ 10 necesita un permiso que no pedimos (regla 3): mostrar alternativa (compartir) si el autor lo usa ahí.
 - `npm audit` (dev): 3 moderadas en `@capacitor/cli` → `xcode` → `uuid` (herramienta de iOS, no se usa; producción limpia). Revisar cuando salga un CLI corregido.
 - Build *release* sin minificación ni firma todavía (corresponde a F6).
@@ -74,7 +74,7 @@
 - (vacío)
 
 ## Historial de sesiones
-- 2026-10-05 · pedidos del autor · rediseño blanco/oscuro + movimiento, tarjetas tipo recientes, paleta de comandos, calendario + bitácora, cifrado AES-GCM + exportar, YouTube Music en el reproductor oficial, globo escondible; 240 unit + 26 e2e.
+- 2026-10-05 · F2 · copia ZIP (fflate) con validación hostil e importar sin pisar, búsqueda por #etiqueta/fecha, aviso global; `/auditar` F2 ✅; 249 unit + 27 e2e; PR #2.
+- 2026-10-05 · pedidos · rediseño blanco/oscuro + movimiento, tarjetas tipo recientes, paleta de comandos, calendario + bitácora, cifrado AES-GCM + exportar, YouTube Music en el reproductor oficial, globo escondible; 240 unit + 26 e2e.
 - 2026-10-05 · F2 · Almacen atómico, formato, ULID, repositorio/árbol, plantillas; pantalla de Notas con autoguardado; editor CodeMirror + lectura sanitizada (22 XSS bloqueados); bordes del sistema; APK de avance por `f2-avance`.
-- 2026-10-04/05 · F1 cerrada · tokens, fuentes B, componentes base + galería, icono EK, barra inferior, reproductor estático; capturas aprobadas.
-- 2026-10-04 · F0 cerrada · repo público, CI (APK, CodeQL, gitleaks, dependency-review), spike del reproductor: A y B suenan.
+- 2026-10-04/05 · F0 y F1 cerradas · repo, CI (APK, CodeQL, gitleaks, dependency-review), spike; tokens, fuentes, componentes, galería, icono EK.
