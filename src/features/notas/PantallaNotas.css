@@ -27,3 +27,7 @@
   font-size: var(--texto-xs);
   color: var(--tinta-suave);
 }
+
+.lista-notas li {
+  animation: entrar var(--dur-media) var(--curva) backwards;
+}

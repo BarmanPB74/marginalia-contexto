@@ -8,7 +8,7 @@
   padding: calc(24px + var(--margen-arriba)) var(--margen-lado)
     calc(48px + var(--alto-barra) + var(--reserva-mini, 0px) + var(--margen-abajo));
   /* Cada pantalla entra con un fundido corto hacia arriba */
-  animation: entrar var(--dur-media) var(--curva) both;
+  animation: entrar var(--dur-media) var(--curva) backwards;
 }
 
 .con-mini-anclado {

@@ -56,6 +56,11 @@ export function ProveedorEstado({ children }: { children: ComponentChildren }) {
   );
 }
 
+/** Para pantallas que también se prueban sueltas, sin <ProveedorEstado>. */
+export function useEstadoOpcional(): EstadoApp | null {
+  return useContext(Contexto);
+}
+
 export function useEstado(): EstadoApp {
   const estado = useContext(Contexto);
   if (!estado) throw new Error('useEstado necesita <ProveedorEstado>');

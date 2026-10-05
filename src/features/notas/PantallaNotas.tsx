@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'preact/hooks';
+import type { VistaNotas } from '../../app/ajustes';
+import { useEstadoOpcional } from '../../app/estado';
 import type { Nota } from '../../core/notas/nota';
 import { arbol, type NodoArbol } from '../../core/notas/repositorio';
 import { Encabezado } from '../../ui/Encabezado';
 import { EstadoVacio } from '../../ui/EstadoVacio';
 import { Pagina } from '../../ui/Pagina';
 import { useRepositorio } from './contexto';
+import { Recientes } from './Recientes';
 import { SelectorPlantilla } from './SelectorPlantilla';
 import './PantallaNotas.css';
 
@@ -17,11 +20,19 @@ function aplanar(nodos: NodoArbol[], nivel = 0): Fila[] {
   return nodos.flatMap((n) => [{ nota: n.nota, nivel }, ...aplanar(n.hijas, nivel + 1)]);
 }
 
-type Carga = { estado: 'cargando' } | { estado: 'error' } | { estado: 'listo'; filas: Fila[]; danadas: number };
+type Carga =
+  | { estado: 'cargando' }
+  | { estado: 'error' }
+  | { estado: 'listo'; notas: Nota[]; filas: Fila[]; danadas: number };
 
-/** Lista de páginas en árbol: título manuscrito y sangría por nivel. */
+/**
+ * Notas en dos vistas: tarjetas (como las apps recientes de Android, por defecto en la app) o
+ * lista en árbol con sangría por nivel. Sin <ProveedorEstado> (pruebas sueltas) usa la lista.
+ */
 export function PantallaNotas() {
   const repo = useRepositorio();
+  const estado = useEstadoOpcional();
+  const vista: VistaNotas = estado?.vistaNotas ?? 'lista';
   const [carga, setCarga] = useState<Carga>({ estado: 'cargando' });
   const [eligiendo, setEligiendo] = useState(false);
 
@@ -29,7 +40,7 @@ export function PantallaNotas() {
     let vigente = true;
     repo.listar().then(
       ({ notas, danadas }) =>
-        vigente && setCarga({ estado: 'listo', filas: aplanar(arbol(notas)), danadas: danadas.length }),
+        vigente && setCarga({ estado: 'listo', notas, filas: aplanar(arbol(notas)), danadas: danadas.length }),
       () => vigente && setCarga({ estado: 'error' }),
     );
     return () => {
@@ -43,9 +54,22 @@ export function PantallaNotas() {
   }
 
   const accion = eligiendo ? undefined : { etiqueta: 'Nueva', alTocar: () => setEligiendo(true) };
+  const iconos = estado
+    ? [
+        { icono: 'buscar' as const, etiqueta: 'Buscar y comandos', alTocar: () => estado.abrirComandos(true) },
+        vista === 'tarjetas'
+          ? { icono: 'lista' as const, etiqueta: 'Ver como lista', alTocar: () => estado.cambiarAjustes({ vistaNotas: 'lista' }) }
+          : {
+              icono: 'tarjetas' as const,
+              etiqueta: 'Ver como tarjetas',
+              alTocar: () => estado.cambiarAjustes({ vistaNotas: 'tarjetas' }),
+            },
+      ]
+    : [];
+  const titulos = carga.estado === 'listo' ? new Map(carga.notas.map((n) => [n.id, n.titulo])) : new Map<string, string>();
   return (
     <Pagina>
-      <Encabezado titulo="Notas" {...(accion ? { accion } : {})} />
+      <Encabezado titulo="Notas" iconos={iconos} {...(accion ? { accion } : {})} />
       {eligiendo && (
         <SelectorPlantilla
           titulo="Nueva nota desde…"
@@ -62,7 +86,10 @@ export function PantallaNotas() {
       {carga.estado === 'listo' && carga.filas.length === 0 && !eligiendo && (
         <EstadoVacio mensaje="Aún no hay notas." pista="Toca «Nueva» para escribir la primera." />
       )}
-      {carga.estado === 'listo' && carga.filas.length > 0 && (
+      {carga.estado === 'listo' && carga.filas.length > 0 && vista === 'tarjetas' && (
+        <Recientes notas={carga.notas} madreDe={(n) => (n.padre ? titulos.get(n.padre) : undefined)} />
+      )}
+      {carga.estado === 'listo' && carga.filas.length > 0 && vista === 'lista' && (
         <ul class="lista-notas">
           {carga.filas.map(({ nota, nivel }) => (
             <li key={nota.id} style={{ '--nivel': nivel }}>

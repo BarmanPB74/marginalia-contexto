@@ -13,3 +13,26 @@
   font-weight: 400;
   line-height: 1.2;
 }
+
+.encabezado__acciones {
+  display: flex;
+  align-items: center;
+  flex: none;
+}
+
+.encabezado__icono {
+  display: grid;
+  place-items: center;
+  width: var(--toque);
+  height: var(--toque);
+  padding: 0;
+  color: var(--tinta);
+  background: none;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.encabezado__icono:active {
+  background: var(--papel-2);
+}
