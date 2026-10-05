@@ -16,6 +16,8 @@ test('crear desde plantilla, escribir y recargar: todo se conserva', async ({ pa
 
   await page.getByLabel('Título').fill('Reunión de prueba');
   await page.getByLabel('Contenido').fill('# Acta\n\nTexto con **Markdown** y ñ.');
+  // CodeMirror procesa lo escrito un instante después: se espera más que la pausa de autoguardado (600 ms)
+  await page.waitForTimeout(900);
   await expect(page.getByRole('status')).toHaveText('Guardado');
 
   await page.reload();
@@ -46,7 +48,9 @@ test('subpáginas: se crean dentro, salen con sangría y atrás vuelve a la madr
   await page.goBack();
   await expect(page.getByLabel('Título')).toHaveValue('Francés');
 
+  // La sangría es de la vista de lista (la app abre en tarjetas)
   await page.goto('/#/notas');
+  await page.getByRole('button', { name: 'Ver como lista' }).click();
   const madre = page.getByRole('link', { name: 'Francés' });
   const hija = page.getByRole('link', { name: 'Subjuntivo' });
   const [xMadre, xHija] = [(await madre.boundingBox())?.x ?? 0, (await hija.boundingBox())?.x ?? 0];

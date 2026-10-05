@@ -26,8 +26,8 @@ type Guardado = 'guardado' | 'pendiente' | 'error';
 type Modo = 'leer' | 'editar';
 
 /** Recién creada o vacía → a escribir; si ya tiene cambios → a leer. */
-function modoInicial(n: Nota): Modo {
-  return n.creado === n.editado || !n.cuerpo.trim() ? 'editar' : 'leer';
+function modoInicial(n: Nota, recienCreada: boolean): Modo {
+  return recienCreada || !n.cuerpo.trim() ? 'editar' : 'leer';
 }
 
 /**
@@ -72,7 +72,7 @@ export function PantallaNota({ id }: { id: string }) {
       async (n) => {
         if (!vigente) return;
         actual.current = n;
-        if (n) setModo(modoInicial(n));
+        if (n) setModo(modoInicial(n, repo.tomarRecienCreada(n.id)));
         setNota(n);
         const m = n?.padre ? await repo.obtener(n.padre) : null;
         if (vigente) setMadre(m);

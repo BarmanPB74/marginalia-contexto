@@ -21,6 +21,9 @@ export interface OpcionesCrear {
 
 /** Notas guardadas como `notas/<id>.md`. El archivo es la fuente de verdad. */
 export class RepositorioNotas {
+  /** Creadas en esta sesión y aún sin abrir ni guardar: se abren para escribir. */
+  private readonly recienCreadas = new Set<string>();
+
   constructor(
     private readonly almacen: Almacen,
     private readonly reloj: () => Date = () => new Date(),
@@ -48,7 +51,17 @@ export class RepositorioNotas {
       cuerpo: aplicarPlantilla(plantilla.cuerpo, { titulo, ahora: enDia }),
     };
     await this.escribir(nota);
+    this.recienCreadas.add(nota.id);
     return nota;
+  }
+
+  /**
+   * ¿Se acaba de crear (y nadie la ha abierto aún)? Responde una sola vez por nota.
+   * Antes se comparaba `creado === editado`, pero van al segundo: crear, escribir y guardar
+   * en el mismo segundo la dejaba "recién creada" para siempre.
+   */
+  tomarRecienCreada(id: string): boolean {
+    return this.recienCreadas.delete(id);
   }
 
   async obtener(id: string): Promise<Nota | null> {
@@ -62,6 +75,7 @@ export class RepositorioNotas {
   /** Guarda los cambios y marca la hora de edición. */
   async guardar(nota: Nota): Promise<Nota> {
     const guardada = { ...nota, editado: isoConOffset(this.reloj()) };
+    this.recienCreadas.delete(nota.id);
     await this.escribir(guardada);
     return guardada;
   }
