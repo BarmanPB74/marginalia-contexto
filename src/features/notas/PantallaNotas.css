@@ -31,3 +31,55 @@
 .lista-notas li {
   animation: entrar var(--dur-media) var(--curva) backwards;
 }
+
+/* Filtro por etiqueta: fila de píldoras que se desliza de lado */
+.filtro-etiquetas {
+  display: flex;
+  gap: 8px;
+  margin: 0 calc(-1 * var(--margen-lado)) 4px;
+  padding: 4px var(--margen-lado) 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.filtro-etiquetas::-webkit-scrollbar {
+  display: none;
+}
+
+.filtro-etiquetas__chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  font-family: var(--letra-mano);
+  font-size: var(--texto-s);
+  color: var(--tinta);
+  background: none;
+  border: var(--trazo) solid var(--separador);
+  border-radius: var(--radio);
+  cursor: pointer;
+}
+
+/* El área táctil llega a 48 px aunque la píldora se vea más fina */
+.filtro-etiquetas__chip {
+  position: relative;
+}
+
+.filtro-etiquetas__chip::after {
+  position: absolute;
+  inset: -4px 0;
+  content: '';
+}
+
+.filtro-etiquetas__chip[aria-pressed='true'] {
+  background: var(--acento-suave);
+  border-color: transparent;
+}
+
+.filtro-etiquetas__cuenta {
+  font-family: var(--letra-cuerpo);
+  font-size: var(--texto-xs);
+  color: var(--tinta-suave);
+}

@@ -1,6 +1,7 @@
 import DOMPurify from 'dompurify';
 import MarkdownIt from 'markdown-it';
 import { esDiaValido, FECHA_EN_TEXTO } from '../notas/fechas';
+import { ETIQUETA_EN_TEXTO, MAX_ETIQUETA } from '../parser/parser';
 
 /**
  * Markdown → HTML seguro para el modo lectura (CLAUDE.md regla 6).
@@ -31,49 +32,69 @@ md.core.ruler.after('inline', 'tareas', (estado) => {
   }
 });
 
-// @AAAA-MM-DD → enlace al día en el Calendario (#/calendario/AAAA-MM-DD). También sobre los tokens:
-// el código (en línea o en bloque) no son tokens de texto, así que ahí no se convierte nada.
-md.core.ruler.after('tareas', 'fechas', (estado) => {
-  for (const bloque of estado.tokens) {
-    if (bloque.type !== 'inline' || !bloque.children) continue;
-    const nuevos: typeof bloque.children = [];
-    let enEnlace = 0;
-    for (const token of bloque.children) {
-      if (token.type === 'link_open') enEnlace++;
-      if (token.type === 'link_close') enEnlace--;
-      if (token.type !== 'text' || enEnlace > 0) {
-        nuevos.push(token);
-        continue;
+type Enlazador = (m: RegExpMatchArray) => { href: string; clase: string } | null;
+
+/**
+ * Convierte en enlaces internos lo que encuentra `patron` en el texto (grupo 1 = lo que va
+ * antes, sin enlazar). Trabaja sobre los tokens: el código (en línea o en bloque) no son
+ * tokens de texto, así que ahí no se convierte nada; tampoco dentro de un enlace.
+ */
+function regla(nombre: string, patron: RegExp, enlazar: Enlazador) {
+  md.core.ruler.push(nombre, (estado) => {
+    for (const bloque of estado.tokens) {
+      if (bloque.type !== 'inline' || !bloque.children) continue;
+      const nuevos: typeof bloque.children = [];
+      let enEnlace = 0;
+      for (const token of bloque.children) {
+        if (token.type === 'link_open') enEnlace++;
+        if (token.type === 'link_close') enEnlace--;
+        if (token.type !== 'text' || enEnlace > 0) {
+          nuevos.push(token);
+          continue;
+        }
+        let ultimo = 0;
+        for (const m of token.content.matchAll(patron)) {
+          const destino = enlazar(m);
+          if (!destino) continue;
+          const inicio = (m.index ?? 0) + (m[1]?.length ?? 0);
+          const fin = (m.index ?? 0) + m[0].length;
+          const antes = new estado.Token('text', '', 0);
+          antes.content = token.content.slice(ultimo, inicio);
+          const abrir = new estado.Token('link_open', 'a', 1);
+          abrir.attrs = [
+            ['href', destino.href],
+            ['class', destino.clase],
+          ];
+          const texto = new estado.Token('text', '', 0);
+          texto.content = token.content.slice(inicio, fin);
+          const cerrar = new estado.Token('link_close', 'a', -1);
+          nuevos.push(antes, abrir, texto, cerrar);
+          ultimo = fin;
+        }
+        if (ultimo === 0) {
+          nuevos.push(token);
+        } else {
+          const resto = new estado.Token('text', '', 0);
+          resto.content = token.content.slice(ultimo);
+          nuevos.push(resto);
+        }
       }
-      let ultimo = 0;
-      for (const m of token.content.matchAll(FECHA_EN_TEXTO)) {
-        const dia = m[2] ?? '';
-        if (!esDiaValido(dia)) continue;
-        const inicio = (m.index ?? 0) + (m[1]?.length ?? 0);
-        const fin = (m.index ?? 0) + m[0].length;
-        const antes = new estado.Token('text', '', 0);
-        antes.content = token.content.slice(ultimo, inicio);
-        const abrir = new estado.Token('link_open', 'a', 1);
-        abrir.attrs = [
-          ['href', `#/calendario/${dia}`],
-          ['class', 'enlace-fecha'],
-        ];
-        const texto = new estado.Token('text', '', 0);
-        texto.content = token.content.slice(inicio, fin);
-        const cerrar = new estado.Token('link_close', 'a', -1);
-        nuevos.push(antes, abrir, texto, cerrar);
-        ultimo = fin;
-      }
-      if (ultimo === 0) {
-        nuevos.push(token);
-      } else {
-        const resto = new estado.Token('text', '', 0);
-        resto.content = token.content.slice(ultimo);
-        nuevos.push(resto);
-      }
+      bloque.children = nuevos;
     }
-    bloque.children = nuevos;
-  }
+  });
+}
+
+// @AAAA-MM-DD → el día en el Calendario
+regla('fechas', FECHA_EN_TEXTO, (m) => {
+  const dia = m[2] ?? '';
+  return esDiaValido(dia) ? { href: `#/calendario/${dia}`, clase: 'enlace-fecha' } : null;
+});
+
+// #etiqueta → la lista de Notas filtrada por esa etiqueta
+regla('etiquetas', ETIQUETA_EN_TEXTO, (m) => {
+  const etiqueta = (m[2] ?? '').replace(/[-/_]+$/, '');
+  if (!etiqueta || etiqueta.length > MAX_ETIQUETA || /^\d+$/.test(etiqueta)) return null;
+  return { href: `#/notas?etiqueta=${encodeURIComponent(etiqueta)}`, clase: 'enlace-etiqueta' };
 });
 
 // Enlaces externos: fuera de la app (Capacitor abre el navegador del sistema) y sin `window.opener`.

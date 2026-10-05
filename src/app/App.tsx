@@ -10,7 +10,7 @@ import { PantallaNotas } from '../features/notas/PantallaNotas';
 import { BarraInferior } from '../ui/BarraInferior';
 import { ProveedorEstado, useEstado } from './estado';
 import { Galeria } from './Galeria';
-import { diaEnRuta, idNotaEnRuta, rutaActual, type IdSeccion } from './rutas';
+import { diaEnRuta, etiquetaEnRuta, idNotaEnRuta, rutaActual, type IdSeccion } from './rutas';
 
 const PANTALLAS = {
   notas: PantallaNotas,
@@ -29,7 +29,14 @@ function useHash() {
   return hash;
 }
 
-function Secciones({ ruta, idNota, dia }: { ruta: IdSeccion; idNota: string | null; dia: string | null }) {
+interface PropsSecciones {
+  ruta: IdSeccion;
+  idNota: string | null;
+  dia: string | null;
+  etiqueta: string | null;
+}
+
+function Secciones({ ruta, idNota, dia, etiqueta }: PropsSecciones) {
   const { flotante, sonando, miniEscondido, cambiarAjustes, comandosAbiertos, cancion, aviso, avisar } = useEstado();
   const Pantalla = PANTALLAS[ruta];
   // En Música ya está el reproductor grande.
@@ -42,6 +49,8 @@ function Secciones({ ruta, idNota, dia }: { ruta: IdSeccion; idNota: string | nu
         <PantallaNota key={idNota} id={idNota} />
       ) : ruta === 'calendario' ? (
         <PantallaCalendario dia={dia} />
+      ) : ruta === 'notas' ? (
+        <PantallaNotas etiqueta={etiqueta} />
       ) : (
         <Pantalla />
       )}
@@ -76,7 +85,7 @@ export function App() {
   const ruta = rutaActual(hash);
   return (
     <ProveedorEstado>
-      {ruta === 'galeria' ? <Galeria /> : <Secciones ruta={ruta} idNota={idNotaEnRuta(hash)} dia={diaEnRuta(hash)} />}
+      {ruta === 'galeria' ? <Galeria /> : <Secciones ruta={ruta} idNota={idNotaEnRuta(hash)} dia={diaEnRuta(hash)} etiqueta={etiquetaEnRuta(hash)} />}
     </ProveedorEstado>
   );
 }

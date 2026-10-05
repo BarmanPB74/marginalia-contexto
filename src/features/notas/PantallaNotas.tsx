@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useMemo, useState } from 'preact/hooks';
 import type { VistaNotas } from '../../app/ajustes';
 import { useEstadoOpcional } from '../../app/estado';
 import type { Nota } from '../../core/notas/nota';
 import { arbol, type NodoArbol } from '../../core/notas/repositorio';
+import { claveEtiqueta, etiquetasDeNota } from '../../core/parser/parser';
 import { Encabezado } from '../../ui/Encabezado';
 import { EstadoVacio } from '../../ui/EstadoVacio';
 import { Pagina } from '../../ui/Pagina';
@@ -23,13 +24,32 @@ function aplanar(nodos: NodoArbol[], nivel = 0): Fila[] {
 type Carga =
   | { estado: 'cargando' }
   | { estado: 'error' }
-  | { estado: 'listo'; notas: Nota[]; filas: Fila[]; danadas: number };
+  | { estado: 'listo'; notas: Nota[]; danadas: number };
+
+interface EtiquetaContada {
+  nombre: string;
+  cuantas: number;
+}
+
+/** Todas las etiquetas (frontmatter y texto), con cuántas notas las llevan; las más usadas primero. */
+function contarEtiquetas(notas: readonly Nota[]): EtiquetaContada[] {
+  const cuenta = new Map<string, EtiquetaContada>();
+  for (const n of notas) {
+    for (const e of etiquetasDeNota(n)) {
+      const k = claveEtiqueta(e);
+      const actual = cuenta.get(k);
+      if (actual) actual.cuantas++;
+      else cuenta.set(k, { nombre: e, cuantas: 1 });
+    }
+  }
+  return [...cuenta.values()].sort((a, b) => b.cuantas - a.cuantas || a.nombre.localeCompare(b.nombre, 'es'));
+}
 
 /**
  * Notas en dos vistas: tarjetas (como las apps recientes de Android, por defecto en la app) o
  * lista en árbol con sangría por nivel. Sin <ProveedorEstado> (pruebas sueltas) usa la lista.
  */
-export function PantallaNotas() {
+export function PantallaNotas({ etiqueta = null }: { etiqueta?: string | null }) {
   const repo = useRepositorio();
   const estado = useEstadoOpcional();
   const vista: VistaNotas = estado?.vistaNotas ?? 'lista';
@@ -40,7 +60,7 @@ export function PantallaNotas() {
     let vigente = true;
     repo.listar().then(
       ({ notas, danadas }) =>
-        vigente && setCarga({ estado: 'listo', notas, filas: aplanar(arbol(notas)), danadas: danadas.length }),
+        vigente && setCarga({ estado: 'listo', notas, danadas: danadas.length }),
       () => vigente && setCarga({ estado: 'error' }),
     );
     return () => {
@@ -66,7 +86,13 @@ export function PantallaNotas() {
             },
       ]
     : [];
-  const titulos = carga.estado === 'listo' ? new Map(carga.notas.map((n) => [n.id, n.titulo])) : new Map<string, string>();
+  const todas = carga.estado === 'listo' ? carga.notas : [];
+  const titulos = new Map(todas.map((n) => [n.id, n.titulo]));
+  const etiquetas = useMemo(() => contarEtiquetas(todas), [todas]);
+  const filtro = etiqueta ? claveEtiqueta(etiqueta) : null;
+  const visibles = filtro ? todas.filter((n) => etiquetasDeNota(n).some((e) => claveEtiqueta(e) === filtro)) : todas;
+  const filas = aplanar(arbol(visibles));
+  const irA = (e: string | null) => (location.hash = e ? `#/notas?etiqueta=${encodeURIComponent(e)}` : '#/notas');
   return (
     <Pagina>
       <Encabezado titulo="Notas" iconos={iconos} {...(accion ? { accion } : {})} />
@@ -83,15 +109,41 @@ export function PantallaNotas() {
           pista="Cierra y vuelve a abrir la app. Tus archivos no se han tocado."
         />
       )}
-      {carga.estado === 'listo' && carga.filas.length === 0 && !eligiendo && (
+      {carga.estado === 'listo' && etiquetas.length > 0 && (
+        <nav class="filtro-etiquetas" aria-label="Filtrar por etiqueta">
+          <button type="button" class="filtro-etiquetas__chip" aria-pressed={!filtro} onClick={() => irA(null)}>
+            Todas
+          </button>
+          {etiquetas.map((e) => (
+            <button
+              key={e.nombre}
+              type="button"
+              class="filtro-etiquetas__chip"
+              aria-pressed={claveEtiqueta(e.nombre) === filtro}
+              onClick={() => irA(claveEtiqueta(e.nombre) === filtro ? null : e.nombre)}
+            >
+              #{e.nombre}
+              <span class="filtro-etiquetas__cuenta">{e.cuantas}</span>
+            </button>
+          ))}
+        </nav>
+      )}
+      {carga.estado === 'listo' && todas.length === 0 && !eligiendo && (
         <EstadoVacio mensaje="Aún no hay notas." pista="Toca «Nueva» para escribir la primera." />
       )}
-      {carga.estado === 'listo' && carga.filas.length > 0 && vista === 'tarjetas' && (
-        <Recientes notas={carga.notas} madreDe={(n) => (n.padre ? titulos.get(n.padre) : undefined)} />
+      {carga.estado === 'listo' && todas.length > 0 && filas.length === 0 && (
+        <EstadoVacio mensaje={`Ninguna nota con #${etiqueta ?? ''}.`} pista="Toca «Todas» para verlas todas." />
       )}
-      {carga.estado === 'listo' && carga.filas.length > 0 && vista === 'lista' && (
+      {carga.estado === 'listo' && filas.length > 0 && vista === 'tarjetas' && (
+        <Recientes
+          key={filtro ?? ''}
+          notas={visibles}
+          madreDe={(n) => (n.padre ? titulos.get(n.padre) : undefined)}
+        />
+      )}
+      {carga.estado === 'listo' && filas.length > 0 && vista === 'lista' && (
         <ul class="lista-notas">
-          {carga.filas.map(({ nota, nivel }) => (
+          {filas.map(({ nota, nivel }) => (
             <li key={nota.id} style={{ '--nivel': nivel }}>
               <a class="lista-notas__enlace" href={`#/notas/${nota.id}`}>
                 {nota.titulo}

@@ -1,3 +1,4 @@
+import { sinCodigo } from '../parser/codigo';
 import type { Nota } from './nota';
 
 /**
@@ -26,26 +27,6 @@ export function esDiaValido(texto: string): boolean {
 export function diaDe(fecha: Date): Dia {
   const dos = (n: number) => String(n).padStart(2, '0');
   return `${fecha.getFullYear()}-${dos(fecha.getMonth() + 1)}-${dos(fecha.getDate())}`;
-}
-
-/** Quita bloques de código (``` y ~~~) y código en línea, dejando el resto en su sitio. */
-function sinCodigo(texto: string): string {
-  const lineas = texto.split('\n');
-  let cerca: string | null = null;
-  return lineas
-    .map((linea) => {
-      const valla = /^\s{0,3}(`{3,}|~{3,})/.exec(linea)?.[1];
-      if (cerca) {
-        if (valla && valla[0] === cerca[0] && valla.length >= cerca.length) cerca = null;
-        return '';
-      }
-      if (valla) {
-        cerca = valla;
-        return '';
-      }
-      return linea.replace(/(`+)[^`]*?\1/g, ' ');
-    })
-    .join('\n');
 }
 
 export function fechasDeTexto(texto: string): Dia[] {
