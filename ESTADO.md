@@ -5,9 +5,9 @@
 
 ## Ahora
 - **Fase actual:** F2 — Notas Markdown locales (F1 cerrada el 2026-10-05, capturas aprobadas por el autor)
-- **Estado:** ~30 %. Hecho: `src/core/almacen/` (escritura atómica + recuperación) y `src/core/notas/` (formato, ULID, repositorio, árbol, plantillas). Sin UI todavía.
+- **Estado:** ~50 %. Hecho: almacén atómico, formato de nota, repositorio/árbol, plantillas y **pantalla de Notas** (árbol, nueva desde plantilla, nota con autoguardado, subpáginas, borrar). APK de avance desde la rama `f2-avance` (CI manual); `main` sigue en F1 hasta cerrar F2.
 - **Última sesión:** 2026-10-05
-- **Siguiente paso concreto:** pantalla de Notas: lista + árbol + "Nueva nota" con selector de plantilla, conectada a `RepositorioNotas` (memoria en navegador, Capacitor en el APK). Luego: editor CodeMirror + lectura (markdown-it + DOMPurify), búsqueda, ZIP (fflate).
+- **Siguiente paso concreto:** editor CodeMirror 6 en lugar del `<textarea>` provisional + modo lectura (markdown-it + DOMPurify) con pruebas de XSS. Luego: búsqueda, ZIP (fflate), y ubicar los pedidos del autor.
 
 ## Decisiones tomadas (ADR en `docs/ARQUITECTURA.md`)
 - 001 Web + Capacitor + Preact · 002 `.md` fuente de verdad · 003 solo IFrame oficial · 004 MIT (Pablo, 2026) · 005 nombre "Marginalia", appId `io.github.barmanpb74.appnoti`
@@ -39,7 +39,7 @@
   4. Ventana de comandos (paleta escrita) para usar la app y crear desde plantillas.
 
 ## Probar en el teléfono (lo que el entorno de Claude no puede verificar)
-- F2: `discoCapacitor` (leer/escribir/renombrar/listar en `Directory.Data`) solo está probado con el disco en memoria; se verifica cuando la pantalla de Notas lo use en el APK: crear nota, cerrar la app a la fuerza, reabrir.
+- F2 (APK de `f2-avance`): crear nota desde cada plantilla, escribir, **forzar cierre** de la app y reabrir → todo sigue. Escribir y cambiar de app enseguida → se guardó. "Borrar nota" muestra el diálogo de confirmación de Android. El cuerpo crece con el texto (`field-sizing`, WebView ≥ 123); si no, hace scroll por dentro.
 - Icono del lanzador con la marca EK (círculo/squircle según el lanzador) y que la barra inferior respete la barra de gestos de Android (`safe-area-inset-bottom`).
 - Cuando F1 llegue al APK: que las fuentes y la galería (`#/galeria`) se vean como en `/sdcard/Documents/appnoti/capturas-f1/galeria.png`. · Cómo instalar un APK de CI: Actions → CI → artefacto `marginalia-debug-apk`.
 
@@ -68,6 +68,7 @@
 - (vacío)
 
 ## Historial de sesiones
+- 2026-10-05 · F2 · pantalla de Notas (árbol, plantillas, autoguardado, subpáginas, borrar) + e2e de recarga con IndexedDB; APK de avance por rama `f2-avance`.
 - 2026-10-05 · F2 · Almacen atómico + formato de nota + ULID + repositorio/árbol + plantillas; 63 pruebas nuevas (XSS queda para el render).
 - 2026-10-05 · F1 cerrada · capturas aprobadas por el autor; push.
 - 2026-10-05 · F1 · línea de progreso invisible arreglada (+e2e), script de capturas, capturas finales, `/auditar` F1 ✅ (gitleaks solo en CI).
