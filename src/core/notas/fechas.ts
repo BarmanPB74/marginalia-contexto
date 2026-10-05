@@ -97,3 +97,22 @@ export function nombreMes(anio: number, mes: number): string {
   const texto = new Date(anio, mes, 1).toLocaleDateString('es', { month: 'long', year: 'numeric' });
   return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
+
+/** Vista agenda: los días con notas desde `desde` (incluido) en orden, como mucho `maximo` días. */
+export function agenda(indice: ReadonlyMap<Dia, Nota[]>, desde: Dia, maximo = 120): { dia: Dia; notas: Nota[] }[] {
+  return [...indice.keys()]
+    .filter((d) => d >= desde)
+    .sort()
+    .slice(0, maximo)
+    .map((dia) => ({ dia, notas: indice.get(dia) ?? [] }));
+}
+
+/** Los días con notas antes de `hasta` (excluido), del más reciente al más antiguo. */
+export function anteriores(indice: ReadonlyMap<Dia, Nota[]>, hasta: Dia, maximo = 60): { dia: Dia; notas: Nota[] }[] {
+  return [...indice.keys()]
+    .filter((d) => d < hasta)
+    .sort()
+    .reverse()
+    .slice(0, maximo)
+    .map((dia) => ({ dia, notas: indice.get(dia) ?? [] }));
+}

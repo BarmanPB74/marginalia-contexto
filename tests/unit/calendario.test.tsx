@@ -1,6 +1,8 @@
 import { act } from 'preact/test-utils';
 import { describe, expect, it } from 'vitest';
 import { diaEnRuta } from '../../src/app/rutas';
+import { agenda, anteriores, notasPorDia } from '../../src/core/notas/fechas';
+import type { Nota } from '../../src/core/notas/nota';
 import { PantallaCalendario } from '../../src/features/calendario/PantallaCalendario';
 import { boton, esperar, montar, repoNuevo } from './ayuda';
 
@@ -64,5 +66,46 @@ describe('PantallaCalendario', () => {
   it('un enlace @fecha de otro mes salta a ese mes', async () => {
     const c = await montar(<PantallaCalendario hoy="2026-10-05" dia="2027-01-03" />, repoNuevo());
     expect(c.querySelector('.calendario__nombre')?.textContent).toBe('Enero de 2027');
+  });
+});
+
+describe('agenda', () => {
+  const n = (id: string, cuerpo: string): Nota => ({ id, titulo: id, creado: '', editado: '', etiquetas: [], extra: {}, cuerpo });
+  const indice = notasPorDia([n('a', '@2026-10-01'), n('b', '@2026-10-05 y @2026-10-20'), n('c', '@2026-11-02')]);
+
+  it('desde hoy en orden; los anteriores del más reciente al más antiguo', () => {
+    expect(agenda(indice, '2026-10-05').map((d) => d.dia)).toEqual(['2026-10-05', '2026-10-20', '2026-11-02']);
+    expect(anteriores(indice, '2026-10-05').map((d) => d.dia)).toEqual(['2026-10-01']);
+  });
+
+  it('la vista Agenda lista los próximos días y deja ver los anteriores', async () => {
+    const repo = repoNuevo();
+    for (const [t, c] of [['Pasada', '@2026-10-01'], ['Hoy toca', '@2026-10-05'], ['Futura', '@2026-12-24']] as const) {
+      const x = await repo.crear({ titulo: t });
+      await repo.guardar({ ...x, cuerpo: c });
+    }
+    const c = await montar(<PantallaCalendario hoy="2026-10-05" />, repo);
+    const agendaBoton = [...c.querySelectorAll('[role="radio"]')].find((b) => b.textContent === 'Agenda') as HTMLButtonElement;
+    act(() => agendaBoton.click());
+    const titulos = () => [...c.querySelectorAll('.calendario__agenda--sola .calendario__nota')].map((a) => a.textContent);
+    expect(titulos()).toEqual(['Hoy toca', 'Futura']);
+    expect(c.querySelector('.calendario__agenda-dia--hoy')?.textContent).toMatch(/^Hoy · lunes, 5 de octubre/);
+    act(() => boton(c, 'Ver días anteriores').click());
+    expect(titulos()).toEqual(['Pasada', 'Hoy toca', 'Futura']);
+  });
+});
+
+describe('rendimiento', () => {
+  it('500 notas con fechas: el mes se pinta rápido (aceptación de F3)', async () => {
+    const repo = repoNuevo();
+    for (let i = 0; i < 500; i++) {
+      const x = await repo.crear({ titulo: `N${i}` });
+      await repo.guardar({ ...x, cuerpo: `@2026-10-${String((i % 28) + 1).padStart(2, '0')} #etiqueta${i % 7}` });
+    }
+    const inicio = performance.now();
+    const c = await montar(<PantallaCalendario hoy="2026-10-05" />, repo);
+    const ms = performance.now() - inicio;
+    expect(c.querySelectorAll('.celda-dia__nota').length).toBeGreaterThan(28);
+    expect(ms).toBeLessThan(3000);
   });
 });

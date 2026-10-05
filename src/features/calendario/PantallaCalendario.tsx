@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { useEstadoOpcional } from '../../app/estado';
 import {
+  agenda,
+  anteriores,
   cuadriculaMes,
   diaDe,
   diaLargo,
@@ -15,6 +17,7 @@ import { Encabezado } from '../../ui/Encabezado';
 import { Hoja } from '../../ui/Hoja';
 import { Icono } from '../../ui/Icono';
 import { Pagina } from '../../ui/Pagina';
+import { Segmentado } from '../../ui/Segmentado';
 import { useRepositorio } from '../notas/contexto';
 import './PantallaCalendario.css';
 
@@ -37,6 +40,26 @@ function sumarMeses({ anio, mes }: Mes, n: number): Mes {
   return { anio: fecha.getFullYear(), mes: fecha.getMonth() };
 }
 
+/** Un día de la agenda: su fecha en palabras y sus notas. */
+function DiaAgenda({ dia, notas, hoy = false }: { dia: Dia; notas: Nota[]; hoy?: boolean }) {
+  return (
+    <li>
+      <a class={`calendario__agenda-dia${hoy ? ' calendario__agenda-dia--hoy' : ''}`} href={`#/calendario/${dia}`}>
+        {hoy ? `Hoy · ${diaLargo(dia)}` : diaLargo(dia)}
+      </a>
+      <ul>
+        {notas.map((n) => (
+          <li key={n.id}>
+            <a class="calendario__nota" href={`#/notas/${n.id}`}>
+              {n.titulo}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </li>
+  );
+}
+
 /**
  * Vista de mes (lunes primero, hoy resaltado). Cada nota con @fecha o `fecha:` deja una raya en su día.
  * Tocar un día abre una hoja con sus notas y para crear la bitácora de ese día.
@@ -49,6 +72,8 @@ export function PantallaCalendario({ dia = null, hoy = diaDe(new Date()) }: { di
   const [mes, setMes] = useState<Mes>(() => mesDe(dia ?? hoy));
   const [direccion, setDireccion] = useState<'antes' | 'despues' | null>(null);
   const gesto = useRef<number | null>(null);
+  const [vista, setVista] = useState<'mes' | 'agenda'>('mes');
+  const [verAnteriores, setVerAnteriores] = useState(false);
 
   useEffect(() => {
     let vigente = true;
@@ -104,6 +129,17 @@ export function PantallaCalendario({ dia = null, hoy = diaDe(new Date()) }: { di
           },
         }}
       />
+      <Segmentado
+        etiqueta="Vista del calendario"
+        opciones={[
+          { valor: 'mes', etiqueta: 'Mes' },
+          { valor: 'agenda', etiqueta: 'Agenda' },
+        ]}
+        valor={vista}
+        alCambiar={setVista}
+      />
+      {vista === 'mes' ? (
+        <>
       <div class="calendario__mes">
         <button type="button" class="calendario__flecha" aria-label="Mes anterior" onClick={() => cambiarMes(-1)}>
           <Icono nombre="izquierda" />
@@ -183,6 +219,36 @@ export function PantallaCalendario({ dia = null, hoy = diaDe(new Date()) }: { di
         </section>
       )}
 
+        </>
+      ) : (
+        notas !== null && (
+          <section class="calendario__agenda calendario__agenda--sola" aria-label="Agenda">
+            {verAnteriores && (
+              <ul class="calendario__lista calendario__lista--anteriores">
+                {anteriores(indice, hoy)
+                  .reverse()
+                  .map(({ dia: d, notas: delDia }) => (
+                    <DiaAgenda key={d} dia={d} notas={delDia} />
+                  ))}
+              </ul>
+            )}
+            {anteriores(indice, hoy).length > 0 && (
+              <Boton variante="texto" alTocar={() => setVerAnteriores(!verAnteriores)}>
+                {verAnteriores ? 'Ocultar días anteriores' : 'Ver días anteriores'}
+              </Boton>
+            )}
+            {agenda(indice, hoy).length === 0 ? (
+              <p class="calendario__vacio">Nada por delante. Pon una @fecha en una nota y aparecerá aquí.</p>
+            ) : (
+              <ul class="calendario__lista">
+                {agenda(indice, hoy).map(({ dia: d, notas: delDia }) => (
+                  <DiaAgenda key={d} dia={d} notas={delDia} hoy={d === hoy} />
+                ))}
+              </ul>
+            )}
+          </section>
+        )
+      )}
       {dia && (
         <Hoja titulo={diaLargo(dia)} alCerrar={cerrar}>
           {delDia.length > 0 ? (

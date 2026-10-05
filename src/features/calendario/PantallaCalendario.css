@@ -139,3 +139,20 @@
 .hoja__titulo::first-letter {
   text-transform: uppercase;
 }
+
+.calendario__agenda--sola {
+  margin-top: 8px;
+}
+
+.calendario__agenda-dia--hoy {
+  color: var(--acento);
+}
+
+.calendario__lista--anteriores {
+  opacity: 0.75;
+}
+
+.segmentado + .calendario__mes,
+.segmentado + .calendario__agenda {
+  margin-top: 12px;
+}
