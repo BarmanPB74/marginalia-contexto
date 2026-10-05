@@ -15,8 +15,13 @@ interface EstadoApp extends Ajustes {
   /** Canción elegida (la primera de las guardadas) y lo que informa el reproductor oficial. */
   cancion: Cancion | null;
   canciones: Cancion[];
-  elegirCancion: (c: Cancion) => void;
+  /** Pone una canción (la sube al principio de las guardadas) desde `inicio` segundos. */
+  elegirCancion: (c: Cancion, inicio?: number) => void;
+  /** Cada elección cuenta: el reproductor se vuelve a cargar en el segundo pedido */
+  eleccion: { vez: number; inicio: number };
   quitarCancion: (clave: string) => void;
+  /** Cambia título/artista de una guardada sin volver a cargar el reproductor */
+  datosCancion: (clave: string, datos: { titulo: string; artista: string }) => void;
   info: InfoVideo;
   alCambiarVideo: (info: Partial<InfoVideo>) => void;
   control: RefObject<ControlVideo | null>;
@@ -38,6 +43,7 @@ export function ProveedorEstado({ children }: { children: ComponentChildren }) {
   const [canciones, setCanciones] = useState<Cancion[]>(leerCanciones);
   const [info, setInfo] = useState<InfoVideo>({ sonando: false, posicion: 0, duracion: 0 });
   const control = useRef<ControlVideo | null>(null);
+  const [eleccion, setEleccion] = useState({ vez: 0, inicio: 0 });
   const [comandosAbiertos, abrirComandos] = useState(false);
   const [comandosLocales, setComandosLocales] = useState<Comando[]>([]);
   const [aviso, avisar] = useState('');
@@ -95,11 +101,24 @@ export function ProveedorEstado({ children }: { children: ComponentChildren }) {
         },
         cancion: canciones[0] ?? null,
         canciones,
-        elegirCancion: (c) => {
-          const lista = conCancion(canciones, c);
+        elegirCancion: (c, inicio = c.enlace.inicio ?? 0) => {
+          // En la lista guardada no se queda el segundo: eso es de cada etiqueta ♪
+          const enlace = { ...c.enlace };
+          delete enlace.inicio;
+          const lista = conCancion(canciones, { ...c, enlace });
           setCanciones(lista);
           guardarCanciones(lista);
-          setInfo({ sonando: true, posicion: c.enlace.inicio ?? 0, duracion: 0 });
+          // Canción nueva: sin el error de la anterior
+          setInfo({ sonando: true, posicion: inicio, duracion: 0 });
+          setEleccion((e) => ({ vez: e.vez + 1, inicio }));
+        },
+        eleccion,
+        datosCancion: (clave, datos) => {
+          setCanciones((actuales) => {
+            const lista = actuales.map((c) => (c.clave === clave ? { ...c, ...datos } : c));
+            guardarCanciones(lista);
+            return lista;
+          });
         },
         quitarCancion: (clave) => {
           const lista = canciones.filter((c) => c.clave !== clave);

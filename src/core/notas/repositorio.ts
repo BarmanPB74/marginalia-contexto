@@ -1,4 +1,5 @@
 import type { Almacen } from '../almacen/almacen';
+import { conCancionPrincipal, enlaceCancion, type EtiquetaCancion } from '../musica/etiqueta';
 import { esDiaValido } from './fechas';
 import { escribirNota, isoConOffset, leerNota, NotaInvalida, TAMANO_MAXIMO, type Nota } from './nota';
 import { aplicarPlantilla, buscarPlantilla } from './plantillas';
@@ -17,6 +18,11 @@ export interface OpcionesCrear {
    * `{{fecha}}` de la plantilla usan ese día (con la hora de ahora).
    */
   dia?: string;
+  /**
+   * Canción que sonaba al crear la nota (historia 4): queda como `cancion:` en el frontmatter
+   * y como `[♪ m:ss](yt:…)` en la primera línea.
+   */
+  cancion?: EtiquetaCancion;
 }
 
 /** Notas guardadas como `notas/<id>.md`. El archivo es la fuente de verdad. */
@@ -50,9 +56,15 @@ export class RepositorioNotas {
       extra: opciones.dia ? { fecha: opciones.dia } : {},
       cuerpo: aplicarPlantilla(plantilla.cuerpo, { titulo, ahora: enDia }),
     };
-    await this.escribir(nota);
-    this.recienCreadas.add(nota.id);
-    return nota;
+    const final = opciones.cancion
+      ? conCancionPrincipal(
+          { ...nota, cuerpo: `${enlaceCancion(opciones.cancion.yt, opciones.cancion.t ?? 0)}\n\n${nota.cuerpo}` },
+          opciones.cancion,
+        )
+      : nota;
+    await this.escribir(final);
+    this.recienCreadas.add(final.id);
+    return final;
   }
 
   /**

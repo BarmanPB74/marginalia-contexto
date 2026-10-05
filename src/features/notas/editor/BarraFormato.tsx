@@ -15,7 +15,14 @@ const ACCIONES: [string, (e: EditorState) => TransactionSpec][] = [
  * Barra mínima sobre el teclado (DISENO.md). Solo aparece mientras se escribe.
  * «@ Fecha» abre el selector de fecha (la nota aparecerá ese día en el Calendario). ♪ canción llega en F4.
  */
-export function BarraFormato({ vista, alPedirFecha }: { vista: RefObject<EditorView | null>; alPedirFecha?: () => void }) {
+interface Props {
+  vista: RefObject<EditorView | null>;
+  alPedirFecha?: () => void;
+  /** Inserta la canción que sonaba (con su segundo) */
+  alPonerCancion?: () => void;
+}
+
+export function BarraFormato({ vista, alPedirFecha, alPonerCancion }: Props) {
   return (
     <div class="barra-formato" role="toolbar" aria-label="Formato">
       {ACCIONES.map(([nombre, accion]) => (
@@ -36,6 +43,18 @@ export function BarraFormato({ vista, alPedirFecha }: { vista: RefObject<EditorV
           {nombre}
         </button>
       ))}
+      {alPonerCancion && (
+        <button
+          type="button"
+          class="barra-formato__boton"
+          aria-label="Canción que sonaba"
+          onPointerDown={(e) => e.preventDefault()}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={alPonerCancion}
+        >
+          ♪
+        </button>
+      )}
       {alPedirFecha && (
         <button
           type="button"

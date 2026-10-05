@@ -53,3 +53,14 @@ export function etiquetaEnRuta(hash: string): string | null {
     return null;
   }
 }
+
+/** `#/musica?yt=ID&t=99` → la canción que hay que poner (desde una etiqueta ♪); si no, null. */
+export function cancionEnRuta(hash: string): { yt: string; t: number } | null {
+  const [ruta, consulta = ''] = hash.replace(/^#\//, '').split('?');
+  if (ruta !== 'musica') return null;
+  const p = new URLSearchParams(consulta);
+  const yt = p.get('yt') ?? '';
+  if (!/^[A-Za-z0-9_-]{11}$/.test(yt)) return null;
+  const t = Number(p.get('t') ?? 0);
+  return { yt, t: Number.isInteger(t) && t >= 0 && t <= 86400 ? t : 0 };
+}

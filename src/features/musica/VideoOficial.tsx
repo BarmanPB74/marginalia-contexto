@@ -12,6 +12,8 @@ export interface InfoVideo {
   posicion: number;
   duracion: number;
   titulo?: string;
+  /** Código de error del reproductor oficial (100: no existe · 101/150: no se permite incrustar) */
+  error?: number;
 }
 
 /** Órdenes al reproductor: las mismas que usa la IFrame API oficial, por postMessage. */
@@ -56,6 +58,10 @@ export function VideoOficial({ enlace, alCambiar, control }: Props) {
       try {
         datos = JSON.parse(e.data) as typeof datos;
       } catch {
+        return;
+      }
+      if (datos.event === 'onError' && typeof datos.info === 'number') {
+        avisar.current({ error: datos.info, sonando: false });
         return;
       }
       const info = datos.info && typeof datos.info === 'object' ? (datos.info as Record<string, unknown>) : null;

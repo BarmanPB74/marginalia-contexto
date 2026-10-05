@@ -9,6 +9,7 @@ import { claveEtiqueta, etiquetasDeNota } from '../../core/parser/parser';
 import { Hoja } from '../../ui/Hoja';
 import { SelectorFecha } from '../../ui/SelectorFecha';
 import type { Comando } from '../comandos/comandos';
+import { cancionDeNota, enlaceCancion, minutoSegundo, rutaCancion } from '../../core/musica/etiqueta';
 import { Boton } from '../../ui/Boton';
 import { EstadoVacio } from '../../ui/EstadoVacio';
 import { Icono } from '../../ui/Icono';
@@ -118,6 +119,22 @@ export function PantallaNota({ id }: { id: string }) {
     setRangoFecha({ desde: from, hasta: to });
   }
 
+  /** ♪: la última canción elegida en Música, en el segundo en que iba (historia 4). */
+  function ponerCancion() {
+    const cancion = estado?.cancion;
+    const editor = vista.current;
+    if (!cancion?.enlace.video) {
+      estado?.avisar('Elige una canción en Música y vuelve: ♪ guardará el segundo en que iba.');
+      return;
+    }
+    if (!editor) return;
+    const { from, to } = editor.state.selection.main;
+    const antes = editor.state.sliceDoc(Math.max(0, from - 1), from);
+    const texto = `${antes && !/\s/.test(antes) ? ' ' : ''}${enlaceCancion(cancion.enlace.video, estado?.info.posicion ?? 0)} `;
+    editor.dispatch({ changes: { from, to, insert: texto }, selection: { anchor: from + texto.length } });
+    editor.focus();
+  }
+
   function ponerFecha(dia: string) {
     const editor = vista.current;
     const rango = rangoFecha;
@@ -150,7 +167,12 @@ export function PantallaNota({ id }: { id: string }) {
     const lista: Comando[] = [
       de('alternar-modo', modo === 'leer' ? 'Editar esta nota' : 'Leer esta nota', 'modo lectura escritura'),
       de('fecha-hoy', 'Insertar la fecha de hoy', 'calendario dia @', 'calendario'),
-      ...(modo === 'editar' ? [de('fecha-elegir', 'Insertar una fecha…', 'calendario dia @ elegir selector', 'calendario')] : []),
+      ...(modo === 'editar'
+        ? [
+            de('fecha-elegir', 'Insertar una fecha…', 'calendario dia @ elegir selector', 'calendario'),
+            de('cancion', 'Insertar la canción que sonaba ♪', 'musica youtube segundo etiqueta', 'musica'),
+          ]
+        : []),
       de('subpagina', 'Nueva subpágina', 'crear hija pagina', 'mas'),
       ...FORMATOS.map((f) =>
         de(`exportar-${f.id}`, `Exportar esta nota como ${f.nombre}`, 'guardar compartir descifrar archivo', 'exportar'),
@@ -228,6 +250,7 @@ export function PantallaNota({ id }: { id: string }) {
       else if (actual.current) cambiar({ cuerpo: `${actual.current.cuerpo.trimEnd()}\n\n@${hoy}\n` });
     },
     'fecha-elegir': () => pedirFecha(),
+    cancion: () => ponerCancion(),
     subpagina: () => setEligiendo(true),
     borrar: () => borrar(),
     negrita: () => enEditor(alternarNegrita),
@@ -288,6 +311,20 @@ export function PantallaNota({ id }: { id: string }) {
           onInput={(e) => cambiar({ titulo: e.currentTarget.value })}
         />
       </header>
+      {(() => {
+        const c = cancionDeNota(nota);
+        if (!c) return null;
+        return (
+          <a class="nota__cancion" href={rutaCancion(c.yt, c.t ?? 0)}>
+            <span aria-hidden="true">♪</span>
+            <span class="nota__cancion-texto">
+              {c.titulo ?? 'Canción'}
+              {c.artista ? ` · ${c.artista}` : ''}
+            </span>
+            {c.t !== undefined && <span class="nota__cancion-t">{minutoSegundo(c.t)}</span>}
+          </a>
+        );
+      })()}
       {modo === 'editar' ? (
         <EditorMarkdown
           valor={nota.cuerpo}
@@ -301,7 +338,7 @@ export function PantallaNota({ id }: { id: string }) {
       ) : (
         <Lectura texto={nota.cuerpo} />
       )}
-      {modo === 'editar' && escribiendo && <BarraFormato vista={vista} alPedirFecha={pedirFecha} />}
+      {modo === 'editar' && escribiendo && <BarraFormato vista={vista} alPedirFecha={pedirFecha} alPonerCancion={ponerCancion} />}
       {rangoFecha && <SelectorFecha alElegir={ponerFecha} alCerrar={() => setRangoFecha(null)} />}
       <footer class="nota__pie">
         <span class="nota__estados">

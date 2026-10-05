@@ -119,3 +119,31 @@
 .nota__pie + .selector-plantilla {
   margin-top: 16px;
 }
+
+/* Canción principal de la nota: una píldora que vuelve a sonar desde su segundo */
+.nota__cancion {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  min-height: 40px;
+  margin: -6px 0 16px;
+  padding: 0 14px;
+  font-family: var(--letra-mano);
+  font-size: var(--texto-s);
+  color: var(--tinta);
+  text-decoration: none;
+  background: var(--acento-suave);
+  border-radius: var(--radio);
+}
+
+.nota__cancion-texto {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.nota__cancion-t {
+  flex: none;
+  color: var(--tinta-suave);
+}

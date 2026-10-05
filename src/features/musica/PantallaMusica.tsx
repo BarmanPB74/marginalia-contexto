@@ -1,4 +1,6 @@
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
+import { cancionDeNota, minutoSegundo, rutaCancion } from '../../core/musica/etiqueta';
+import type { Nota } from '../../core/notas/nota';
 import { useEstado } from '../../app/estado';
 import { claveDe, metadatos, miniatura, type Cancion } from '../../core/musica/canciones';
 import { leerEnlace, urlYoutubeMusic } from '../../core/musica/enlaces';
@@ -8,6 +10,7 @@ import { EstadoVacio } from '../../ui/EstadoVacio';
 import { Pagina } from '../../ui/Pagina';
 import { Miniatura } from './Miniatura';
 import { Reproductor } from './Reproductor';
+import { useRepositorio } from '../notas/contexto';
 import { VideoOficial } from './VideoOficial';
 import './PantallaMusica.css';
 
@@ -17,11 +20,48 @@ import './PantallaMusica.css';
  * (solo enlace y metadatos). Sin cuentas: YouTube Music no ofrece una API oficial para
  * conectarse a la cuenta de alguien, así que se usa lo que comparte su botón «Compartir».
  */
-export function PantallaMusica() {
+export function PantallaMusica({ pedida = null }: { pedida?: { yt: string; t: number } | null }) {
   const e = useEstado();
+  const repo = useRepositorio();
+
+  // Una etiqueta ♪ de una nota pide esta canción desde este segundo (historia 5)
+  useEffect(() => {
+    if (!pedida) return;
+    const guardada = e.canciones.find((c) => c.clave === pedida.yt);
+    const cancion: Cancion = guardada ?? {
+      clave: pedida.yt,
+      enlace: { video: pedida.yt },
+      titulo: 'Canción de YouTube',
+      artista: '',
+    };
+    e.elegirCancion(cancion, pedida.t);
+    // Que «atrás» o recargar no la vuelvan a pedir
+    location.replace('#/musica');
+    if (!guardada) {
+      void metadatos({ video: pedida.yt }).then(
+        (datos) => datos && e.datosCancion(pedida.yt, datos),
+      );
+    }
+    // Solo cuando cambia lo pedido
+  }, [pedida?.yt, pedida?.t]);
   const [texto, setTexto] = useState('');
   const [error, setError] = useState('');
   const [buscando, setBuscando] = useState(false);
+  const [conCancion, setConCancion] = useState<Nota[]>([]);
+
+  // «Las notas con ♪ canción aparecen aquí»: las que tienen canción principal, la última editada primero
+  useEffect(() => {
+    let vigente = true;
+    repo.listar().then(
+      ({ notas }) =>
+        vigente &&
+        setConCancion(notas.filter((n) => cancionDeNota(n)).sort((a, b) => (a.editado < b.editado ? 1 : -1))),
+      () => undefined,
+    );
+    return () => {
+      vigente = false;
+    };
+  }, [repo]);
 
   async function anadir(ev?: Event) {
     ev?.preventDefault();
@@ -44,6 +84,31 @@ export function PantallaMusica() {
   }
 
   const actual = e.cancion;
+  const [enLinea, setEnLinea] = useState(() => navigator.onLine !== false);
+  useEffect(() => {
+    const cambiar = () => setEnLinea(navigator.onLine !== false);
+    addEventListener('online', cambiar);
+    addEventListener('offline', cambiar);
+    return () => {
+      removeEventListener('online', cambiar);
+      removeEventListener('offline', cambiar);
+    };
+  }, []);
+
+  /** Historia 4: mientras suena, una nota que guarda la canción y el segundo exacto. */
+  async function notaConCancion() {
+    if (!actual?.enlace.video) return;
+    const nota = await repo.crear({
+      plantilla: 'rapida',
+      cancion: {
+        yt: actual.enlace.video,
+        titulo: e.info.titulo ?? actual.titulo,
+        ...(actual.artista ? { artista: actual.artista } : {}),
+        t: Math.floor(e.info.posicion),
+      },
+    });
+    location.hash = `#/notas/${nota.id}`;
+  }
   return (
     <Pagina>
       <Encabezado
@@ -82,7 +147,14 @@ export function PantallaMusica() {
           alAlternar={e.alternar}
           alAnterior={() => e.control.current?.anterior()}
           alSiguiente={() => e.control.current?.siguiente()}
-          video={<VideoOficial key={actual.clave} enlace={actual.enlace} alCambiar={e.alCambiarVideo} control={e.control} />}
+          video={
+            <VideoOficial
+              key={`${actual.clave}-${e.eleccion.vez}`}
+              enlace={{ ...actual.enlace, ...(e.eleccion.inicio ? { inicio: e.eleccion.inicio } : {}) }}
+              alCambiar={e.alCambiarVideo}
+              control={e.control}
+            />
+          }
         />
       ) : (
         <EstadoVacio
@@ -90,12 +162,59 @@ export function PantallaMusica() {
           pista="En YouTube Music toca «Compartir → Copiar enlace» y pégalo arriba: canción, álbum o lista."
         />
       )}
+      {actual && !enLinea && (
+        <p class="musica__error" role="alert">
+          Sin conexión: el reproductor de YouTube necesita internet. Tus notas y canciones guardadas siguen aquí.
+        </p>
+      )}
+      {actual && e.info.error !== undefined && (
+        <p class="musica__error" role="alert">
+          {e.info.error === 101 || e.info.error === 150
+            ? 'Quien la publicó no deja reproducirla fuera de YouTube. Ábrela en YouTube Music.'
+            : e.info.error === 100
+              ? 'Esta canción ya no está disponible (borrada o privada).'
+              : 'El reproductor no pudo cargarla. Prueba de nuevo o ábrela en YouTube Music.'}
+        </p>
+      )}
+      {actual?.enlace.video && (
+        <div class="musica__acciones">
+          <Boton alTocar={() => void notaConCancion()}>♪ Nueva nota con esta canción</Boton>
+        </div>
+      )}
       {actual && (
         <p class="musica__abrir">
           <a href={urlYoutubeMusic(actual.enlace)} target="_blank" rel="noopener noreferrer">
             Abrir en YouTube Music
           </a>
         </p>
+      )}
+
+      {conCancion.length > 0 && (
+        <section class="musica__guardadas" aria-label="Notas con canción">
+          <h2 class="musica__subtitulo">Notas con canción</h2>
+          <ul class="musica__lista">
+            {conCancion.map((n) => {
+              const c = cancionDeNota(n);
+              if (!c) return null;
+              return (
+                <li key={n.id} class="musica__fila">
+                  <a class="musica__elegir" href={`#/notas/${n.id}`}>
+                    <span class="musica__datos">
+                      <span class="musica__titulo">{n.titulo}</span>
+                      <span class="musica__artista">
+                        ♪ {c.titulo ?? 'Canción'}
+                        {c.t !== undefined ? ` · ${minutoSegundo(c.t)}` : ''}
+                      </span>
+                    </span>
+                  </a>
+                  <a class="musica__quitar" href={rutaCancion(c.yt, c.t ?? 0)} aria-label={`Reproducir «${c.titulo ?? 'canción'}» desde su segundo`}>
+                    ▷
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
       )}
 
       {e.canciones.length > 0 && (

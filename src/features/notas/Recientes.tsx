@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
+import { cancionDeNota } from '../../core/musica/etiqueta';
 import { extracto, haceCuanto } from '../../core/notas/extracto';
 import type { Nota } from '../../core/notas/nota';
 import './Recientes.css';
@@ -44,6 +45,7 @@ export function Recientes({ notas, madreDe }: Props) {
         {ordenadas.map((nota, i) => {
           const madre = madreDe(nota);
           const vista = extracto(nota.cuerpo);
+          const cancion = cancionDeNota(nota);
           return (
             <li key={nota.id} class="recientes__hueco" style={{ '--orden': Math.min(i, 6) }}>
               <a class="recientes__tarjeta" href={`#/notas/${nota.id}`} aria-label={nota.titulo}>
@@ -53,6 +55,7 @@ export function Recientes({ notas, madreDe }: Props) {
                     {madre ? `${madre} · ` : ''}
                     {haceCuanto(nota.editado)}
                   </span>
+                  {cancion && <span class="recientes__cancion">♪ {cancion.titulo ?? 'Canción'}</span>}
                 </span>
                 <span class="recientes__vista" aria-hidden="true">
                   {vista || 'Nota vacía'}

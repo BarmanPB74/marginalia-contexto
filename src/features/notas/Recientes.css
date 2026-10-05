@@ -136,3 +136,12 @@
   color: var(--tinta-suave);
   text-align: center;
 }
+
+.recientes__cancion {
+  overflow: hidden;
+  font-family: var(--letra-mano);
+  font-size: var(--texto-xs);
+  color: var(--acento);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

@@ -122,6 +122,7 @@
 }
 
 .musica__quitar {
+  text-decoration: none;
   display: grid;
   flex: none;
   place-items: center;
@@ -134,4 +135,10 @@
   border: 0;
   border-radius: 50%;
   cursor: pointer;
+}
+
+.musica__acciones {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
 }
