@@ -16,6 +16,8 @@ interface Props {
   /** Lado donde está escondido (solo queda una pestaña en el borde); `null` = visible. */
   escondido?: LadoEscondido;
   alEsconder?: (lado: LadoEscondido) => void;
+  /** miniatura oficial de la canción (i.ytimg.com) */
+  portada?: string | null;
 }
 
 /** Cuánto hay que deslizar el mini anclado de lado para esconderlo. */
@@ -57,6 +59,7 @@ export function MiniReproductor({
   modo,
   escondido = null,
   alEsconder = () => undefined,
+  portada = null,
 }: Props) {
   const caja = useRef<HTMLDivElement>(null);
   const [posicion, setPosicion] = useState<{ x: number; y: number } | null>(null);
@@ -196,7 +199,11 @@ export function MiniReproductor({
           <Icono nombre="mover" />
         </button>
       )}
-      <div class="mini__portada" aria-hidden="true" />
+      {portada ? (
+        <img class="mini__portada" src={portada} alt="" referrerpolicy="no-referrer" />
+      ) : (
+        <div class="mini__portada" aria-hidden="true" />
+      )}
       <a class="mini__datos" href="#/musica">
         <span class="mini__titulo">{titulo}</span>
         <span class="mini__artista">{artista}</span>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { PantallaAjustes } from '../features/ajustes/PantallaAjustes';
 import { PantallaCalendario } from '../features/calendario/PantallaCalendario';
 import { Paleta } from '../features/comandos/Paleta';
-import { CANCION_DEMO } from '../features/musica/demo';
+import { miniatura } from '../core/musica/canciones';
 import { MiniReproductor } from '../features/musica/MiniReproductor';
 import { PantallaMusica } from '../features/musica/PantallaMusica';
 import { PantallaNota } from '../features/notas/PantallaNota';
@@ -30,9 +30,9 @@ function useHash() {
 }
 
 function Secciones({ ruta, idNota, dia }: { ruta: IdSeccion; idNota: string | null; dia: string | null }) {
-  const { flotante, sonando, alternar, miniEscondido, cambiarAjustes, comandosAbiertos } = useEstado();
+  const { flotante, sonando, miniEscondido, cambiarAjustes, comandosAbiertos, cancion } = useEstado();
   const Pantalla = PANTALLAS[ruta];
-  // En Música ya está el reproductor grande. F1: siempre hay una canción de muestra; en F4, solo si hay algo cargado.
+  // En Música ya está el reproductor grande.
   const conMini = ruta !== 'musica';
   const anclado = conMini && !flotante && !miniEscondido;
   return (
@@ -47,10 +47,12 @@ function Secciones({ ruta, idNota, dia }: { ruta: IdSeccion; idNota: string | nu
       )}
       {conMini && (
         <MiniReproductor
-          titulo={CANCION_DEMO.titulo}
-          artista={CANCION_DEMO.artista}
+          titulo={cancion?.titulo ?? 'Nada sonando'}
+          artista={cancion ? cancion.artista : 'Toca para elegir música'}
+          portada={cancion ? miniatura(cancion.enlace) : null}
           sonando={sonando}
-          alAlternar={alternar}
+          // El reproductor oficial vive en Música (visible, LEGAL §1): reproducir lleva allí.
+          alAlternar={() => (location.hash = '#/musica')}
           modo={flotante ? 'flotante' : 'anclado'}
           escondido={miniEscondido}
           alEsconder={(lado) => cambiarAjustes({ miniEscondido: lado })}

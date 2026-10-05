@@ -63,6 +63,7 @@
   flex: none;
   width: 36px;
   height: 36px;
+  object-fit: cover;
   background: var(--acento-suave);
   border: var(--trazo) solid var(--contorno);
   border-radius: 5px 4px 6px 3px / 4px 6px 3px 5px;

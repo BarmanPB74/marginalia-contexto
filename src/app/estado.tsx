@@ -1,6 +1,8 @@
-import { createContext, type ComponentChildren } from 'preact';
-import { useContext, useEffect, useState } from 'preact/hooks';
+import { createContext, type ComponentChildren, type RefObject } from 'preact';
+import { useContext, useEffect, useRef, useState } from 'preact/hooks';
+import { conCancion, guardarCanciones, leerCanciones, type Cancion } from '../core/musica/canciones';
 import type { Comando } from '../features/comandos/comandos';
+import type { ControlVideo, InfoVideo } from '../features/musica/VideoOficial';
 import { aplicarTema, guardarAjustes, leerAjustes, type Ajustes } from './ajustes';
 
 interface EstadoApp extends Ajustes {
@@ -10,6 +12,14 @@ interface EstadoApp extends Ajustes {
   /** Compartido por el reproductor grande y el pequeño. */
   sonando: boolean;
   alternar: () => void;
+  /** Canción elegida (la primera de las guardadas) y lo que informa el reproductor oficial. */
+  cancion: Cancion | null;
+  canciones: Cancion[];
+  elegirCancion: (c: Cancion) => void;
+  quitarCancion: (clave: string) => void;
+  info: InfoVideo;
+  alCambiarVideo: (info: Partial<InfoVideo>) => void;
+  control: RefObject<ControlVideo | null>;
   /** Paleta de comandos abierta. */
   comandosAbiertos: boolean;
   abrirComandos: (abierta: boolean) => void;
@@ -22,7 +32,9 @@ const Contexto = createContext<EstadoApp | null>(null);
 
 export function ProveedorEstado({ children }: { children: ComponentChildren }) {
   const [ajustes, setAjustes] = useState<Ajustes>(leerAjustes);
-  const [sonando, setSonando] = useState(false);
+  const [canciones, setCanciones] = useState<Cancion[]>(leerCanciones);
+  const [info, setInfo] = useState<InfoVideo>({ sonando: false, posicion: 0, duracion: 0 });
+  const control = useRef<ControlVideo | null>(null);
   const [comandosAbiertos, abrirComandos] = useState(false);
   const [comandosLocales, setComandosLocales] = useState<Comando[]>([]);
 
@@ -62,8 +74,31 @@ export function ProveedorEstado({ children }: { children: ComponentChildren }) {
         ...ajustes,
         cambiarAjustes,
         setFlotante: (flotante) => cambiarAjustes({ flotante }),
-        sonando,
-        alternar: () => setSonando((s) => !s),
+        sonando: info.sonando,
+        alternar: () => {
+          // Con el reproductor oficial en pantalla, se le ordena; si no, al menos cambia el dibujo.
+          if (control.current) {
+            if (info.sonando) control.current.pausar();
+            else control.current.reproducir();
+          }
+          setInfo((i) => ({ ...i, sonando: !i.sonando }));
+        },
+        cancion: canciones[0] ?? null,
+        canciones,
+        elegirCancion: (c) => {
+          const lista = conCancion(canciones, c);
+          setCanciones(lista);
+          guardarCanciones(lista);
+          setInfo({ sonando: true, posicion: c.enlace.inicio ?? 0, duracion: 0 });
+        },
+        quitarCancion: (clave) => {
+          const lista = canciones.filter((c) => c.clave !== clave);
+          setCanciones(lista);
+          guardarCanciones(lista);
+        },
+        info,
+        alCambiarVideo: (parcial) => setInfo((i) => ({ ...i, ...parcial })),
+        control,
         comandosAbiertos,
         abrirComandos,
         comandosLocales,

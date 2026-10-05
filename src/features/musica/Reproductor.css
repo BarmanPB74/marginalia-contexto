@@ -2,9 +2,16 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 20px 20px 16px;
-  border: var(--trazo) solid var(--tinta);
-  border-radius: var(--radio);
+  padding: 16px 16px 12px;
+  background: var(--superficie);
+  border: var(--trazo) solid var(--contorno);
+  border-radius: var(--radio-grande);
+  box-shadow: var(--sombra);
+  animation: aparecer var(--dur-media) var(--curva) backwards;
+}
+
+.reproductor > .video-oficial {
+  margin-bottom: 12px;
 }
 
 .reproductor__cabecera {
@@ -18,7 +25,8 @@
   flex: none;
   width: 72px;
   height: 72px;
-  border: var(--trazo) solid var(--tinta);
+  background: var(--acento-suave);
+  border: var(--trazo) solid var(--contorno);
   border-radius: 7px 5px 8px 4px / 5px 8px 4px 7px;
 }
 

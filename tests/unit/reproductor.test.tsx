@@ -110,7 +110,7 @@ describe('preferencia de reproductor flotante', () => {
     location.hash = '#/musica';
     c = montar(<App />);
     expect(c.querySelector('.mini')).toBeNull();
-    expect(c.querySelector('.reproductor')).not.toBeNull();
+    expect(c.querySelector('.estado-vacio')?.textContent).toContain('Nada sonando');
   });
 
   it('el interruptor de Ajustes lo vuelve flotante', () => {
@@ -164,5 +164,47 @@ describe('tema', () => {
     expect(localStorage.getItem('marginalia.ajustes.v1')).toContain('oscuro');
     act(() => opcion('Sistema').click());
     expect(document.documentElement.hasAttribute('data-tema')).toBe(false);
+  });
+});
+
+describe('Música con YouTube Music', () => {
+  const GUARDADA = [
+    { clave: 'dQw4w9WgXcQ', enlace: { video: 'dQw4w9WgXcQ' }, titulo: 'Tema guardado', artista: 'Alguien' },
+  ];
+
+  it('con una canción guardada: reproductor oficial sin cookies dentro del dibujo, y el mini la muestra', () => {
+    localStorage.setItem('marginalia.canciones.v1', JSON.stringify(GUARDADA));
+    location.hash = '#/musica';
+    let c = montar(<App />);
+    const marco = c.querySelector('iframe');
+    expect(marco?.getAttribute('src')).toMatch(/^https:\/\/www\.youtube-nocookie\.com\/embed\/dQw4w9WgXcQ\?/);
+    expect(c.querySelector('.reproductor .video-oficial')).not.toBeNull();
+    expect(c.querySelector('.reproductor__titulo')?.textContent).toBe('Tema guardado');
+    expect(c.querySelector('a[href^="https://music.youtube.com/watch?v=dQw4w9WgXcQ"]')).not.toBeNull();
+    render(null, c);
+    c.remove();
+
+    location.hash = '#/notas';
+    c = montar(<App />);
+    expect(c.querySelector('.mini__titulo')?.textContent).toBe('Tema guardado');
+    expect(c.querySelector('img.mini__portada')?.getAttribute('src')).toBe('https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg');
+    expect(c.querySelector('iframe')).toBeNull(); // fuera de Música no hay audio escondido
+    act(() => (c.querySelector('button[aria-label="Reproducir"]') as HTMLButtonElement).click());
+    expect(location.hash).toBe('#/musica');
+  });
+
+  it('un enlace que no es de YouTube se rechaza con una pista', () => {
+    location.hash = '#/musica';
+    const c = montar(<App />);
+    const entrada = c.querySelector('input[aria-label="Enlace de YouTube Music"]') as HTMLInputElement;
+    act(() => {
+      entrada.value = 'https://evil.com/watch?v=dQw4w9WgXcQ';
+      entrada.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    act(() => {
+      (c.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit', { cancelable: true }));
+    });
+    expect(c.querySelector('[role="alert"]')?.textContent).toContain('no parece un enlace');
+    expect(c.querySelector('iframe')).toBeNull();
   });
 });

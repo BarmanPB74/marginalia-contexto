@@ -1,0 +1,14 @@
+.video-oficial {
+  overflow: hidden;
+  border-radius: var(--radio);
+  background: var(--papel-2);
+  /* En pantallas anchas no crece más que la columna de lectura */
+  aspect-ratio: 16 / 9;
+}
+
+.video-oficial__marco {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
