@@ -44,9 +44,9 @@ Enlace a otra página: [[Pasado compuesto]]
 | Enlace entre páginas | `[[Título de página]]` | Navegación; se resuelve por título (insensible a mayúsculas) |
 | Callout | `> [!nota] texto` (también `[!ojo]`, `[!tarea]`) | Cita con trazo; se degrada a blockquote |
 
-## Reglas del parser (`src/core/parser/`)
+## Reglas del parser (`src/core/parser/parser.ts`, `parseNota`)
 1. No interpretar `#`, `@` ni `[[ ]]` dentro de bloques de código ni de código en línea.
-2. `#etiqueta`: solo si va precedido de inicio de línea o espacio y seguido de letra/dígito (los encabezados `# Título` NO son etiquetas). Permitir letras con tilde y `ñ`.
+2. `#etiqueta`: solo si va precedido de inicio de línea, espacio o `(` y seguido de letra/dígito (los encabezados `# Título` NO son etiquetas). Permitir letras con tilde y `ñ`, `_`, `-` y `/` (subetiquetas: `#proyectos/marginalia`). Solo números (`#1`, `#2026`) no cuenta. Máximo 64 caracteres. `#Estudio` y `#estudio` son la misma (se comparan en minúsculas). En lectura enlaza a `#/notas?etiqueta=…`.
 3. Fechas: validar calendario real (`@2026-02-30` es inválida y se ignora). Zona horaria: la del dispositivo; guardar ISO 8601 con offset en el frontmatter.
 4. `yt:` solo acepta IDs que cumplan `^[A-Za-z0-9_-]{11}$`. Todo lo demás se trata como texto.
 5. Frontmatter: YAML con esquema validado; campos desconocidos se **preservan** al guardar (no perder datos de otros editores).

@@ -4,10 +4,10 @@
 > Lo actualiza `/cierre`. Si algo aquí contradice el código, arréglalo aquí.
 
 ## Ahora
-- **Fase actual:** F2 — Notas Markdown locales. **Entregables completos**; falta solo probar en el teléfono para cerrarla.
-- **Estado:** todo en la rama `ccr-4bb4aef6-3n6fty` (sobre `f2-avance`, con los pedidos del autor del 2026-10-05: rediseño, tarjetas, calendario, paleta, cifrado, YouTube Music). **PR #2 a `main`**, CI/CodeQL/dependencias en verde.
-- **Última sesión:** 2026-10-05 — copia ZIP (historia 7) y búsqueda por `#etiqueta`/fecha (historia 6); `/auditar` F2 ✅.
-- **Siguiente paso concreto:** el autor prueba el APK del PR #2 (lista de abajo); si todo va bien, fusionar y `/fase 3` (lo que falta de F3: filtro por etiqueta, autocompletar `#`/`@`, selector de fecha).
+- **Fase actual:** F3 — Etiquetas y Calendario. **Entregables completos** (F2 cerrada el 2026-10-05: el autor probó el APK y todo bien).
+- **Estado:** rama `ccr-4bb4aef6-3n6fty`, PR #2 a `main` (F2 + pedidos + F3). `/auditar` F3 ✅.
+- **Última sesión:** 2026-10-05 — parser completo, filtro por etiqueta, autocompletar `#`/`@`, selector de fecha, vista Agenda.
+- **Siguiente paso concreto:** el autor prueba F3 en el teléfono (lista de abajo); si va bien, fusionar el PR #2 y `/inicio` de F4 (etiqueta de canción con segundo exacto, Share Intent desde YouTube Music).
 
 ## Decisiones tomadas (ADR en `docs/ARQUITECTURA.md`)
 - 001 Web + Capacitor + Preact · 002 `.md` fuente de verdad · 003 solo IFrame oficial · 004 MIT (Pablo, 2026) · 005 nombre "Marginalia", appId `io.github.barmanpb74.appnoti`
@@ -32,6 +32,7 @@
 - Plantillas estilo Obsidian (`{{titulo}}`, `{{fecha}}`, `{{hora}}`), de serie: en blanco, rápida, bitácora (empieza con `@fecha`), reunión.
 - 2026-10-05 (pedidos del autor): ADR-008 cifrado AES-256-GCM al crear/guardar, exportar .md/.txt/.html descifrado a `Documentos/Marginalia`; ADR-009 preferencias y canciones en `localStorage`; ADR-010 reproductor oficial controlado por `postMessage` (sin script externo); ADR-011 paleta blanca tipo Pixel + oscuro + movimiento suave. Notas en **tarjetas tipo recientes** por defecto (lista en Ajustes). Paleta de comandos (lupa o Ctrl+K). Calendario de mes con hoja del día y «Nueva bitácora». Globo de música escondible a un lado (botón, lanzarlo al borde o deslizar).
 - Mini reproductor: anclado o flotante (Ajustes); en Música no se muestra. Fuera de Música el iframe no existe: el mini lleva a Música (sin audio escondido, LEGAL §1).
+- F3: `core/parser/parseNota` (etiquetas con subetiquetas, sin ReDoS); `#/notas?etiqueta=x` filtra; autocompletar con `@codemirror/autocomplete` (`#` etiquetas existentes, `@` hoy/mañana/días); `SelectorFecha` propio en hoja; Calendario Mes | Agenda. Las llamadas al plugin de archivos van en fila (lectura colgada muy rara en e2e).
 
 ## Pendiente de decidir con el autor
 - ¿Reproductor tipo "imagen en imagen" (video pequeño visible) para que la música siga fuera de Música? Ver LEGAL §1.
@@ -39,13 +40,10 @@
 - Pedidos aún sin fase: plantillas con gráficos/cálculos y plantillas propias; exportar a PDF/carta/documento legal; backlinks, nota diaria, grafo.
 
 ## Probar en el teléfono (lo que el entorno de Claude no puede verificar)
-- **Rama `ccr-4bb4aef6-3n6fty`** (APK por Actions → CI manual): tema Sistema/Claro/Oscuro y que la barra de estado cambie de color de iconos; animaciones fluidas (no a tirones) en un gama media.
-- Notas en tarjetas: deslizar de lado, que encajen al centro y la del centro se vea grande. Paleta: la lupa abre, el teclado sale, buscar "bit" → «Bitácora de hoy».
-- Calendario: tocar un día → hoja; «Nueva bitácora» abre la nota con `@fecha`; en lectura, tocar la `@fecha` vuelve al día; deslizar cambia de mes.
-- Copia: Ajustes → Exportar notas (ZIP) → aparece en Documentos/Marginalia; Importar abre el selector de archivos de Android y trae las notas (importar dos veces no duplica).
-- Cifrado: notas de la versión anterior siguen abriéndose (se cifran al arrancar). Exportar → aparece en Archivos › Documentos › Marginalia y se abre con otra app (Android 10 o anterior: puede fallar sin permiso).
-- Música: en YouTube Music «Compartir → Copiar enlace», pegarlo → suena en el reproductor oficial; pausa/anterior/siguiente dibujados responden; la línea de progreso avanza; álbum/lista también. Globo: esconderlo a cada lado y traerlo.
-- Pendiente de antes: barra de formato sobre el teclado; forzar cierre y reabrir conserva todo; icono EK (ahora sobre blanco).
+- **F3 (APK del PR #2):** escribir `#es` → sale la lista con tus etiquetas, tocar una la completa. Escribir `@` → hoy, mañana, días; «Elegir en el calendario…» abre el mes. Botón «@ Fecha» de la barra (la barra cabe en una fila sobre el teclado).
+- Notas: la fila de etiquetas se desliza de lado; tocar una filtra; en lectura, tocar `#etiqueta` lleva al filtro.
+- Calendario: Mes | Agenda; en Agenda, «Ver días anteriores». Con muchas notas, el mes no se siente lento.
+- Que el autocompletar no estorbe al teclado de Android (autocorrector, dictado).
 
 ## Resultado del spike del reproductor (F0, 2026-10-04)
 - `youtube-nocookie.com/embed` y `youtube.com/embed` cargan y suenan en la WebView (origen `https://localhost`): no hace falta el Plan B. Ya usado en Música (ADR-010).
@@ -57,7 +55,7 @@
 ## Dependencias justificadas
 - `preact` 11 · UI de 4 kB · MIT · `@capacitor/core` + `@capacitor/android` 8.5 · puente y proyecto Android · MIT
 - CodeMirror: `@codemirror/state` 6.7.6, `view` 6.43.13, `commands` 6.11.1, `language` 6.12.4, `@lezer/markdown` 1.7.2, `@lezer/highlight` 1.2.5 · editor · MIT · `markdown-it` 15.0.2 · lectura · MIT (trae `entities` BSD-2 → atribución en F6; `argparse` PSF-2.0 solo en su CLI, no entra al bundle) · `dompurify` 3.4.16 · sanitizar · MPL-2.0 o Apache-2.0 (usamos Apache-2.0)
-- `@capacitor/filesystem` 8.1.4 · notas en la carpeta privada y exportar a Documentos · MIT · no añade permisos · `yaml` 2.9.1 · frontmatter · ISC · Cifrado, búsqueda, enlaces de música: **sin dependencias nuevas** (WebCrypto, código propio) · `fflate` 0.8.3 · ZIP de copia · MIT · sin dependencias · ~8 kB en el bundle
+- `@capacitor/filesystem` 8.1.4 · notas en la carpeta privada y exportar a Documentos · MIT · no añade permisos · `yaml` 2.9.1 · frontmatter · ISC · Cifrado, búsqueda, enlaces de música: **sin dependencias nuevas** (WebCrypto, código propio) · `fflate` 0.8.3 · ZIP de copia · MIT · sin dependencias · ~8 kB · `@codemirror/autocomplete` 6.20.3 · autocompletar `#`/`@` · MIT · oficial de CodeMirror, reutiliza state/view
 - Fuentes (no son paquetes npm): Newsreader 400/400i/600, Kalam 400, JetBrains Mono 400 · @fontsource 5.3.0, latino · OFL-1.1 con `OFL.txt` en cada carpeta · 120 kB en total
 - Dev: `vite` 8 (build) MIT · `@preact/preset-vite` MIT · `typescript` 6.0 Apache-2.0 · `eslint` 10 + `@eslint/js` + `typescript-eslint` + `globals` MIT · `vitest` 5 + `jsdom` MIT · `@playwright/test` Apache-2.0 · `@capacitor/cli` MIT
 - Auditoría de licencias (2026-10-04): todas compatibles; MPL-2.0 solo en `lightningcss` (herramienta de build, sin modificar).
@@ -65,6 +63,7 @@
 ## Riesgos abiertos
 - Bundle JS 636 kB (≈215 kB gzip) tras CodeMirror + markdown-it. Presupuesto: arranque en frío < 2 s. Si el autor nota lentitud al abrir, cargar editor y lectura con `import()` al abrir una nota.
 - Control del reproductor por `postMessage` probado solo en Chromium (sin red): falta el teléfono. Si algún video no permite incrustarse, solo queda «Abrir en YouTube Music».
+- e2e con 6 navegadores a la vez: 1 de 116 falló al recargar 0,9 s después de escribir (el guardado aún no había terminado). Mismo límite que matar la app justo al teclear.
 - `gitleaks` no está en el entorno de Claude: solo corre en CI (verde en el PR #2). El selector de archivos depende del `WebChromeClient` de Capacitor: probar en el teléfono.
 - Exportar a `Documentos` en Android ≤ 10 necesita un permiso que no pedimos (regla 3): mostrar alternativa (compartir) si el autor lo usa ahí.
 - `npm audit` (dev): 3 moderadas en `@capacitor/cli` → `xcode` → `uuid` (herramienta de iOS, no se usa; producción limpia). Revisar cuando salga un CLI corregido.
@@ -74,7 +73,7 @@
 - (vacío)
 
 ## Historial de sesiones
-- 2026-10-05 · F2 · copia ZIP (fflate) con validación hostil e importar sin pisar, búsqueda por #etiqueta/fecha, aviso global; `/auditar` F2 ✅; aviso de CodeQL en un test corregido; 249 unit + 27 e2e; PR #2.
-- 2026-10-05 · pedidos · rediseño blanco/oscuro + movimiento, tarjetas tipo recientes, paleta de comandos, calendario + bitácora, cifrado AES-GCM + exportar, YouTube Music en el reproductor oficial, globo escondible; 240 unit + 26 e2e.
+- 2026-10-05 · F3 · parser completo, filtro por etiqueta, autocompletar `#`/`@`, selector de fecha, Agenda, 500 notas; disco en fila; `/auditar` F3 ✅; 272 unit + 29 e2e.
+- 2026-10-05 · F2 cerrada + pedidos · rediseño, tarjetas, paleta, calendario, cifrado, YouTube Music, copia ZIP, búsqueda por #/fecha; PR #2; probado en el teléfono por el autor.
 - 2026-10-05 · F2 · Almacen atómico, formato, ULID, repositorio/árbol, plantillas; pantalla de Notas con autoguardado; editor CodeMirror + lectura sanitizada (22 XSS bloqueados); bordes del sistema; APK de avance por `f2-avance`.
 - 2026-10-04/05 · F0 y F1 cerradas · repo, CI (APK, CodeQL, gitleaks, dependency-review), spike; tokens, fuentes, componentes, galería, icono EK.
