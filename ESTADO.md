@@ -77,11 +77,5 @@
 - 2026-10-05 · F2 · bordes del sistema (barra de estado) + Volver; editor CodeMirror, lectura sanitizada, barra de formato; 22 cargas XSS bloqueadas (unit + e2e).
 - 2026-10-05 · F2 · pantalla de Notas (árbol, plantillas, autoguardado, subpáginas, borrar) + e2e de recarga con IndexedDB; APK de avance por rama `f2-avance`.
 - 2026-10-05 · F2 · Almacen atómico + formato de nota + ULID + repositorio/árbol + plantillas; 63 pruebas nuevas (XSS queda para el render).
-- 2026-10-05 · F1 cerrada · capturas aprobadas por el autor; push.
-- 2026-10-05 · F1 · línea de progreso invisible arreglada (+e2e), script de capturas, capturas finales, `/auditar` F1 ✅ (gitleaks solo en CI).
-- 2026-10-04 · F0 · repo público, licencia y docs de seguridad, Vite+Preact+TS+Capacitor endurecido, CI verde con APK debug, CodeQL, gitleaks, dependency-review, Dependabot, push protection; spike del reproductor listo para probar.
-- 2026-10-04 · F0 cerrada · spike probado en el teléfono: A y B cargan y suenan.
-- 2026-10-05 · F1 · icono EK, iconos SVG, barra inferior y 4 secciones vacías; e2e de navegación, atrás y barra.
-- 2026-10-05 · F1 · componentes base + galería; e2e: táctil ≥ 48 px, sin scroll horizontal.
-- 2026-10-05 · F1 · fuentes B empaquetadas + e2e de carga bajo CSP y sin peticiones externas.
-- 2026-10-04 · F1 inicio · tokens.css + textura, base.css solo con tokens, pruebas de contraste y colores sueltos, 3 capturas de fuentes.
+- 2026-10-04/05 · F1 cerrada · tokens, fuentes B, componentes base + galería, icono EK, barra inferior, reproductor estático; capturas aprobadas.
+- 2026-10-04 · F0 cerrada · repo público, CI (APK, CodeQL, gitleaks, dependency-review), spike del reproductor: A y B suenan.
