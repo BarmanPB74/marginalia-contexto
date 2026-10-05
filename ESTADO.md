@@ -61,7 +61,7 @@
 - Auditoría de licencias (2026-10-04): todas compatibles; MPL-2.0 solo en `lightningcss` (herramienta de build, sin modificar).
 
 ## Riesgos abiertos
-- Bundle JS 636 kB (≈215 kB gzip) tras CodeMirror + markdown-it. Presupuesto: arranque en frío < 2 s. Si el autor nota lentitud al abrir, cargar editor y lectura con `import()` al abrir una nota.
+- Bundle JS 678 kB (≈230 kB gzip) tras CodeMirror + autocompletar + markdown-it. Presupuesto: arranque en frío < 2 s. Si el autor nota lentitud al abrir, cargar editor y lectura con `import()` al abrir una nota.
 - Control del reproductor por `postMessage` probado solo en Chromium (sin red): falta el teléfono. Si algún video no permite incrustarse, solo queda «Abrir en YouTube Music».
 - e2e con 6 navegadores a la vez: 1 de 116 falló al recargar 0,9 s después de escribir (el guardado aún no había terminado). Mismo límite que matar la app justo al teclear.
 - `gitleaks` no está en el entorno de Claude: solo corre en CI (verde en el PR #2). El selector de archivos depende del `WebChromeClient` de Capacitor: probar en el teléfono.
