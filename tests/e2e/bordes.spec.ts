@@ -32,7 +32,7 @@ test('una nota abierta: la ruta, volver y el título quedan bajo la barra de est
   await page.getByRole('button', { name: 'En blanco' }).click();
   for (const caja of [
     await page.getByRole('button', { name: 'Volver' }).boundingBox(),
-    await page.getByLabel('Título').boundingBox(),
+    await page.getByLabel('Título', { exact: true }).boundingBox(),
   ]) {
     expect(caja?.y).toBeGreaterThanOrEqual(ARRIBA);
   }

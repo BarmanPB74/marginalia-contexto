@@ -4,7 +4,7 @@ test('copia ZIP: exportar, borrar la nota, importar y vuelve igual (historia 7)'
   await page.goto('/#/notas');
   await page.getByRole('button', { name: 'Nueva' }).click();
   await page.getByRole('button', { name: 'En blanco' }).click();
-  await page.getByLabel('Título').fill('Apuntes de francés');
+  await page.getByLabel('Título', { exact: true }).fill('Apuntes de francés');
   await page.getByLabel('Contenido').fill('Subjuntivo @2026-10-12 #idiomas con ñ');
   await page.waitForTimeout(900);
   await expect(page.getByRole('status')).toHaveText('Guardado');

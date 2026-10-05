@@ -11,17 +11,17 @@ test('crear desde plantilla, escribir y recargar: todo se conserva', async ({ pa
   await expect(page.getByText('Aún no hay notas.')).toBeVisible();
 
   await nuevaNota(page, 'Reunión');
-  await expect(page.getByLabel('Título')).toHaveValue(/^Reunión \d{4}-\d\d-\d\d$/);
+  await expect(page.getByLabel('Título', { exact: true })).toHaveValue(/^Reunión \d{4}-\d\d-\d\d$/);
   await expect(page.getByLabel('Contenido')).toContainText('## Acuerdos');
 
-  await page.getByLabel('Título').fill('Reunión de prueba');
+  await page.getByLabel('Título', { exact: true }).fill('Reunión de prueba');
   await page.getByLabel('Contenido').fill('# Acta\n\nTexto con **Markdown** y ñ.');
   // CodeMirror procesa lo escrito un instante después: se espera más que la pausa de autoguardado (600 ms)
   await page.waitForTimeout(900);
   await expect(page.getByRole('status')).toHaveText('Guardado');
 
   await page.reload();
-  await expect(page.getByLabel('Título')).toHaveValue('Reunión de prueba');
+  await expect(page.getByLabel('Título', { exact: true })).toHaveValue('Reunión de prueba');
   // Ya editada: abre en lectura, con el Markdown pintado
   await expect(page.locator('.lectura h1')).toHaveText('Acta');
   await expect(page.locator('.lectura strong')).toHaveText('Markdown');
@@ -36,17 +36,17 @@ test('crear desde plantilla, escribir y recargar: todo se conserva', async ({ pa
 test('subpáginas: se crean dentro, salen con sangría y atrás vuelve a la madre', async ({ page }) => {
   await page.goto('/#/notas');
   await nuevaNota(page, 'En blanco');
-  await page.getByLabel('Título').fill('Francés');
+  await page.getByLabel('Título', { exact: true }).fill('Francés');
   await expect(page.getByRole('status')).toHaveText('Guardado');
 
   await page.getByRole('button', { name: 'Subpágina' }).click();
   await page.getByRole('button', { name: 'En blanco' }).click();
   await expect(page.getByRole('navigation', { name: 'Ubicación' }).getByRole('link', { name: 'Francés' })).toBeVisible();
-  await page.getByLabel('Título').fill('Subjuntivo');
+  await page.getByLabel('Título', { exact: true }).fill('Subjuntivo');
   await expect(page.getByRole('status')).toHaveText('Guardado');
 
   await page.goBack();
-  await expect(page.getByLabel('Título')).toHaveValue('Francés');
+  await expect(page.getByLabel('Título', { exact: true })).toHaveValue('Francés');
 
   // La sangría es de la vista de lista (la app abre en tarjetas)
   await page.goto('/#/notas');
@@ -63,7 +63,7 @@ test('subpáginas: se crean dentro, salen con sangría y atrás vuelve a la madr
 test('borrar una nota (confirmado) la quita de la lista', async ({ page }) => {
   await page.goto('/#/notas');
   await nuevaNota(page, 'Nota rápida');
-  await page.getByLabel('Título').fill('Para borrar');
+  await page.getByLabel('Título', { exact: true }).fill('Para borrar');
   await expect(page.getByRole('status')).toHaveText('Guardado');
   page.once('dialog', (d) => void d.accept());
   await page.getByRole('button', { name: 'Borrar nota' }).click();

@@ -6,7 +6,7 @@ const dia = (f: Date) => `${f.getFullYear()}-${dos(f.getMonth() + 1)}-${dos(f.ge
 async function notaNueva(page: import('@playwright/test').Page, titulo: string, cuerpo: string) {
   await page.getByRole('button', { name: 'Nueva' }).click();
   await page.getByRole('button', { name: 'En blanco' }).click();
-  await page.getByLabel('Título').fill(titulo);
+  await page.getByLabel('Título', { exact: true }).fill(titulo);
   await page.getByLabel('Contenido').fill(cuerpo);
   await page.waitForTimeout(900);
 }
@@ -23,6 +23,8 @@ test('autocompletar: @ sugiere fechas en palabras y # las etiquetas que ya exist
   const lista = page.locator('.cm-tooltip-autocomplete');
   await expect(lista).toBeVisible();
   await expect(lista.getByRole('option').first()).toContainText('mañana');
+  // CodeMirror ignora Intro durante 75 ms tras abrir la lista (interactionDelay), para no elegir sin querer
+  await page.waitForTimeout(150);
   await page.keyboard.press('Enter');
   const manana = new Date();
   manana.setDate(manana.getDate() + 1);
@@ -30,6 +32,7 @@ test('autocompletar: @ sugiere fechas en palabras y # las etiquetas que ya exist
 
   await page.keyboard.type('y #fr');
   await expect(lista.getByRole('option').first()).toHaveText('#francés');
+  await page.waitForTimeout(150);
   await page.keyboard.press('Enter');
   await expect(editor).toContainText('y #francés ');
 });
