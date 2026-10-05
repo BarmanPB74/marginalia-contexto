@@ -1,7 +1,10 @@
 import { createContext, type ComponentChildren, type RefObject } from 'preact';
 import { useContext, useEffect, useRef, useState } from 'preact/hooks';
 import { conCancion, guardarCanciones, leerCanciones, type Cancion } from '../core/musica/canciones';
+import type { EnlaceMusica } from '../core/musica/enlaces';
 import type { Comando } from '../features/comandos/comandos';
+import { escucharCompartido } from '../features/musica/compartido';
+import { claveDe, metadatos } from '../core/musica/canciones';
 import type { ControlVideo, InfoVideo } from '../features/musica/VideoOficial';
 import { aplicarTema, guardarAjustes, leerAjustes, type Ajustes } from './ajustes';
 
@@ -66,6 +69,48 @@ export function ProveedorEstado({ children }: { children: ComponentChildren }) {
     return () => removeEventListener('keydown', alTeclear);
   }, []);
 
+  // Solo usan los "set" (estables): sirven igual desde efectos que se montan una vez.
+  function elegirCancion(c: Cancion, inicio = c.enlace.inicio ?? 0) {
+    // En la lista guardada no se queda el segundo: eso es de cada etiqueta ♪
+    const enlace = { ...c.enlace };
+    delete enlace.inicio;
+    setCanciones((actuales) => {
+      const lista = conCancion(actuales, { ...c, enlace });
+      guardarCanciones(lista);
+      return lista;
+    });
+    // Canción nueva: sin el error de la anterior
+    setInfo({ sonando: true, posicion: inicio, duracion: 0 });
+    setEleccion((e) => ({ vez: e.vez + 1, inicio }));
+  }
+
+  function datosCancion(clave: string, datos: { titulo: string; artista: string }) {
+    setCanciones((actuales) => {
+      const lista = actuales.map((c) => (c.clave === clave ? { ...c, ...datos } : c));
+      guardarCanciones(lista);
+      return lista;
+    });
+  }
+
+  // «Compartir → Marginalia» desde YouTube Music: se guarda, se abre Música y suena
+  useEffect(
+    () =>
+      escucharCompartido((enlace: EnlaceMusica | null) => {
+        if (!enlace) {
+          avisar('Lo compartido no es un enlace de YouTube Music.');
+          return;
+        }
+        const clave = claveDe(enlace);
+        elegirCancion(
+          { clave, enlace, titulo: enlace.video ? 'Canción de YouTube' : 'Lista de YouTube Music', artista: '' },
+          enlace.inicio ?? 0,
+        );
+        location.hash = '#/musica';
+        void metadatos(enlace).then((d) => d && datosCancion(clave, d));
+      }),
+    [],
+  );
+
   useEffect(() => {
     aplicarTema(ajustes.tema);
     if (ajustes.tema !== 'sistema') return;
@@ -101,25 +146,9 @@ export function ProveedorEstado({ children }: { children: ComponentChildren }) {
         },
         cancion: canciones[0] ?? null,
         canciones,
-        elegirCancion: (c, inicio = c.enlace.inicio ?? 0) => {
-          // En la lista guardada no se queda el segundo: eso es de cada etiqueta ♪
-          const enlace = { ...c.enlace };
-          delete enlace.inicio;
-          const lista = conCancion(canciones, { ...c, enlace });
-          setCanciones(lista);
-          guardarCanciones(lista);
-          // Canción nueva: sin el error de la anterior
-          setInfo({ sonando: true, posicion: inicio, duracion: 0 });
-          setEleccion((e) => ({ vez: e.vez + 1, inicio }));
-        },
+        elegirCancion,
         eleccion,
-        datosCancion: (clave, datos) => {
-          setCanciones((actuales) => {
-            const lista = actuales.map((c) => (c.clave === clave ? { ...c, ...datos } : c));
-            guardarCanciones(lista);
-            return lista;
-          });
-        },
+        datosCancion,
         quitarCancion: (clave) => {
           const lista = canciones.filter((c) => c.clave !== clave);
           setCanciones(lista);
