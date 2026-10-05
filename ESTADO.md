@@ -74,7 +74,7 @@
 - (vacío)
 
 ## Historial de sesiones
-- 2026-10-05 · F2 · copia ZIP (fflate) con validación hostil e importar sin pisar, búsqueda por #etiqueta/fecha, aviso global; `/auditar` F2 ✅; 249 unit + 27 e2e; PR #2.
+- 2026-10-05 · F2 · copia ZIP (fflate) con validación hostil e importar sin pisar, búsqueda por #etiqueta/fecha, aviso global; `/auditar` F2 ✅; aviso de CodeQL en un test corregido; 249 unit + 27 e2e; PR #2.
 - 2026-10-05 · pedidos · rediseño blanco/oscuro + movimiento, tarjetas tipo recientes, paleta de comandos, calendario + bitácora, cifrado AES-GCM + exportar, YouTube Music en el reproductor oficial, globo escondible; 240 unit + 26 e2e.
 - 2026-10-05 · F2 · Almacen atómico, formato, ULID, repositorio/árbol, plantillas; pantalla de Notas con autoguardado; editor CodeMirror + lectura sanitizada (22 XSS bloqueados); bordes del sistema; APK de avance por `f2-avance`.
 - 2026-10-04/05 · F0 y F1 cerradas · repo, CI (APK, CodeQL, gitleaks, dependency-review), spike; tokens, fuentes, componentes, galería, icono EK.
