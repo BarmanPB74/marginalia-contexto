@@ -1,8 +1,7 @@
 import type { EditorState, TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
 import type { RefObject } from 'preact';
-import { diaDe } from '../../../core/notas/fechas';
-import { alternarLista, alternarNegrita, alternarTarea, insertarEnlace, insertarFecha } from './formato';
+import { alternarLista, alternarNegrita, alternarTarea, insertarEnlace } from './formato';
 import './BarraFormato.css';
 
 const ACCIONES: [string, (e: EditorState) => TransactionSpec][] = [
@@ -10,14 +9,13 @@ const ACCIONES: [string, (e: EditorState) => TransactionSpec][] = [
   ['Lista', alternarLista],
   ['Tarea', alternarTarea],
   ['Enlace', insertarEnlace],
-  ['@ Hoy', (e) => insertarFecha(e, diaDe(new Date()))],
 ];
 
 /**
  * Barra mínima sobre el teclado (DISENO.md). Solo aparece mientras se escribe.
- * «@ Hoy» pone la fecha de hoy (la nota aparece en el Calendario). ♪ canción llega en F4.
+ * «@ Fecha» abre el selector de fecha (la nota aparecerá ese día en el Calendario). ♪ canción llega en F4.
  */
-export function BarraFormato({ vista }: { vista: RefObject<EditorView | null> }) {
+export function BarraFormato({ vista, alPedirFecha }: { vista: RefObject<EditorView | null>; alPedirFecha?: () => void }) {
   return (
     <div class="barra-formato" role="toolbar" aria-label="Formato">
       {ACCIONES.map(([nombre, accion]) => (
@@ -38,6 +36,17 @@ export function BarraFormato({ vista }: { vista: RefObject<EditorView | null> })
           {nombre}
         </button>
       ))}
+      {alPedirFecha && (
+        <button
+          type="button"
+          class="barra-formato__boton"
+          onPointerDown={(e) => e.preventDefault()}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={alPedirFecha}
+        >
+          @ Fecha
+        </button>
+      )}
     </div>
   );
 }

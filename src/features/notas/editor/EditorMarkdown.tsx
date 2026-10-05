@@ -1,9 +1,11 @@
+import { autocompletion, completionKeymap } from '@codemirror/autocomplete';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { EditorState } from '@codemirror/state';
 import { EditorView, keymap, placeholder } from '@codemirror/view';
 import type { RefObject } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
 import { lenguajeMarkdown } from './lenguaje';
+import { fuenteEtiquetas, fuenteFechas } from './sugerencias';
 import './EditorMarkdown.css';
 
 interface Props {
@@ -14,14 +16,26 @@ interface Props {
   /** Para que la barra de formato actúe sobre este editor. */
   vista?: RefObject<EditorView | null>;
   enfocarAlAbrir?: boolean;
+  /** Etiquetas que ya existen, para autocompletar `#` */
+  etiquetas?: () => readonly string[];
+  /** «Elegir en el calendario…» del autocompletar de `@`: el rango que hay que reemplazar */
+  alElegirFecha?: (desde: number, hasta: number) => void;
 }
 
 /** Editor Markdown (CodeMirror 6): lienzo casi vacío, sin números de línea ni bordes. */
-export function EditorMarkdown({ valor, alCambiar, alEnfocar, vista, enfocarAlAbrir = false }: Props) {
+export function EditorMarkdown({
+  valor,
+  alCambiar,
+  alEnfocar,
+  vista,
+  enfocarAlAbrir = false,
+  etiquetas = () => [],
+  alElegirFecha,
+}: Props) {
   const caja = useRef<HTMLDivElement>(null);
   // Siempre la última versión de los avisos, sin recrear el editor.
-  const avisos = useRef({ alCambiar, alEnfocar });
-  avisos.current = { alCambiar, alEnfocar };
+  const avisos = useRef({ alCambiar, alEnfocar, etiquetas, alElegirFecha });
+  avisos.current = { alCambiar, alEnfocar, etiquetas, alElegirFecha };
 
   useEffect(() => {
     if (!caja.current) return;
@@ -31,7 +45,20 @@ export function EditorMarkdown({ valor, alCambiar, alEnfocar, vista, enfocarAlAb
         doc: valor,
         extensions: [
           history(),
-          keymap.of([...defaultKeymap, ...historyKeymap]),
+          // `#` sugiere etiquetas que ya existen y `@` fechas cercanas (F3)
+          autocompletion({
+            override: [
+              fuenteEtiquetas(() => avisos.current.etiquetas()),
+              fuenteFechas(
+                () => new Date(),
+                (desde, hasta) => avisos.current.alElegirFecha?.(desde, hasta),
+              ),
+            ],
+            icons: false,
+            closeOnBlur: true,
+            tooltipClass: () => 'sugerencias',
+          }),
+          keymap.of([...completionKeymap, ...defaultKeymap, ...historyKeymap]),
           lenguajeMarkdown,
           EditorView.lineWrapping,
           placeholder('Escribe en Markdown…'),

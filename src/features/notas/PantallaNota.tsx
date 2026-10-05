@@ -5,7 +5,9 @@ import { diaDe } from '../../core/notas/fechas';
 import { exportar, FORMATOS, nombreArchivo, type Formato } from '../../core/exportar/formatos';
 import { guardarExportado } from '../../core/exportar/guardar';
 import type { Nota } from '../../core/notas/nota';
+import { claveEtiqueta, etiquetasDeNota } from '../../core/parser/parser';
 import { Hoja } from '../../ui/Hoja';
+import { SelectorFecha } from '../../ui/SelectorFecha';
 import type { Comando } from '../comandos/comandos';
 import { Boton } from '../../ui/Boton';
 import { EstadoVacio } from '../../ui/EstadoVacio';
@@ -44,6 +46,9 @@ export function PantallaNota({ id }: { id: string }) {
   const [escribiendo, setEscribiendo] = useState(false);
   const [exportando, setExportando] = useState(false);
   const [aviso, setAviso] = useState('');
+  /** Rango del editor donde va la fecha elegida en el selector (null = cerrado) */
+  const [rangoFecha, setRangoFecha] = useState<{ desde: number; hasta: number } | null>(null);
+  const etiquetasConocidas = useRef<string[]>([]);
   const vista = useRef<EditorView | null>(null);
   const actual = useRef<Nota | null>(null);
   const sucia = useRef(false);
@@ -89,6 +94,40 @@ export function PantallaNota({ id }: { id: string }) {
     };
   }, [repo, id]);
 
+  // Etiquetas de todas las notas, para autocompletar `#` en el editor
+  useEffect(() => {
+    let vigente = true;
+    repo.listar().then(
+      ({ notas }) => {
+        if (!vigente) return;
+        const vistas = new Map<string, string>();
+        for (const e of notas.flatMap(etiquetasDeNota)) if (!vistas.has(claveEtiqueta(e))) vistas.set(claveEtiqueta(e), e);
+        etiquetasConocidas.current = [...vistas.values()];
+      },
+      () => undefined,
+    );
+    return () => {
+      vigente = false;
+    };
+  }, [repo]);
+
+  function pedirFecha() {
+    const editor = vista.current;
+    if (!editor) return;
+    const { from, to } = editor.state.selection.main;
+    setRangoFecha({ desde: from, hasta: to });
+  }
+
+  function ponerFecha(dia: string) {
+    const editor = vista.current;
+    const rango = rangoFecha;
+    setRangoFecha(null);
+    if (!editor || !rango) return;
+    editor.dispatch({ selection: { anchor: rango.desde, head: rango.hasta } });
+    editor.dispatch(insertarFecha(editor.state, dia));
+    editor.focus();
+  }
+
   // Mientras se escribe se esconden la barra de secciones y el mini reproductor (BarraFormato.css).
   useEffect(() => {
     document.documentElement.classList.toggle('escribiendo', escribiendo);
@@ -111,6 +150,7 @@ export function PantallaNota({ id }: { id: string }) {
     const lista: Comando[] = [
       de('alternar-modo', modo === 'leer' ? 'Editar esta nota' : 'Leer esta nota', 'modo lectura escritura'),
       de('fecha-hoy', 'Insertar la fecha de hoy', 'calendario dia @', 'calendario'),
+      ...(modo === 'editar' ? [de('fecha-elegir', 'Insertar una fecha…', 'calendario dia @ elegir selector', 'calendario')] : []),
       de('subpagina', 'Nueva subpágina', 'crear hija pagina', 'mas'),
       ...FORMATOS.map((f) =>
         de(`exportar-${f.id}`, `Exportar esta nota como ${f.nombre}`, 'guardar compartir descifrar archivo', 'exportar'),
@@ -187,6 +227,7 @@ export function PantallaNota({ id }: { id: string }) {
       if (modo === 'editar' && vista.current) enEditor((e) => insertarFecha(e, hoy));
       else if (actual.current) cambiar({ cuerpo: `${actual.current.cuerpo.trimEnd()}\n\n@${hoy}\n` });
     },
+    'fecha-elegir': () => pedirFecha(),
     subpagina: () => setEligiendo(true),
     borrar: () => borrar(),
     negrita: () => enEditor(alternarNegrita),
@@ -254,11 +295,14 @@ export function PantallaNota({ id }: { id: string }) {
           alEnfocar={setEscribiendo}
           vista={vista}
           enfocarAlAbrir
+          etiquetas={() => etiquetasConocidas.current}
+          alElegirFecha={(desde, hasta) => setRangoFecha({ desde, hasta })}
         />
       ) : (
         <Lectura texto={nota.cuerpo} />
       )}
-      {modo === 'editar' && escribiendo && <BarraFormato vista={vista} />}
+      {modo === 'editar' && escribiendo && <BarraFormato vista={vista} alPedirFecha={pedirFecha} />}
+      {rangoFecha && <SelectorFecha alElegir={ponerFecha} alCerrar={() => setRangoFecha(null)} />}
       <footer class="nota__pie">
         <span class="nota__estados">
           <span class="nota__estado" role="status">
