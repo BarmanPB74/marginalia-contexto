@@ -13,10 +13,12 @@ Objetivo: cumplir **OWASP MASVS nivel 1** en toda la app y nivel 2 en almacenami
 
 | Activo | Amenaza | Control |
 |---|---|---|
-| Notas del usuario | Teléfono perdido o prestado | Almacenamiento privado de la app; bloqueo biométrico opcional; cifrado opcional; `FLAG_SECURE` opcional |
+| Notas del usuario | Teléfono perdido o prestado, copia de archivos | Almacenamiento privado de la app; **cifrado AES-256-GCM siempre activo** (ADR-008); bloqueo biométrico opcional (F5); `FLAG_SECURE` opcional |
+| Notas del usuario | Archivo cifrado alterado o cambiado por otro | GCM autentica el contenido y la ruta (AAD): no se descifra y sale como "dañado", sin tocar las demás |
 | Notas del usuario | Copias de seguridad automáticas de Android | `allowBackup=false` por defecto + reglas explícitas; exportación solo manual |
 | WebView | XSS por Markdown/HTML malicioso en una nota importada | Sanitizar con DOMPurify (lista blanca), CSP estricta, sin `eval`, sin HTML crudo sin sanitizar |
-| WebView | Puente JS expuesto a páginas ajenas | Sin `addJavascriptInterface` propio; navegación limitada a un *allowlist*; iframes solo de `youtube.com`/`youtube-nocookie.com` |
+| WebView | Puente JS expuesto a páginas ajenas | Sin `addJavascriptInterface` propio; navegación limitada a un *allowlist*; iframes solo de `youtube-nocookie.com`; mensajes del reproductor aceptados solo de ese origen y de su ventana |
+| Enlaces pegados | URL hostil en "Pega un enlace de YouTube Music" | Solo hosts de YouTube en lista blanca, IDs validados (`^[A-Za-z0-9_-]{11}$`, listas 10–64); nada más del enlace llega al iframe |
 | Importación ZIP/MD | *Zip-slip*, archivos gigantes, YAML hostil | Validar rutas, límites de tamaño/cantidad, parser YAML seguro (sin tipos ejecutables), esquema |
 | Share Intent | Texto malicioso entrante | Tratar como no confiable: extraer solo ID de 11 caracteres válido, ignorar el resto |
 | Cadena de suministro | Dependencia comprometida | Pocas dependencias, `package-lock.json` fijo, `npm audit`, Dependabot, `dependency-review`, revisar permisos de plugins de Capacitor |
@@ -30,7 +32,7 @@ Objetivo: cumplir **OWASP MASVS nivel 1** en toda la app y nivel 2 en almacenami
 - `android:exported` explícito en cada componente; el único *intent-filter* de entrada es `ACTION_SEND` con `text/plain`.
 - `WebView`: `allowFileAccess=false`, `allowContentAccess=false`, `setJavaScriptEnabled` solo lo necesario, sin depuración remota en *release*.
 - Build *release*: ofuscación/minificación activada, `debuggable=false`.
-- CSP en `index.html`, por ejemplo: `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://i.ytimg.com; frame-src https://www.youtube-nocookie.com https://www.youtube.com; connect-src 'self' https://www.youtube.com; object-src 'none'; base-uri 'none'`. Ajustar con evidencia, nunca relajar "por si acaso".
+- CSP en `index.html`, por ejemplo: `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://i.ytimg.com; frame-src https://www.youtube-nocookie.com; connect-src 'self' https://www.youtube.com; object-src 'none'; base-uri 'none'`. Ajustar con evidencia, nunca relajar "por si acaso".
 
 ## 4. Puerta de seguridad por fase (checklist para `/auditar`)
 
@@ -65,9 +67,10 @@ Hacer, documentar y corregir. Herramientas y qué buscar:
 
 Entregable: `docs/seguridad/AUDITORIA-F5.md` con tabla *hallazgo → severidad → evidencia → corrección → verificación*. Meta: 0 críticos/altos abiertos.
 
-## 6. Cifrado y bloqueo (decisión en F5, ADR propio)
-- Bloqueo de la app con biometría/PIN del dispositivo (BiometricPrompt) — opcional, activable en Ajustes.
-- Cifrado en reposo opcional: **no inventar criptografía**. Usar SQLCipher/Android Keystore o WebCrypto AES-GCM con clave en Keystore; documentar el diseño y qué NO protege (p. ej. dispositivo con root).
+## 6. Cifrado y bloqueo
+- **Hecho (ADR-008, 2026-10-05):** cifrado en reposo con WebCrypto AES-256-GCM (`src/core/almacen/cifrado.ts`), sin criptografía propia. Una nota se cifra en el mismo momento en que se crea; exportar la descifra a un formato legible. Pruebas: ida y vuelta, IV distinto cada vez, archivo alterado / de otra ruta / con otra clave → no se descifra.
+- Qué **no** protege: teléfono con root o malware con acceso a la app, la app ya abierta, capturas de pantalla.
+- Pendiente F5: envolver la clave con Android Keystore (hoy vive no extraíble en IndexedDB de la WebView); bloqueo con biometría/PIN (BiometricPrompt), opcional en Ajustes.
 - Exportación cifrada opcional con contraseña (derivación Argon2id/PBKDF2 con parámetros documentados).
 
 ## 7. Privacidad

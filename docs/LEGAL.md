@@ -16,6 +16,8 @@ Prohibido (no implementar, no sugerir, no "solo de prueba"):
 - Usar credenciales de usuario de Google/YouTube o automatizar su cuenta.
 - Almacenar el contenido multimedia en la app. Solo se guardan: ID, título, artista y segundo (metadatos).
 
+Aplicación (2026-10-05): la app lee enlaces de YouTube Music/YouTube que la persona pega (lo que da «Compartir → Copiar enlace»), los reproduce en el iframe oficial visible y con sus controles, y lo controla por `postMessage` (el protocolo de la IFrame API, ADR-010). No hay inicio de sesión ni acceso a la cuenta (no existe API oficial para eso). Al salir de Música el reproductor se desmonta y la música para: no hay audio con el video escondido. Un reproductor flotante tipo "imagen en imagen" que siga sonando fuera de Música queda **pendiente de decidir con el autor** (el visor debería seguir visible y de un tamaño razonable; verificar los términos vigentes de la API antes).
+
 Si el reproductor incrustado no es viable en la WebView, se aplica el **Plan B** de `docs/ARQUITECTURA.md` (Intent + Share Intent). Nunca se recurre a una vía no oficial.
 
 ## 2. Licencia del proyecto

@@ -28,10 +28,12 @@ Plataforma (Capacitor): Filesystem · Share Intent · App Lock
 Reglas de dependencia:
 - `core/` **no** importa de `features/` ni de `ui/`. Es TypeScript puro y testeable.
 - Todo acceso a plataforma pasa por una interfaz (`Almacen`, `Reproductor`); en tests y en navegador se usan implementaciones en memoria.
-- Un `Reproductor` es una interfaz (`cargar(id, t)`, `reproducir()`, `pausar()`, `tiempoActual()`, eventos). La implementación YouTube vive en `features/musica/yt-iframe.ts`. Así el resto de la app no depende de YouTube.
+- El reproductor se controla con `ControlVideo` (`reproducir`, `pausar`, `anterior`, `siguiente`, `saltar`) que implementa `features/musica/VideoOficial.tsx` (ADR-010). Los enlaces se leen en `core/musica/enlaces.ts`.
 
 ## Datos
-Ver `docs/FORMATO_NOTAS.md`. Resumen: `.md` = verdad; índice de búsqueda en memoria, reconstruible al abrir (ADR-007); ajustes en un JSON pequeño.
+Ver `docs/FORMATO_NOTAS.md`. Resumen: `.md` = verdad (guardado **cifrado** en el teléfono, ADR-008; se exporta en claro); índice de búsqueda en memoria, reconstruible al abrir (ADR-007); preferencias y canciones guardadas en `localStorage` de la WebView (ADR-009).
+
+Capas del almacenamiento: `Disco` (Capacitor, crudo) → `discoCifrado` (AES-GCM) → `Almacen` (rutas validadas, escritura atómica, cola por archivo) → `RepositorioNotas`.
 
 ## Reproductor de YouTube — riesgos conocidos (verificar con un *spike* al inicio de la Fase 4)
 1. **Origen/Referer**: YouTube puede rechazar embeds sin un `Referer`/origen válido (errores tipo 150/153). En Capacitor el origen es `https://localhost`. Si falla, probar `server.hostname` propio de Capacitor y la opción `origin`/`widget_referrer` del IFrame API. Documentar qué funcionó.
@@ -66,3 +68,7 @@ Ver `docs/FORMATO_NOTAS.md`. Resumen: `.md` = verdad; índice de búsqueda en me
 | 005 | Nombre "Marginalia"; appId `io.github.barmanpb74.appnoti` | Aceptada (2026-10-04) |
 | 006 | TypeScript 6.0 hasta que `typescript-eslint` soporte TS 7 | Aceptada (2026-10-04) |
 | 007 | Índice de búsqueda en memoria (no SQLite/FTS5): 2 000 notas caben de sobra y evita un plugin nativo. Se reconstruye leyendo `notas/`. Revisar si la búsqueda supera 150 ms | Aceptada (2026-10-05, autor) |
+| 008 | **Cifrado en reposo de las notas** (pedido del autor, adelanta parte de F5): AES-256-GCM de WebCrypto, IV aleatorio por escritura, ruta del archivo como AAD; clave no extraíble generada en el teléfono y guardada en IndexedDB de la WebView. Cada `.md` lleva la cabecera `MARGINALIA-CIFRADO v1`. Las notas en claro se cifran al arrancar. **Exportar** (Markdown/texto/HTML) produce el archivo descifrado: así ADR-002 sigue en pie (las notas nunca quedan atrapadas). Límites: no protege un teléfono con root ni la app desbloqueada; si se borran los datos de la WebView sin los archivos (Android no lo hace por separado) las notas no se podrían leer; mejora futura: clave envuelta por Android Keystore | Aceptada (2026-10-05, autor) |
+| 009 | Preferencias (tema, vista de notas, reproductor) y canciones guardadas (solo ID + título + artista) en `localStorage`: son pocas, de este teléfono y no son notas | Aceptada (2026-10-05) |
+| 010 | Reproductor: el iframe oficial (`youtube-nocookie`, `enablejsapi=1`) se controla por `postMessage` con el mismo protocolo que la IFrame API, **sin** cargar su script externo (la CSP sigue con `script-src 'self'`). Solo se aceptan mensajes del origen del reproductor y de su ventana. Sustituye a la interfaz `Reproductor` prevista | Aceptada (2026-10-05) |
+| 011 | Diseño: paleta clara de neutros fríos estilo Android (Pixel) y tema oscuro (sigue al sistema o se fija en Ajustes); se quita la textura de papel viejo; se mantiene el trazo a mano. Movimiento suave con curvas de Material, siempre con `prefers-reduced-motion` | Aceptada (2026-10-05, autor) |

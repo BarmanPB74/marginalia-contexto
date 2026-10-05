@@ -60,5 +60,7 @@ Enlace a otra página: [[Pasado compuesto]]
 
 ## Almacenamiento
 - Carpeta privada de la app: `notas/` (un `.md` por página; nombre = `id.md`; el título vive en el frontmatter).
+- **En el teléfono cada archivo va cifrado** (ADR-008): cabecera `MARGINALIA-CIFRADO v1` + Base64 de IV ‖ AES-GCM. Dentro, exactamente este formato. Exportar (Markdown/texto/HTML) lo saca a `Documentos/Marginalia/` ya legible; el `.md` exportado se puede volver a leer tal cual.
+- Bitácora desde el Calendario: `fecha: AAAA-MM-DD` en el frontmatter y la primera línea del cuerpo es `@AAAA-MM-DD` (enlace al día). En modo lectura, toda `@fecha` válida es un enlace a `#/calendario/AAAA-MM-DD`.
 - Índice de búsqueda **en memoria** (ADR-007): notas, etiquetas, fechas, canciones y texto. Se reconstruye escaneando `notas/` al abrir. Nunca es fuente de verdad.
 - Exportación/importación: ZIP de la carpeta `notas/` + `LEEME.txt`. Importar valida rutas (anti *zip-slip*), tamaños y esquema.

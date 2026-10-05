@@ -4,10 +4,10 @@
 > Lo actualiza `/cierre`. Si algo aquí contradice el código, arréglalo aquí.
 
 ## Ahora
-- **Fase actual:** F2 — Notas Markdown locales (F1 cerrada el 2026-10-05, capturas aprobadas por el autor)
-- **Estado:** ~70 %. Hecho: almacén atómico, formato de nota, repositorio/árbol, plantillas, pantalla de Notas, **editor CodeMirror + modo lectura sanitizado + barra de formato**, XSS probado. Falta: búsqueda y exportar/importar ZIP. APK de avance desde la rama `f2-avance` (CI manual); `main` sigue en F1 hasta cerrar F2.
+- **Fase actual:** F2 — Notas Markdown locales (F1 cerrada el 2026-10-05).
+- **Estado:** F2 ~80 % (búsqueda hecha por la paleta de comandos; falta importar/exportar ZIP). El autor pidió el 2026-10-05 adelantar partes de F3 (calendario), F4 (YouTube Music), F5 (cifrado) y un rediseño: **hechas en la rama `ccr-4bb4aef6-3n6fty`** (sobre `f2-avance`), pendientes de su revisión en el teléfono.
 - **Última sesión:** 2026-10-05
-- **Siguiente paso concreto:** búsqueda de texto (índice en memoria, ADR-007) en la lista de Notas. Luego ZIP (fflate) → cierre de F2. Ubicar los pedidos del autor.
+- **Siguiente paso concreto:** el autor prueba el APK de esa rama (lista de abajo) y decide los pendientes; luego ZIP (fflate) → cierre de F2.
 
 ## Decisiones tomadas (ADR en `docs/ARQUITECTURA.md`)
 - 001 Web + Capacitor + Preact · 002 `.md` fuente de verdad · 003 solo IFrame oficial · 004 MIT (Pablo, 2026) · 005 nombre "Marginalia", appId `io.github.barmanpb74.appnoti`
@@ -22,30 +22,29 @@
 - Rutas por hash: `#/notas` (por defecto), `#/calendario`, `#/musica`, `#/ajustes`, `#/galeria` (interna, sin enlace). Funcionan igual en la WebView, en `vite preview` y en el navegador, sin configurar servidor; el botón atrás de Android recorre el historial.
 - Cada componente de `src/ui/` importa su propio CSS; los estilos globales (`a`, `mark`, `code`, foco visible) viven en `base.css`. Pantallas de sección en `src/features/<sección>/`.
 - Icono y arranque (2026-10-05, pedido del autor): marca EK de Eisen-Kern redibujada a mano, tinta sobre papel, sin texto. El arranque (splash, también Android 12+) es la misma marca sobre papel. Fuente `recursos/icono/marca-ek.svg` (el PNG negro original queda en el historial de git); regenerar con `node scripts/icono-android.mjs`. La marca **no** es MIT (README, LEGAL §4).
-- El spike del reproductor vive ahora en Música (se borra en F4).
 - ADR-007 (2026-10-05, autor): búsqueda con índice **en memoria**, no SQLite.
 - Almacén: `Disco` (crudo) + `Almacen` (atómico). En Android, `Filesystem.rename` borra el destino y luego mueve; por eso, si falta `x.md` y hay `x.md.tmp`, se promueve el temporal. Carpeta `Directory.Data` (privada, sin permisos).
 - ULID propio (`src/core/notas/ulid.ts`) en vez del paquete `ulid`. Frontmatter YAML con esquema `core`; las listas se escriben con guiones, como Obsidian.
 - Borrar una página sube sus hijas al nivel de la borrada; nunca se borran en cascada.
 - Bordes del sistema: Capacitor 8 dibuja bajo la barra de estado y la de gestos e inyecta `--safe-area-inset-*`; los tokens `--margen-arriba/--margen-abajo` los usan (con `env()` de respaldo). "Volver" en una nota sube un nivel (madre o lista).
 - Editor: CodeMirror 6 con `@lezer/markdown` + GFM directo (sin `@codemirror/lang-markdown`, que arrastra analizadores de HTML/CSS/JS). Lectura: `markdown-it` con `html: false` + DOMPurify con lista blanca de etiquetas; cada barrera sola frena las 22 cargas de XSS de `tests/unit/render.test.ts`. Enlaces externos con `target=_blank rel=noopener noreferrer`.
-- Modo al abrir: recién creada o vacía → Editar; con cambios → Leer. Mientras se escribe (`.escribiendo` en `<html>`) se esconden la barra de secciones y el mini, y aparece la barra de formato sobre el teclado.
-- Plantillas estilo Obsidian (`{{titulo}}`, `{{fecha}}`, `{{hora}}`), de serie: en blanco, rápida, bitácora, reunión.
-
-- Mini reproductor (2026-10-05, pedido del autor): anclado sobre la barra por defecto; en Ajustes, "Reproductor flotante" lo vuelve arrastrable por el asa, sin salir de la pantalla ni tapar la barra. En Música no se muestra (ya está el grande). Estado compartido en `src/app/estado.tsx`; en F1 suena una canción de muestra (`demo.ts`), sin sonido.
+- Modo al abrir: recién creada en esta sesión (el repositorio lo recuerda; `creado === editado` fallaba al segundo) o vacía → Editar; si no → Leer. Mientras se escribe (`.escribiendo` en `<html>`) se esconden la barra de secciones y el mini, y aparece la barra de formato sobre el teclado.
+- Plantillas estilo Obsidian (`{{titulo}}`, `{{fecha}}`, `{{hora}}`), de serie: en blanco, rápida, bitácora (empieza con `@fecha`), reunión.
+- 2026-10-05 (pedidos del autor): ADR-008 cifrado AES-256-GCM al crear/guardar, exportar .md/.txt/.html descifrado a `Documentos/Marginalia`; ADR-009 preferencias y canciones en `localStorage`; ADR-010 reproductor oficial controlado por `postMessage` (sin script externo); ADR-011 paleta blanca tipo Pixel + oscuro + movimiento suave. Notas en **tarjetas tipo recientes** por defecto (lista en Ajustes). Paleta de comandos (lupa o Ctrl+K). Calendario de mes con hoja del día y «Nueva bitácora». Globo de música escondible a un lado (botón, lanzarlo al borde o deslizar).
+- Mini reproductor: anclado o flotante (Ajustes); en Música no se muestra. Fuera de Música el iframe no existe: el mini lleva a Música (sin audio escondido, LEGAL §1).
 
 ## Pendiente de decidir con el autor
-- **Pedidos del autor (2026-10-05), falta ubicarlos en fases** (no están en FASES.md):
-  1. Plantillas con funciones: gráficos y cálculos (piden el render de F2 primero); plantillas propias del usuario en una carpeta `plantillas/`.
-  2. Convertir una nota a formatos (PDF, carta, documento legal) y exportar al archivo que elija.
-  3. Herramientas tipo Obsidian (¿cuáles? enlaces `[[ ]]` y etiquetas ya están en el formato; faltan p. ej. backlinks, nota diaria, vista de grafo).
-  4. Ventana de comandos (paleta escrita) para usar la app y crear desde plantillas.
+- ¿Reproductor tipo "imagen en imagen" (video pequeño visible) para que la música siga fuera de Música? Ver LEGAL §1.
+- ¿Envolver la clave de cifrado con Android Keystore (plugin nativo) y bloqueo biométrico? (F5)
+- Pedidos aún sin fase: plantillas con gráficos/cálculos y plantillas propias; exportar a PDF/carta/documento legal; backlinks, nota diaria, grafo.
 
 ## Probar en el teléfono (lo que el entorno de Claude no puede verificar)
-- F2 bloque 3: el título y "Volver" no quedan bajo la barra de notificaciones (en Chromium se simuló con 32 px). Escribir con el teclado de Android en CodeMirror (autocorrector, tildes, dictado por voz). La barra Negrita/Lista/Tarea/Enlace queda pegada encima del teclado y el teclado no se cierra al tocarla. Un enlace en modo lectura abre el navegador del sistema, no dentro de la app. Abrir una nota no se siente lento (bundle de 583 kB).
-- F2 (APK de `f2-avance`): crear nota desde cada plantilla, escribir, **forzar cierre** de la app y reabrir → todo sigue. Escribir y cambiar de app enseguida → se guardó. "Borrar nota" muestra el diálogo de confirmación de Android. El cuerpo crece con el texto (`field-sizing`, WebView ≥ 123); si no, hace scroll por dentro.
-- Icono del lanzador con la marca EK (círculo/squircle según el lanzador) y que la barra inferior respete la barra de gestos de Android (`safe-area-inset-bottom`).
-- Cuando F1 llegue al APK: que las fuentes y la galería (`#/galeria`) se vean como en `/sdcard/Documents/appnoti/capturas-f1/galeria.png`. · Cómo instalar un APK de CI: Actions → CI → artefacto `marginalia-debug-apk`.
+- **Rama `ccr-4bb4aef6-3n6fty`** (APK por Actions → CI manual): tema Sistema/Claro/Oscuro y que la barra de estado cambie de color de iconos; animaciones fluidas (no a tirones) en un gama media.
+- Notas en tarjetas: deslizar de lado, que encajen al centro y la del centro se vea grande. Paleta: la lupa abre, el teclado sale, buscar "bit" → «Bitácora de hoy».
+- Calendario: tocar un día → hoja; «Nueva bitácora» abre la nota con `@fecha`; en lectura, tocar la `@fecha` vuelve al día; deslizar cambia de mes.
+- Cifrado: notas de la versión anterior siguen abriéndose (se cifran al arrancar). Exportar → aparece en Archivos › Documentos › Marginalia y se abre con otra app (Android 10 o anterior: puede fallar sin permiso).
+- Música: en YouTube Music «Compartir → Copiar enlace», pegarlo → suena en el reproductor oficial; pausa/anterior/siguiente dibujados responden; la línea de progreso avanza; álbum/lista también. Globo: esconderlo a cada lado y traerlo.
+- Pendiente de antes: barra de formato sobre el teclado; forzar cierre y reabrir conserva todo; icono EK (ahora sobre blanco).
 
 ## Resultado del spike del reproductor (F0, 2026-10-04, teléfono del autor)
 - A `youtube-nocookie.com/embed` dentro de la WebView (origen `https://localhost`): **carga y suena**.
@@ -59,14 +58,15 @@
 ## Dependencias justificadas
 - `preact` 11 · UI de 4 kB · MIT · `@capacitor/core` + `@capacitor/android` 8.5 · puente y proyecto Android · MIT
 - CodeMirror: `@codemirror/state` 6.7.6, `view` 6.43.13, `commands` 6.11.1, `language` 6.12.4, `@lezer/markdown` 1.7.2, `@lezer/highlight` 1.2.5 · editor · MIT · `markdown-it` 15.0.2 · lectura · MIT (trae `entities` BSD-2 → atribución en F6; `argparse` PSF-2.0 solo en su CLI, no entra al bundle) · `dompurify` 3.4.16 · sanitizar · MPL-2.0 o Apache-2.0 (usamos Apache-2.0)
-- `@capacitor/filesystem` 8.1.4 · leer/escribir notas en la carpeta privada · MIT · no añade permisos (manifiesto vacío) · `yaml` 2.9.1 · frontmatter · ISC · sin dependencias
+- `@capacitor/filesystem` 8.1.4 · notas en la carpeta privada y exportar a Documentos · MIT · no añade permisos · `yaml` 2.9.1 · frontmatter · ISC · Cifrado, búsqueda, enlaces de música: **sin dependencias nuevas** (WebCrypto, código propio)
 - Fuentes (no son paquetes npm): Newsreader 400/400i/600, Kalam 400, JetBrains Mono 400 · @fontsource 5.3.0, latino · OFL-1.1 con `OFL.txt` en cada carpeta · 120 kB en total
 - Dev: `vite` 8 (build) MIT · `@preact/preset-vite` MIT · `typescript` 6.0 Apache-2.0 · `eslint` 10 + `@eslint/js` + `typescript-eslint` + `globals` MIT · `vitest` 5 + `jsdom` MIT · `@playwright/test` Apache-2.0 · `@capacitor/cli` MIT
 - Auditoría de licencias (2026-10-04): todas compatibles; MPL-2.0 solo en `lightningcss` (herramienta de build, sin modificar).
 
 ## Riesgos abiertos
 - Bundle JS 583 kB (202 kB gzip) tras CodeMirror + markdown-it. Presupuesto: arranque en frío < 2 s. Si el autor nota lentitud al abrir, cargar editor y lectura con `import()` al abrir una nota.
-- IFrame API de YouTube (script externo: exige ajustar la CSP `script-src`) — sin probar aún; se valida al inicio de F4.
+- Control del reproductor por `postMessage` probado solo en Chromium (sin red): falta el teléfono. Si algún video no permite incrustarse, solo queda «Abrir en YouTube Music».
+- Exportar a `Documentos` en Android ≤ 10 necesita un permiso que no pedimos (regla 3): mostrar alternativa (compartir) si el autor lo usa ahí.
 - `npm audit` (dev): 3 moderadas en `@capacitor/cli` → `xcode` → `uuid` (herramienta de iOS, no se usa; producción limpia). Revisar cuando salga un CLI corregido.
 - Build *release* sin minificación ni firma todavía (corresponde a F6).
 
@@ -74,8 +74,7 @@
 - (vacío)
 
 ## Historial de sesiones
-- 2026-10-05 · F2 · bordes del sistema (barra de estado) + Volver; editor CodeMirror, lectura sanitizada, barra de formato; 22 cargas XSS bloqueadas (unit + e2e).
-- 2026-10-05 · F2 · pantalla de Notas (árbol, plantillas, autoguardado, subpáginas, borrar) + e2e de recarga con IndexedDB; APK de avance por rama `f2-avance`.
-- 2026-10-05 · F2 · Almacen atómico + formato de nota + ULID + repositorio/árbol + plantillas; 63 pruebas nuevas (XSS queda para el render).
+- 2026-10-05 · pedidos del autor · rediseño blanco/oscuro + movimiento, tarjetas tipo recientes, paleta de comandos, calendario + bitácora, cifrado AES-GCM + exportar, YouTube Music en el reproductor oficial, globo escondible; 240 unit + 26 e2e.
+- 2026-10-05 · F2 · Almacen atómico, formato, ULID, repositorio/árbol, plantillas; pantalla de Notas con autoguardado; editor CodeMirror + lectura sanitizada (22 XSS bloqueados); bordes del sistema; APK de avance por `f2-avance`.
 - 2026-10-04/05 · F1 cerrada · tokens, fuentes B, componentes base + galería, icono EK, barra inferior, reproductor estático; capturas aprobadas.
 - 2026-10-04 · F0 cerrada · repo público, CI (APK, CodeQL, gitleaks, dependency-review), spike del reproductor: A y B suenan.

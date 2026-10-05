@@ -1,13 +1,16 @@
 # Marginalia
 
-Cuaderno de notas en Markdown para Android, local-first, con estética de papel dibujado a mano.
+Cuaderno de notas en Markdown para Android, local-first: limpio como el sistema de Android, con trazo dibujado a mano, en claro y en oscuro.
 
-> **Estado:** en construcción (Fase 0 — Cimientos). Todavía no hay funciones de notas.
+> **Estado:** en construcción (Fase 2 — Notas). Versión de avance, sin publicar.
 
 ## Qué es
-- Notas en Markdown organizadas en páginas.
-- Etiquetas de fecha que aparecen en un calendario.
-- Notas asociadas a una canción (y al segundo exacto) usando el reproductor oficial incrustado de YouTube.
+- Notas en Markdown organizadas en páginas y subpáginas, vistas como **tarjetas tipo apps recientes** o como lista.
+- Plantillas: nota rápida, **bitácora**, reunión.
+- **Calendario**: cada `@fecha` de una nota la pone en su día; desde un día se crea su bitácora.
+- **Paleta de comandos**: busca notas, ajustes y herramientas escribiendo su nombre.
+- **Música de YouTube Music**: pega el enlace de una canción, álbum o lista y suena en el reproductor oficial incrustado, con un globo que se esconde a un lado.
+- **Notas cifradas** (AES-256-GCM) en el teléfono desde que se crean; al exportarlas (Markdown, texto, HTML) salen legibles.
 - Todo vive en tu teléfono: sin cuentas, sin servidor, sin analíticas.
 
 ## Desarrollo
