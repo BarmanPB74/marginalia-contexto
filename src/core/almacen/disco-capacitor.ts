@@ -14,10 +14,23 @@ async function existe(ruta: string): Promise<boolean> {
 }
 
 /**
+ * Todas las operaciones del plugin, una detrás de otra. El plugin no promete nada con llamadas
+ * simultáneas (en el navegador, la primera vez puede abrir su base de datos dos veces a la vez),
+ * y en los e2e apareció, muy de vez en cuando, una lectura que nunca terminaba. Con notas
+ * pequeñas, ir en fila cuesta milisegundos.
+ */
+let cola: Promise<unknown> = Promise.resolve();
+function enFila<T>(tarea: () => Promise<T>): Promise<T> {
+  const resultado = cola.catch(() => undefined).then(tarea);
+  cola = resultado;
+  return resultado;
+}
+
+/**
  * Disco del teléfono. No verificable en el entorno de Claude (no hay WebView):
  * ver "Probar en el teléfono" en ESTADO.md.
  */
-export const discoCapacitor: Disco = {
+const directo: Disco = {
   async leer(ruta) {
     if (!(await existe(ruta))) return null;
     const { data } = await Filesystem.readFile({ path: ruta, directory: DIRECTORIO, encoding: Encoding.UTF8 });
@@ -48,4 +61,12 @@ export const discoCapacitor: Disco = {
     const { files } = await Filesystem.readdir({ path: carpeta, directory: DIRECTORIO });
     return files.filter((f) => f.type === 'file').map((f) => f.name);
   },
+};
+
+export const discoCapacitor: Disco = {
+  leer: (ruta) => enFila(() => directo.leer(ruta)),
+  escribir: (ruta, contenido) => enFila(() => directo.escribir(ruta, contenido)),
+  renombrar: (origen, destino) => enFila(() => directo.renombrar(origen, destino)),
+  borrar: (ruta) => enFila(() => directo.borrar(ruta)),
+  listar: (carpeta) => enFila(() => directo.listar(carpeta)),
 };
