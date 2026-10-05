@@ -5,9 +5,9 @@
 
 ## Ahora
 - **Fase actual:** F2 — Notas Markdown locales (F1 cerrada el 2026-10-05, capturas aprobadas por el autor)
-- **Estado:** sin empezar.
+- **Estado:** ~30 %. Hecho: `src/core/almacen/` (escritura atómica + recuperación) y `src/core/notas/` (formato, ULID, repositorio, árbol, plantillas). Sin UI todavía.
 - **Última sesión:** 2026-10-05
-- **Siguiente paso concreto:** `/inicio` de F2 (leer su sección en `docs/FASES.md` y proponer plan). El autor prueba el APK de F1 en el teléfono.
+- **Siguiente paso concreto:** pantalla de Notas: lista + árbol + "Nueva nota" con selector de plantilla, conectada a `RepositorioNotas` (memoria en navegador, Capacitor en el APK). Luego: editor CodeMirror + lectura (markdown-it + DOMPurify), búsqueda, ZIP (fflate).
 
 ## Decisiones tomadas (ADR en `docs/ARQUITECTURA.md`)
 - 001 Web + Capacitor + Preact · 002 `.md` fuente de verdad · 003 solo IFrame oficial · 004 MIT (Pablo, 2026) · 005 nombre "Marginalia", appId `io.github.barmanpb74.appnoti`
@@ -23,13 +23,23 @@
 - Cada componente de `src/ui/` importa su propio CSS; los estilos globales (`a`, `mark`, `code`, foco visible) viven en `base.css`. Pantallas de sección en `src/features/<sección>/`.
 - Icono y arranque (2026-10-05, pedido del autor): marca EK de Eisen-Kern redibujada a mano, tinta sobre papel, sin texto. El arranque (splash, también Android 12+) es la misma marca sobre papel. Fuente `recursos/icono/marca-ek.svg` (el PNG negro original queda en el historial de git); regenerar con `node scripts/icono-android.mjs`. La marca **no** es MIT (README, LEGAL §4).
 - El spike del reproductor vive ahora en Música (se borra en F4).
+- ADR-007 (2026-10-05, autor): búsqueda con índice **en memoria**, no SQLite.
+- Almacén: `Disco` (crudo) + `Almacen` (atómico). En Android, `Filesystem.rename` borra el destino y luego mueve; por eso, si falta `x.md` y hay `x.md.tmp`, se promueve el temporal. Carpeta `Directory.Data` (privada, sin permisos).
+- ULID propio (`src/core/notas/ulid.ts`) en vez del paquete `ulid`. Frontmatter YAML con esquema `core`; las listas se escriben con guiones, como Obsidian.
+- Borrar una página sube sus hijas al nivel de la borrada; nunca se borran en cascada.
+- Plantillas estilo Obsidian (`{{titulo}}`, `{{fecha}}`, `{{hora}}`), de serie: en blanco, rápida, bitácora, reunión.
 
 - Mini reproductor (2026-10-05, pedido del autor): anclado sobre la barra por defecto; en Ajustes, "Reproductor flotante" lo vuelve arrastrable por el asa, sin salir de la pantalla ni tapar la barra. En Música no se muestra (ya está el grande). Estado compartido en `src/app/estado.tsx`; en F1 suena una canción de muestra (`demo.ts`), sin sonido.
 
 ## Pendiente de decidir con el autor
-- (nada)
+- **Pedidos del autor (2026-10-05), falta ubicarlos en fases** (no están en FASES.md):
+  1. Plantillas con funciones: gráficos y cálculos (piden el render de F2 primero); plantillas propias del usuario en una carpeta `plantillas/`.
+  2. Convertir una nota a formatos (PDF, carta, documento legal) y exportar al archivo que elija.
+  3. Herramientas tipo Obsidian (¿cuáles? enlaces `[[ ]]` y etiquetas ya están en el formato; faltan p. ej. backlinks, nota diaria, vista de grafo).
+  4. Ventana de comandos (paleta escrita) para usar la app y crear desde plantillas.
 
 ## Probar en el teléfono (lo que el entorno de Claude no puede verificar)
+- F2: `discoCapacitor` (leer/escribir/renombrar/listar en `Directory.Data`) solo está probado con el disco en memoria; se verifica cuando la pantalla de Notas lo use en el APK: crear nota, cerrar la app a la fuerza, reabrir.
 - Icono del lanzador con la marca EK (círculo/squircle según el lanzador) y que la barra inferior respete la barra de gestos de Android (`safe-area-inset-bottom`).
 - Cuando F1 llegue al APK: que las fuentes y la galería (`#/galeria`) se vean como en `/sdcard/Documents/appnoti/capturas-f1/galeria.png`. · Cómo instalar un APK de CI: Actions → CI → artefacto `marginalia-debug-apk`.
 
@@ -44,6 +54,7 @@
 
 ## Dependencias justificadas
 - `preact` 11 · UI de 4 kB · MIT · `@capacitor/core` + `@capacitor/android` 8.5 · puente y proyecto Android · MIT
+- `@capacitor/filesystem` 8.1.4 · leer/escribir notas en la carpeta privada · MIT · no añade permisos (manifiesto vacío) · `yaml` 2.9.1 · frontmatter · ISC · sin dependencias
 - Fuentes (no son paquetes npm): Newsreader 400/400i/600, Kalam 400, JetBrains Mono 400 · @fontsource 5.3.0, latino · OFL-1.1 con `OFL.txt` en cada carpeta · 120 kB en total
 - Dev: `vite` 8 (build) MIT · `@preact/preset-vite` MIT · `typescript` 6.0 Apache-2.0 · `eslint` 10 + `@eslint/js` + `typescript-eslint` + `globals` MIT · `vitest` 5 + `jsdom` MIT · `@playwright/test` Apache-2.0 · `@capacitor/cli` MIT
 - Auditoría de licencias (2026-10-04): todas compatibles; MPL-2.0 solo en `lightningcss` (herramienta de build, sin modificar).
@@ -57,6 +68,7 @@
 - (vacío)
 
 ## Historial de sesiones
+- 2026-10-05 · F2 · Almacen atómico + formato de nota + ULID + repositorio/árbol + plantillas; 63 pruebas nuevas (XSS queda para el render).
 - 2026-10-05 · F1 cerrada · capturas aprobadas por el autor; push.
 - 2026-10-05 · F1 · línea de progreso invisible arreglada (+e2e), script de capturas, capturas finales, `/auditar` F1 ✅ (gitleaks solo en CI).
 - 2026-10-04 · F0 · repo público, licencia y docs de seguridad, Vite+Preact+TS+Capacitor endurecido, CI verde con APK debug, CodeQL, gitleaks, dependency-review, Dependabot, push protection; spike del reproductor listo para probar.

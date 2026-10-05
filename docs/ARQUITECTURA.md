@@ -22,7 +22,7 @@ features/  notas · calendario · musica · ajustes     ← lógica de pantalla
    │
 core/      parser · índice · repositorio de notas · reproductor (puerto)
    │
-Plataforma (Capacitor): Filesystem · SQLite · Share Intent · App Lock
+Plataforma (Capacitor): Filesystem · Share Intent · App Lock
 ```
 
 Reglas de dependencia:
@@ -31,7 +31,7 @@ Reglas de dependencia:
 - Un `Reproductor` es una interfaz (`cargar(id, t)`, `reproducir()`, `pausar()`, `tiempoActual()`, eventos). La implementación YouTube vive en `features/musica/yt-iframe.ts`. Así el resto de la app no depende de YouTube.
 
 ## Datos
-Ver `docs/FORMATO_NOTAS.md`. Resumen: `.md` = verdad; SQLite (FTS5) = índice reconstruible; ajustes en un JSON pequeño.
+Ver `docs/FORMATO_NOTAS.md`. Resumen: `.md` = verdad; índice de búsqueda en memoria, reconstruible al abrir (ADR-007); ajustes en un JSON pequeño.
 
 ## Reproductor de YouTube — riesgos conocidos (verificar con un *spike* al inicio de la Fase 4)
 1. **Origen/Referer**: YouTube puede rechazar embeds sin un `Referer`/origen válido (errores tipo 150/153). En Capacitor el origen es `https://localhost`. Si falla, probar `server.hostname` propio de Capacitor y la opción `origin`/`widget_referrer` del IFrame API. Documentar qué funcionó.
@@ -54,14 +54,15 @@ Ver `docs/FORMATO_NOTAS.md`. Resumen: `.md` = verdad; SQLite (FTS5) = índice re
 ## Rendimiento (presupuesto)
 - APK < 15 MB. Arranque en frío < 2 s en un gama media.
 - Lista de 2 000 notas fluida (virtualizar listas largas).
-- Búsqueda FTS < 150 ms sobre 2 000 notas.
+- Búsqueda < 150 ms sobre 2 000 notas.
 
 ## Registro de decisiones (ADR)
 | # | Decisión | Estado |
 |---|---|---|
 | 001 | Web + Capacitor + Preact | Aceptada |
-| 002 | `.md` como fuente de verdad + índice SQLite reconstruible | Aceptada |
+| 002 | `.md` como fuente de verdad + índice reconstruible | Aceptada (el índice pasa a memoria, ver 007) |
 | 003 | Solo YouTube IFrame Player oficial | Aceptada (ver LEGAL) |
 | 004 | Licencia MIT | Aceptada (confirmada en F0, 2026-10-04) |
 | 005 | Nombre "Marginalia"; appId `io.github.barmanpb74.appnoti` | Aceptada (2026-10-04) |
 | 006 | TypeScript 6.0 hasta que `typescript-eslint` soporte TS 7 | Aceptada (2026-10-04) |
+| 007 | Índice de búsqueda en memoria (no SQLite/FTS5): 2 000 notas caben de sobra y evita un plugin nativo. Se reconstruye leyendo `notas/`. Revisar si la búsqueda supera 150 ms | Aceptada (2026-10-05, autor) |

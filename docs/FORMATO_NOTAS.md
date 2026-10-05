@@ -60,5 +60,5 @@ Enlace a otra página: [[Pasado compuesto]]
 
 ## Almacenamiento
 - Carpeta privada de la app: `notas/` (un `.md` por página; nombre = `id.md`; el título vive en el frontmatter).
-- Índice SQLite (`indice.db`): tabla de notas, etiquetas, fechas, canciones, texto FTS5. **Reconstruible** escaneando `notas/`. Nunca es fuente de verdad.
+- Índice de búsqueda **en memoria** (ADR-007): notas, etiquetas, fechas, canciones y texto. Se reconstruye escaneando `notas/` al abrir. Nunca es fuente de verdad.
 - Exportación/importación: ZIP de la carpeta `notas/` + `LEEME.txt`. Importar valida rutas (anti *zip-slip*), tamaños y esquema.
