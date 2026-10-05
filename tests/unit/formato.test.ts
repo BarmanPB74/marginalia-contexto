@@ -2,15 +2,18 @@ import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/
 import { describe, expect, it } from 'vitest';
 import { alternarLista, alternarNegrita, alternarTarea, insertarEnlace } from '../../src/features/notas/editor/formato';
 
-/** "|" marca el cursor; "[" y "]" una selección. */
+/** Quita el carácter de la posición `i` (una sola marca a propósito, no todas). */
+const sin = (texto: string, i: number) => texto.slice(0, i) + texto.slice(i + 1);
+
+/** "|" marca el cursor; "[" y "]" una selección. Cada marca aparece una sola vez. */
 function estado(texto: string): EditorState {
   const cursor = texto.indexOf('|');
   if (cursor >= 0) {
-    return EditorState.create({ doc: texto.replace('|', ''), selection: EditorSelection.cursor(cursor) });
+    return EditorState.create({ doc: sin(texto, cursor), selection: EditorSelection.cursor(cursor) });
   }
   const desde = texto.indexOf('[');
   const hasta = texto.indexOf(']') - 1;
-  return EditorState.create({ doc: texto.replace('[', '').replace(']', ''), selection: EditorSelection.range(desde, hasta) });
+  return EditorState.create({ doc: sin(sin(texto, desde), hasta), selection: EditorSelection.range(desde, hasta) });
 }
 
 function aplicar(e: EditorState, accion: (e: EditorState) => TransactionSpec): string {
