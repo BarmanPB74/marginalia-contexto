@@ -1,10 +1,9 @@
 import type { Ajustes } from '../../app/ajustes';
-import { exportar, nombreArchivo } from '../../core/exportar/formatos';
-import { guardarExportado } from '../../core/exportar/guardar';
 import { diaDe } from '../../core/notas/fechas';
 import { PLANTILLAS } from '../../core/notas/plantillas';
 import type { RepositorioNotas } from '../../core/notas/repositorio';
 import type { NombreIcono } from '../../ui/Icono';
+import { elegirZip, exportarCopia, importarCopia } from '../notas/copia';
 
 export type GrupoComando = 'Esta nota' | 'Herramientas' | 'Ir a' | 'Ajustes' | 'Música';
 
@@ -26,10 +25,20 @@ interface Contexto {
   sonando: boolean;
   alternar: () => void;
   hoy?: Date;
+  /** Mensaje para la persona tras una herramienta (exportar, importar…) */
+  avisar?: (mensaje: string) => void;
 }
 
 /** Comandos que existen en cualquier pantalla. Los de una nota abierta los añade PantallaNota. */
-export function comandosGlobales({ repo, ajustes, cambiarAjustes, sonando, alternar, hoy = new Date() }: Contexto): Comando[] {
+export function comandosGlobales({
+  repo,
+  ajustes,
+  cambiarAjustes,
+  sonando,
+  alternar,
+  hoy = new Date(),
+  avisar = () => undefined,
+}: Contexto): Comando[] {
   const abrir = async (opciones: Parameters<RepositorioNotas['crear']>[0]) => {
     const nota = await repo.crear(opciones);
     location.hash = `#/notas/${nota.id}`;
@@ -53,21 +62,23 @@ export function comandosGlobales({ repo, ajustes, cambiarAjustes, sonando, alter
       ejecutar: () => abrir({ plantilla: p.id }),
     })),
     {
-      id: 'exportar-todas',
-      nombre: 'Exportar todas las notas (Markdown, sin cifrar)',
+      id: 'exportar-zip',
+      nombre: 'Exportar todas las notas (ZIP)',
       grupo: 'Herramientas',
-      palabras: 'copia respaldo backup guardar descifrar obsidian',
+      palabras: 'copia respaldo backup guardar descifrar obsidian markdown',
       icono: 'exportar',
+      ejecutar: async () => avisar(await exportarCopia(repo, hoy)),
+    },
+    {
+      id: 'importar-zip',
+      nombre: 'Importar notas (ZIP)',
+      grupo: 'Herramientas',
+      palabras: 'copia respaldo backup restaurar recuperar',
+      icono: 'mas',
       ejecutar: async () => {
-        const { notas } = await repo.listar();
-        const usados = new Set<string>();
-        for (const n of notas) {
-          // Dos notas con el mismo título no se pisan: la segunda lleva su id
-          let nombre = nombreArchivo(n.titulo, 'md');
-          if (usados.has(nombre)) nombre = nombreArchivo(`${n.titulo} ${n.id}`, 'md');
-          usados.add(nombre);
-          await guardarExportado(nombre, exportar(n, 'md'), 'text/markdown', `notas-${dia}`);
-        }
+        // elegirZip() se llama sin esperar nada antes: sigue dentro del toque o de Intro
+        const archivo = await elegirZip();
+        if (archivo) avisar(await importarCopia(repo, archivo));
       },
     },
     {

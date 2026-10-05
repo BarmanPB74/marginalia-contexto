@@ -30,7 +30,7 @@ function useHash() {
 }
 
 function Secciones({ ruta, idNota, dia }: { ruta: IdSeccion; idNota: string | null; dia: string | null }) {
-  const { flotante, sonando, miniEscondido, cambiarAjustes, comandosAbiertos, cancion } = useEstado();
+  const { flotante, sonando, miniEscondido, cambiarAjustes, comandosAbiertos, cancion, aviso, avisar } = useEstado();
   const Pantalla = PANTALLAS[ruta];
   // En Música ya está el reproductor grande.
   const conMini = ruta !== 'musica';
@@ -60,6 +60,13 @@ function Secciones({ ruta, idNota, dia }: { ruta: IdSeccion; idNota: string | nu
       )}
       <BarraInferior actual={ruta} />
       {comandosAbiertos && <Paleta />}
+      <div class="aviso-global" aria-live="polite">
+        {aviso && (
+          <button type="button" class="aviso-global__texto" onClick={() => avisar('')}>
+            {aviso}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

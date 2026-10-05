@@ -2,6 +2,7 @@ import { Fragment } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { useEstado } from '../../app/estado';
 import { fragmento, puntuar } from '../../core/comandos/buscar';
+import { fechasDeNota } from '../../core/notas/fechas';
 import type { Nota } from '../../core/notas/nota';
 import { Icono, type NombreIcono } from '../../ui/Icono';
 import { useRepositorio } from '../notas/contexto';
@@ -30,13 +31,15 @@ function deComando(c: Comando, consulta: string): Resultado | null {
 
 function deNota(n: Nota, consulta: string): Resultado | null {
   const enTitulo = puntuar(consulta, n.titulo);
-  const enTexto = consulta.trim() ? puntuar(consulta, `${n.titulo} ${n.etiquetas.join(' ')} ${n.cuerpo}`) : 0;
+  // Historia 6: también por etiqueta (#estudio) y por fecha (2026-10-12 o @2026-10-12), aunque vivan en el frontmatter
+  const marcas = [...n.etiquetas.map((e) => `#${e}`), ...fechasDeNota(n).map((d) => `@${d}`)].join(' ');
+  const enTexto = consulta.trim() ? puntuar(consulta, `${n.titulo} ${marcas} ${n.cuerpo}`) : 0;
   if (enTitulo === 0 && enTexto === 0) return null;
   return {
     id: `nota-${n.id}`,
     nombre: n.titulo,
     grupo: 'Notas',
-    ...(enTitulo === 0 ? { detalle: fragmento(n.cuerpo, consulta) } : {}),
+    ...(enTitulo === 0 ? { detalle: fragmento(`${marcas} ${n.cuerpo}`, consulta) } : {}),
     icono: 'notas',
     puntos: enTitulo * 2 + enTexto,
     ejecutar: () => void (location.hash = `#/notas/${n.id}`),
@@ -69,7 +72,7 @@ export function Paleta() {
   }, [repo]);
 
   const resultados = useMemo(() => {
-    const comandos = [...estado.comandosLocales, ...comandosGlobales({ ...estado, repo, ajustes: estado })]
+    const comandos = [...estado.comandosLocales, ...comandosGlobales({ ...estado, repo, ajustes: estado, avisar: estado.avisar })]
       .map((c) => deComando(c, consulta))
       .filter((r): r is Resultado => r !== null);
     const deNotas = (

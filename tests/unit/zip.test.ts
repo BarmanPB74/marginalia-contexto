@@ -26,7 +26,7 @@ const zip = (archivos: Record<string, string | Uint8Array>) =>
 
 describe('exportarZip / leerZip', () => {
   it('ida y vuelta sin pérdida: mismo .md byte a byte, con LEEME.txt', () => {
-    const notas = [nota('Uno'), nota('Dos', { padre: undefined })];
+    const notas = [nota('Uno'), nota('Dos')];
     const bytes = exportarZip(notas);
     const { notas: leidas, rechazados } = leerZip(bytes);
     expect(rechazados).toEqual([]);

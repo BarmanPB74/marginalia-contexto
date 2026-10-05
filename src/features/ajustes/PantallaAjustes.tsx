@@ -1,9 +1,13 @@
+import { useState } from 'preact/hooks';
 import { useEstado } from '../../app/estado';
 import type { Tema, VistaNotas } from '../../app/ajustes';
+import { Boton } from '../../ui/Boton';
 import { Encabezado } from '../../ui/Encabezado';
 import { Interruptor } from '../../ui/Interruptor';
 import { Pagina } from '../../ui/Pagina';
 import { Segmentado } from '../../ui/Segmentado';
+import { useRepositorio } from '../notas/contexto';
+import { elegirZip, exportarCopia, importarCopia } from '../notas/copia';
 import './PantallaAjustes.css';
 
 const TEMAS: { valor: Tema; etiqueta: string }[] = [
@@ -20,6 +24,21 @@ const VISTAS: { valor: VistaNotas; etiqueta: string }[] = [
 /** Lista plana, sin tarjetas (DISENO.md). */
 export function PantallaAjustes() {
   const { flotante, setFlotante, tema, vistaNotas, miniEscondido, cambiarAjustes, abrirComandos } = useEstado();
+  const repo = useRepositorio();
+  const [aviso, setAviso] = useState('');
+  const [ocupado, setOcupado] = useState(false);
+
+  async function trabajar(tarea: () => Promise<string>) {
+    setOcupado(true);
+    setAviso('');
+    try {
+      setAviso(await tarea());
+    } catch {
+      setAviso('No se pudo completar. En Android 10 o anterior, la carpeta Documentos necesita un permiso que la app no pide.');
+    } finally {
+      setOcupado(false);
+    }
+  }
   return (
     <Pagina>
       <Encabezado
@@ -59,6 +78,36 @@ export function PantallaAjustes() {
             />
           </li>
         )}
+        <li>
+          <p class="ajustes__titulo">Copia de seguridad</p>
+          <div class="ajustes__botones">
+            <Boton desactivado={ocupado} alTocar={() => void trabajar(() => exportarCopia(repo))}>
+              Exportar notas (ZIP)
+            </Boton>
+            <Boton
+              variante="texto"
+              desactivado={ocupado}
+              alTocar={() => {
+                // El selector se abre ya, dentro del toque; lo demás espera al archivo
+                const eleccion = elegirZip();
+                void trabajar(async () => {
+                  const archivo = await eleccion;
+                  return archivo ? importarCopia(repo, archivo) : '';
+                });
+              }}
+            >
+              Importar notas (ZIP)
+            </Boton>
+          </div>
+          <p class="ajustes__pista">
+            Todas tus notas en un .zip de Markdown legible (sin cifrar). Importar nunca borra ni pisa lo que ya tienes.
+          </p>
+          {aviso && (
+            <p class="ajustes__aviso" aria-live="polite">
+              {aviso}
+            </p>
+          )}
+        </li>
         <li>
           <p class="ajustes__titulo">Privacidad</p>
           <p class="ajustes__pista ajustes__pista--suelta">

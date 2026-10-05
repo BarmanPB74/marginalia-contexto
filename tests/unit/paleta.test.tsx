@@ -49,6 +49,23 @@ describe('paleta de comandos', () => {
     expect(location.hash).toBe(`#/notas/${n.id}`);
   });
 
+  it('historia 6: busca por #etiqueta y por fecha, aunque estén solo en el frontmatter', async () => {
+    const repo = repoNuevo();
+    const a = await repo.crear({ titulo: 'Apuntes', plantilla: 'en-blanco' });
+    await repo.guardar({ ...a, etiquetas: ['estudio'], cuerpo: 'nada que ver' });
+    const b = await repo.crear({ titulo: 'Entrega', plantilla: 'reunion', dia: '2026-10-12' });
+    await repo.guardar({ ...b, cuerpo: 'sin fecha en el texto' });
+    await repo.crear({ titulo: 'Otra' });
+    location.hash = '#/notas';
+    const c = await montar(<App />, repo);
+    const entrada = await abrirPaleta(c);
+    act(() => escribir(entrada, '#estudio'));
+    expect(opciones(c).filter((o) => ['Apuntes', 'Entrega', 'Otra'].includes(o ?? ''))).toEqual(['Apuntes']);
+    act(() => escribir(entrada, '2026-10-12'));
+    expect(opciones(c).filter((o) => ['Apuntes', 'Entrega', 'Otra'].includes(o ?? ''))).toEqual(['Entrega']);
+    expect(c.querySelector('.paleta__detalle')?.textContent).toContain('@2026-10-12');
+  });
+
   it('herramientas: «bitácora» crea la de hoy; las flechas mueven la selección; Escape cierra', async () => {
     const repo = repoNuevo();
     location.hash = '#/notas';

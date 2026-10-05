@@ -23,6 +23,9 @@ interface EstadoApp extends Ajustes {
   /** Paleta de comandos abierta. */
   comandosAbiertos: boolean;
   abrirComandos: (abierta: boolean) => void;
+  /** Aviso corto que aparece abajo unos segundos (resultado de exportar, importar…) */
+  aviso: string;
+  avisar: (mensaje: string) => void;
   /** Comandos de la pantalla actual (p. ej. los de la nota abierta), además de los globales. */
   comandosLocales: Comando[];
   setComandosLocales: (comandos: Comando[]) => void;
@@ -37,6 +40,13 @@ export function ProveedorEstado({ children }: { children: ComponentChildren }) {
   const control = useRef<ControlVideo | null>(null);
   const [comandosAbiertos, abrirComandos] = useState(false);
   const [comandosLocales, setComandosLocales] = useState<Comando[]>([]);
+  const [aviso, avisar] = useState('');
+
+  useEffect(() => {
+    if (!aviso) return;
+    const reloj = setTimeout(() => avisar(''), 7000);
+    return () => clearTimeout(reloj);
+  }, [aviso]);
 
   // Ctrl+K (o ⌘K) abre la paleta desde cualquier pantalla con teclado físico.
   useEffect(() => {
@@ -103,6 +113,8 @@ export function ProveedorEstado({ children }: { children: ComponentChildren }) {
         abrirComandos,
         comandosLocales,
         setComandosLocales,
+        aviso,
+        avisar,
       }}
     >
       {children}

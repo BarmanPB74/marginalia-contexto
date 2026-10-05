@@ -29,3 +29,19 @@
 .ajustes__pista--suelta {
   margin-top: 0;
 }
+
+.ajustes__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ajustes__aviso {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  font-size: var(--texto-s);
+  background: var(--acento-suave);
+  border-radius: var(--radio);
+  overflow-wrap: anywhere;
+  animation: aparecer var(--dur-media) var(--curva) backwards;
+}
