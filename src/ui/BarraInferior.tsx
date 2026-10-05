@@ -13,7 +13,9 @@ export function BarraInferior({ actual }: { actual: IdSeccion }) {
           href={`#/${s.id}`}
           aria-current={s.id === actual ? 'page' : undefined}
         >
-          <Icono nombre={s.icono} />
+          <span class="barra-inferior__pastilla">
+            <Icono nombre={s.icono} />
+          </span>
           <span class="barra-inferior__etiqueta">{s.etiqueta}</span>
         </a>
       ))}

@@ -35,3 +35,13 @@ export function limitarPosicion(punto: Punto, caja: Medidas, pantalla: Pantalla)
     y: Math.max(MARGEN + (pantalla.reservaSuperior ?? 0), Math.min(punto.y, maxY)),
   };
 }
+
+/** Si el dedo suelta a menos de esto del canto, el globo se esconde de ese lado. */
+export const BORDE_ESCONDER = 12;
+
+/** Lado hacia el que se esconde un globo lanzado contra el borde; `null` si se soltó dentro. */
+export function ladoParaEsconder(x: number, anchoPantalla: number): 'izquierda' | 'derecha' | null {
+  if (x <= BORDE_ESCONDER) return 'izquierda';
+  if (x >= anchoPantalla - BORDE_ESCONDER) return 'derecha';
+  return null;
+}

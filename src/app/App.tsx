@@ -29,11 +29,11 @@ function useHash() {
 }
 
 function Secciones({ ruta, idNota }: { ruta: IdSeccion; idNota: string | null }) {
-  const { flotante, sonando, alternar } = useEstado();
+  const { flotante, sonando, alternar, miniEscondido, cambiarAjustes } = useEstado();
   const Pantalla = PANTALLAS[ruta];
   // En Música ya está el reproductor grande. F1: siempre hay una canción de muestra; en F4, solo si hay algo cargado.
   const conMini = ruta !== 'musica';
-  const anclado = conMini && !flotante;
+  const anclado = conMini && !flotante && !miniEscondido;
   return (
     <div class={anclado ? 'con-mini-anclado' : undefined}>
       {/* key: al cambiar de nota se desmonta la anterior, que guarda lo pendiente */}
@@ -45,6 +45,8 @@ function Secciones({ ruta, idNota }: { ruta: IdSeccion; idNota: string | null })
           sonando={sonando}
           alAlternar={alternar}
           modo={flotante ? 'flotante' : 'anclado'}
+          escondido={miniEscondido}
+          alEsconder={(lado) => cambiarAjustes({ miniEscondido: lado })}
         />
       )}
       <BarraInferior actual={ruta} />

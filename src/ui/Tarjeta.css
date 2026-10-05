@@ -1,5 +1,8 @@
 .tarjeta {
   padding: 16px;
-  border: var(--trazo) solid var(--tinta);
+  background: var(--superficie);
+  border: var(--trazo) solid var(--contorno);
   border-radius: var(--radio);
+  box-shadow: var(--sombra);
+  animation: aparecer var(--dur-media) var(--curva) both;
 }

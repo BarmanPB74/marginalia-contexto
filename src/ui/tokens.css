@@ -1,24 +1,36 @@
 /*
  * Tokens de diseño — ÚNICA fuente de colores, trazos y medidas (docs/DISENO.md).
  * Ningún otro archivo de src/ puede escribir un color literal (lo vigila tests/unit/tokens.test.ts).
+ *
+ * Paleta (2026-10-05, pedido del autor): blanco limpio y neutros fríos al estilo del sistema de
+ * Android (Pixel), con el trazo a mano de siempre. Dos temas: claro (por defecto) y oscuro, que
+ * sigue al teléfono salvo que Ajustes → Tema fije uno (`data-tema` en <html>).
  */
 :root {
-  /* Papel y tinta */
-  --papel: #faf7f0;
-  --papel-2: #f3eee2;
-  --tinta: #1e1c19;
-  --tinta-suave: #6b665d;
-  --acento: #2d4a6b;
-  --marca: rgb(242 227 160 / 0.6);
-  --separador: color-mix(in srgb, var(--tinta) 15%, transparent);
+  color-scheme: light;
+
+  /* Superficies y tinta — tema claro */
+  --papel: #fcfcff;
+  --papel-2: #f0f2f7;
+  --superficie: #ffffff;
+  --tinta: #1b1c20;
+  --tinta-suave: #5b5f68;
+  --acento: #0b4cb4;
+  --acento-suave: #d8e4fb;
+  --marca: rgb(168 199 250 / 0.45);
+  --sombra: 0 1px 2px rgb(20 30 60 / 0.06), 0 6px 20px rgb(20 30 60 / 0.07);
+  --velo: rgb(15 18 25 / 0.32);
+  --separador: color-mix(in srgb, var(--tinta) 12%, transparent);
+  --contorno: color-mix(in srgb, var(--tinta) 78%, transparent);
 
   /* Trazo "a mano": radios asimétricos fijos, deterministas y baratos para la WebView */
   --trazo: 1.5px;
   --trazo-icono: 1.75;
   --radio: 14px 12px 15px 11px / 12px 15px 11px 14px;
+  --radio-grande: 26px 22px 28px 21px / 22px 27px 21px 26px;
 
-  /* Textura de papel: ruido SVG muy sutil (≈4 %), estático */
-  --textura: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .04 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23r)'/%3E%3C/svg%3E");
+  /* Sin textura de papel viejo: el fondo es liso (se deja el token por compatibilidad) */
+  --textura: none;
 
   /* Tipografía (fuentes locales en src/ui/fuentes.css). La letra a mano nunca va en párrafos largos. */
   --letra-cuerpo: 'Newsreader', Georgia, serif;
@@ -39,18 +51,60 @@
    */
   --margen-arriba: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
   --margen-abajo: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  /* Margen lateral que crece con la pantalla: 16 px en teléfonos pequeños, 24 px en los grandes */
+  --margen-lado: clamp(16px, 5vw, 24px);
 
   /* Espacio y tacto */
   --toque: 48px;
   --alto-barra: 64px;
   --alto-mini: 60px;
 
-  /* Movimiento: casi nulo */
-  --transicion: 140ms ease-out;
+  /* Movimiento suave: curva "enfatizada" de Material, corta para tocar y larga para entrar */
+  --curva: cubic-bezier(0.2, 0, 0, 1);
+  --curva-salida: cubic-bezier(0.3, 0, 0.8, 0.15);
+  --transicion: 160ms var(--curva);
+  --dur-corta: 180ms;
+  --dur-media: 320ms;
+  --dur-larga: 460ms;
+}
+
+/* Tema oscuro: el del teléfono (salvo que Ajustes fije "claro")… */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema='claro']) {
+    color-scheme: dark;
+    --papel: #111318;
+    --papel-2: #1d2026;
+    --superficie: #191c21;
+    --tinta: #e4e6ec;
+    --tinta-suave: #a3a8b3;
+    --acento: #a8c7fa;
+    --acento-suave: #233a5e;
+    --marca: rgb(168 199 250 / 0.22);
+    --sombra: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.35);
+    --velo: rgb(0 0 0 / 0.5);
+  }
+}
+
+/* …o el que fije Ajustes → Tema. Mismos valores que el bloque de arriba. */
+:root[data-tema='oscuro'] {
+  color-scheme: dark;
+  --papel: #111318;
+  --papel-2: #1d2026;
+  --superficie: #191c21;
+  --tinta: #e4e6ec;
+  --tinta-suave: #a3a8b3;
+  --acento: #a8c7fa;
+  --acento-suave: #233a5e;
+  --marca: rgb(168 199 250 / 0.22);
+  --sombra: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.35);
+  --velo: rgb(0 0 0 / 0.5);
 }
 
 @media (prefers-reduced-motion: reduce) {
   :root {
     --transicion: 0ms;
+    --dur-corta: 0ms;
+    --dur-media: 0ms;
+    --dur-larga: 0ms;
   }
 }

@@ -1,6 +1,5 @@
 /* Base global. Solo usa tokens de src/ui/tokens.css: aquí no se escriben colores. */
 :root {
-  color-scheme: light;
   background: var(--papel);
   color: var(--tinta);
   font-family: var(--letra-cuerpo);
@@ -10,7 +9,52 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--textura) var(--papel);
+  background: var(--papel);
+  /* Cambiar de tema (claro ↔ oscuro) se funde en vez de saltar */
+  transition:
+    background-color var(--dur-media) var(--curva),
+    color var(--dur-media) var(--curva);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Movimiento suave compartido (docs/DISENO.md § Movimiento). Con "reducir movimiento" duran 0 ms. */
+@keyframes entrar {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@keyframes subir {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes fundir {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Lo que se toca responde con un hundimiento leve */
+button,
+a {
+  transition:
+    transform var(--dur-corta) var(--curva),
+    background-color var(--dur-corta) var(--curva),
+    color var(--dur-corta) var(--curva);
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 /* Texto enriquecido básico */

@@ -41,7 +41,7 @@
   border-left-color: var(--tinta);
 }
 
-/* Selección con el mismo resaltador amarillo de "hoy" (DISENO.md: --marca) */
+/* Selección con el mismo resaltador de "hoy" (DISENO.md: --marca) */
 .editor-markdown .cm-editor .cm-selectionBackground,
 .editor-markdown .cm-editor.cm-focused .cm-selectionBackground,
 .editor-markdown .cm-content ::selection {

@@ -2,7 +2,7 @@ import { render, type ComponentChild } from 'preact';
 import { act } from 'preact/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../../src/app/App';
-import { formatearTiempo, limitarPosicion } from '../../src/features/musica/tiempo';
+import { formatearTiempo, ladoParaEsconder, limitarPosicion } from '../../src/features/musica/tiempo';
 import { MiniReproductor } from '../../src/features/musica/MiniReproductor';
 import { Reproductor } from '../../src/features/musica/Reproductor';
 
@@ -121,5 +121,48 @@ describe('preferencia de reproductor flotante', () => {
     act(() => interruptor.click());
     expect(c.querySelector('.mini--flotante')).not.toBeNull();
     expect(c.querySelector('.mini--anclado')).toBeNull();
+  });
+});
+
+describe('esconder el globo de música a un lado', () => {
+  it('ladoParaEsconder: solo al soltar pegado al canto', () => {
+    expect(ladoParaEsconder(5, 390)).toBe('izquierda');
+    expect(ladoParaEsconder(386, 390)).toBe('derecha');
+    expect(ladoParaEsconder(200, 390)).toBeNull();
+  });
+
+  it('el botón lo esconde, queda una pestaña y un toque lo trae de vuelta (y se recuerda)', () => {
+    location.hash = '#/notas';
+    let c = montar(<App />);
+    act(() => (c.querySelector('button[aria-label="Esconder reproductor a un lado"]') as HTMLButtonElement).click());
+    expect(c.querySelector('.mini')).toBeNull();
+    const pestana = c.querySelector('.mini-pestana') as HTMLButtonElement;
+    expect(pestana.getAttribute('aria-label')).toMatch(/^Mostrar reproductor/);
+    expect(c.querySelector('.con-mini-anclado')).toBeNull();
+
+    // Al volver a abrir la app sigue escondido
+    render(null, c);
+    c.remove();
+    c = montar(<App />);
+    act(() => (c.querySelector('.mini-pestana') as HTMLButtonElement).click());
+    expect(c.querySelector('.mini--anclado')).not.toBeNull();
+    expect(c.querySelector('.mini-pestana')).toBeNull();
+  });
+});
+
+describe('tema', () => {
+  it('Ajustes → Oscuro marca <html> y se recuerda; Sistema lo quita', () => {
+    location.hash = '#/ajustes';
+    const c = montar(<App />);
+    const opcion = (nombre: string) =>
+      [...c.querySelectorAll('[role="radiogroup"][aria-label="Tema"] [role="radio"]')].find(
+        (b) => b.textContent === nombre,
+      ) as HTMLButtonElement;
+    act(() => opcion('Oscuro').click());
+    expect(document.documentElement.dataset['tema']).toBe('oscuro');
+    expect(opcion('Oscuro').getAttribute('aria-checked')).toBe('true');
+    expect(localStorage.getItem('marginalia.ajustes.v1')).toContain('oscuro');
+    act(() => opcion('Sistema').click());
+    expect(document.documentElement.hasAttribute('data-tema')).toBe(false);
   });
 });

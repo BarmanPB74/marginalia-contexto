@@ -34,15 +34,33 @@ test('flotante: se arrastra por el asa y se queda donde se suelta', async ({ pag
   expect(despues?.y).toBeCloseTo(antes.y - 300, 0);
 });
 
-test('flotante: aunque se lance fuera, no sale de la pantalla ni tapa la barra', async ({ page }) => {
+test('flotante: lanzado contra un lado se esconde en una pestaña, y vuelve con un toque', async ({ page }) => {
+  await activarFlotante(page);
+  const a = await page.getByRole('button', { name: 'Mover reproductor' }).boundingBox();
+  const vista = page.viewportSize();
+  if (!a || !vista) throw new Error('sin cajas');
+  await page.mouse.move(a.x + 10, a.y + 10);
+  await page.mouse.down();
+  await page.mouse.move(vista.width - 2, a.y - 100, { steps: 8 });
+  await page.mouse.up();
+  await expect(mini(page)).toHaveCount(0);
+  const pestana = page.getByRole('button', { name: /Mostrar reproductor/ });
+  const p = await pestana.boundingBox();
+  if (!p) throw new Error('sin pestaña');
+  expect(p.x + p.width).toBeCloseTo(vista.width, 0);
+  await pestana.click();
+  await expect(mini(page)).toBeVisible();
+});
+
+test('flotante: aunque se lance fuera por arriba o abajo, no sale de la pantalla ni tapa la barra', async ({ page }) => {
   await activarFlotante(page);
   const a = await page.getByRole('button', { name: 'Mover reproductor' }).boundingBox();
   if (!a) throw new Error('sin asa');
   const vista = page.viewportSize();
   if (!vista) throw new Error('sin viewport');
   for (const [x, y] of [
-    [-500, -500],
-    [vista.width + 500, vista.height + 500],
+    [vista.width / 2, -500],
+    [vista.width / 2, vista.height + 500],
   ] as const) {
     const actual = await page.getByRole('button', { name: 'Mover reproductor' }).boundingBox();
     if (!actual) throw new Error('sin asa');

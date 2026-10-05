@@ -1,13 +1,26 @@
 .mini {
   box-sizing: border-box;
+  z-index: 20;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-height: var(--alto-mini);
-  padding: 0 4px 0 12px;
-  background: var(--textura) var(--papel);
-  border: var(--trazo) solid var(--tinta);
+  padding: 0 0 0 12px;
+  background: var(--superficie);
+  border: var(--trazo) solid var(--contorno);
   border-radius: var(--radio);
+  box-shadow: var(--sombra);
+  animation: aparecer var(--dur-media) var(--curva) both;
+  transition:
+    transform var(--dur-media) var(--curva),
+    opacity var(--dur-media) var(--curva);
+  /* El dedo puede deslizarlo de lado; el desplazamiento vertical sigue siendo de la página */
+  touch-action: pan-y;
+}
+
+/* Mientras el dedo lo arrastra de lado, sigue al dedo sin retraso */
+.mini--deslizando {
+  transition: none;
 }
 
 /* Anclado: justo encima de la barra inferior, de lado a lado */
@@ -23,7 +36,7 @@
 /* Flotante: lo coloca y lo mueve el código (left/top); más compacto */
 .mini--flotante {
   position: fixed;
-  width: min(300px, calc(100vw - 16px));
+  width: min(330px, calc(100vw - 16px));
   padding-left: 0;
 }
 
@@ -50,7 +63,8 @@
   flex: none;
   width: 36px;
   height: 36px;
-  border: var(--trazo) solid var(--tinta);
+  background: var(--acento-suave);
+  border: var(--trazo) solid var(--contorno);
   border-radius: 5px 4px 6px 3px / 4px 6px 3px 5px;
 }
 
@@ -95,4 +109,80 @@
   border: 0;
   border-radius: var(--radio);
   cursor: pointer;
+}
+
+.mini__esconder {
+  color: var(--tinta-suave);
+}
+
+/* Escondido: solo una pestaña en el canto de la pantalla, con la corchea asomando */
+.mini-pestana {
+  position: fixed;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 64px;
+  padding: 0;
+  color: var(--acento);
+  background: var(--superficie);
+  border: var(--trazo) solid var(--contorno);
+  box-shadow: var(--sombra);
+  cursor: pointer;
+  /* Ampliar la zona táctil a 48 px sin agrandar el dibujo */
+  outline-offset: 2px;
+}
+
+.mini-pestana::before {
+  position: absolute;
+  inset: -8px -18px;
+  content: '';
+}
+
+.mini-pestana--izquierda {
+  left: 0;
+  border-left: 0;
+  border-radius: 0 16px 14px 0 / 0 14px 16px 0;
+  animation: pestana-izquierda var(--dur-media) var(--curva) both;
+}
+
+.mini-pestana--derecha {
+  right: 0;
+  border-right: 0;
+  border-radius: 16px 0 0 14px / 14px 0 0 16px;
+  animation: pestana-derecha var(--dur-media) var(--curva) both;
+}
+
+/* Si estaba anclado, la pestaña queda a la altura donde estaba el mini */
+.mini-pestana--anclada {
+  bottom: calc(var(--alto-barra) + var(--margen-abajo) + 8px);
+}
+
+@keyframes pestana-izquierda {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes pestana-derecha {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+/* Mientras suena, la corchea respira despacio (se apaga con "reducir movimiento") */
+.mini-pestana__onda--sonando {
+  animation: respirar 1.6s ease-in-out infinite;
+}
+
+@keyframes respirar {
+  50% {
+    transform: scale(1.15);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mini-pestana__onda--sonando {
+    animation: none;
+  }
 }
