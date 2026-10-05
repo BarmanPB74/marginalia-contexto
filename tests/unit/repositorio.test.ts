@@ -55,6 +55,16 @@ describe('RepositorioNotas', () => {
     expect(nota.cuerpo).toContain('## 08:30');
   });
 
+  it('bitácora de un día del calendario: título, @fecha y fecha: de ese día', async () => {
+    const repo = new RepositorioNotas(crearAlmacen(new DiscoMemoria()), () => new Date(2026, 9, 5, 9, 30));
+    const nota = await repo.crear({ plantilla: 'bitacora', dia: '2026-10-12' });
+    expect(nota.titulo).toBe('Bitácora 2026-10-12');
+    expect(nota.cuerpo).toBe('@2026-10-12\n\n## 09:30\n\n');
+    expect(nota.extra['fecha']).toBe('2026-10-12');
+    expect(nota.creado.startsWith('2026-10-05T09:30')).toBe(true);
+    await expect(repo.crear({ plantilla: 'bitacora', dia: '2026-02-30' })).rejects.toThrow('día');
+  });
+
   it('rechaza una plantilla que no existe o un padre que no existe', async () => {
     const { repo } = nuevo();
     await expect(repo.crear({ plantilla: 'nope' })).rejects.toThrow('plantilla');

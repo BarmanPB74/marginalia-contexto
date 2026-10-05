@@ -1,7 +1,8 @@
 import type { EditorState, TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
 import type { RefObject } from 'preact';
-import { alternarLista, alternarNegrita, alternarTarea, insertarEnlace } from './formato';
+import { diaDe } from '../../../core/notas/fechas';
+import { alternarLista, alternarNegrita, alternarTarea, insertarEnlace, insertarFecha } from './formato';
 import './BarraFormato.css';
 
 const ACCIONES: [string, (e: EditorState) => TransactionSpec][] = [
@@ -9,11 +10,12 @@ const ACCIONES: [string, (e: EditorState) => TransactionSpec][] = [
   ['Lista', alternarLista],
   ['Tarea', alternarTarea],
   ['Enlace', insertarEnlace],
+  ['@ Hoy', (e) => insertarFecha(e, diaDe(new Date()))],
 ];
 
 /**
  * Barra mínima sobre el teclado (DISENO.md). Solo aparece mientras se escribe.
- * ♪ canción y @ fecha llegan en F3/F4.
+ * «@ Hoy» pone la fecha de hoy (la nota aparece en el Calendario). ♪ canción llega en F4.
  */
 export function BarraFormato({ vista }: { vista: RefObject<EditorView | null> }) {
   return (

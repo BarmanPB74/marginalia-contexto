@@ -1,4 +1,5 @@
 import type { Almacen } from '../almacen/almacen';
+import { esDiaValido } from './fechas';
 import { escribirNota, isoConOffset, leerNota, NotaInvalida, TAMANO_MAXIMO, type Nota } from './nota';
 import { aplicarPlantilla, buscarPlantilla } from './plantillas';
 import { esUlid, ulid } from './ulid';
@@ -11,6 +12,11 @@ export interface OpcionesCrear {
   padre?: string;
   /** id de una plantilla de `PLANTILLAS`; por defecto, en blanco. */
   plantilla?: string;
+  /**
+   * Día del calendario al que pertenece ("AAAA-MM-DD"). Se guarda en `fecha:` y las variables
+   * `{{fecha}}` de la plantilla usan ese día (con la hora de ahora).
+   */
+  dia?: string;
 }
 
 /** Notas guardadas como `notas/<id>.md`. El archivo es la fuente de verdad. */
@@ -26,8 +32,10 @@ export class RepositorioNotas {
     if (opciones.padre !== undefined && !(await this.obtener(opciones.padre))) {
       throw new Error('La página padre no existe');
     }
+    if (opciones.dia !== undefined && !esDiaValido(opciones.dia)) throw new Error('El día no es válido');
     const ahora = this.reloj();
-    const titulo = opciones.titulo?.trim() || aplicarPlantilla(plantilla.titulo, { titulo: '', ahora });
+    const enDia = opciones.dia ? diaConHora(opciones.dia, ahora) : ahora;
+    const titulo = opciones.titulo?.trim() || aplicarPlantilla(plantilla.titulo, { titulo: '', ahora: enDia });
     const fecha = isoConOffset(ahora);
     const nota: Nota = {
       id: ulid(ahora.getTime()),
@@ -36,8 +44,8 @@ export class RepositorioNotas {
       editado: fecha,
       etiquetas: [...plantilla.etiquetas],
       ...(opciones.padre ? { padre: opciones.padre } : {}),
-      extra: {},
-      cuerpo: aplicarPlantilla(plantilla.cuerpo, { titulo, ahora }),
+      extra: opciones.dia ? { fecha: opciones.dia } : {},
+      cuerpo: aplicarPlantilla(plantilla.cuerpo, { titulo, ahora: enDia }),
     };
     await this.escribir(nota);
     return nota;
@@ -112,6 +120,12 @@ export class RepositorioNotas {
     if (new TextEncoder().encode(texto).length > TAMANO_MAXIMO) throw new NotaInvalida('supera 2 MB');
     await this.almacen.escribir(ruta(nota.id), texto);
   }
+}
+
+/** El día elegido con la hora del reloj (para `{{hora}}`). */
+function diaConHora(dia: string, ahora: Date): Date {
+  const [a, m, d] = dia.split('-').map(Number) as [number, number, number];
+  return new Date(a, m - 1, d, ahora.getHours(), ahora.getMinutes(), ahora.getSeconds());
 }
 
 function conPadre(nota: Nota, padre: string | undefined): Nota {

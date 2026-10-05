@@ -117,3 +117,16 @@ describe('renderMarkdown', () => {
     });
   });
 });
+
+describe('@fecha en modo lectura', () => {
+  it('se vuelve un enlace al día del calendario', () => {
+    const html = renderMarkdown('Entrega @2026-10-12 18:30, repaso (@2026-10-10).');
+    expect(html).toContain('<a href="#/calendario/2026-10-12" class="enlace-fecha">@2026-10-12 18:30</a>');
+    expect(html).toContain('(<a href="#/calendario/2026-10-10" class="enlace-fecha">@2026-10-10</a>).');
+  });
+
+  it('no toca fechas imposibles, código ni texto que ya es enlace', () => {
+    const html = renderMarkdown('@2026-02-30 `@2026-10-01` [@2026-10-02](https://ejemplo.org)\n\n    @2026-10-03');
+    expect(html).not.toContain('enlace-fecha');
+  });
+});

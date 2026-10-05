@@ -1,5 +1,6 @@
 import DOMPurify from 'dompurify';
 import MarkdownIt from 'markdown-it';
+import { esDiaValido, FECHA_EN_TEXTO } from '../notas/fechas';
 
 /**
  * Markdown → HTML seguro para el modo lectura (CLAUDE.md regla 6).
@@ -27,6 +28,51 @@ md.core.ruler.after('inline', 'tareas', (estado) => {
     casilla.content = `<input type="checkbox" disabled${marca[1] === ' ' ? '' : ' checked'}> `;
     linea.children?.unshift(casilla);
     tokens[i - 2]?.attrJoin('class', 'tarea');
+  }
+});
+
+// @AAAA-MM-DD → enlace al día en el Calendario (#/calendario/AAAA-MM-DD). También sobre los tokens:
+// el código (en línea o en bloque) no son tokens de texto, así que ahí no se convierte nada.
+md.core.ruler.after('tareas', 'fechas', (estado) => {
+  for (const bloque of estado.tokens) {
+    if (bloque.type !== 'inline' || !bloque.children) continue;
+    const nuevos: typeof bloque.children = [];
+    let enEnlace = 0;
+    for (const token of bloque.children) {
+      if (token.type === 'link_open') enEnlace++;
+      if (token.type === 'link_close') enEnlace--;
+      if (token.type !== 'text' || enEnlace > 0) {
+        nuevos.push(token);
+        continue;
+      }
+      let ultimo = 0;
+      for (const m of token.content.matchAll(FECHA_EN_TEXTO)) {
+        const dia = m[2] ?? '';
+        if (!esDiaValido(dia)) continue;
+        const inicio = (m.index ?? 0) + (m[1]?.length ?? 0);
+        const fin = (m.index ?? 0) + m[0].length;
+        const antes = new estado.Token('text', '', 0);
+        antes.content = token.content.slice(ultimo, inicio);
+        const abrir = new estado.Token('link_open', 'a', 1);
+        abrir.attrs = [
+          ['href', `#/calendario/${dia}`],
+          ['class', 'enlace-fecha'],
+        ];
+        const texto = new estado.Token('text', '', 0);
+        texto.content = token.content.slice(inicio, fin);
+        const cerrar = new estado.Token('link_close', 'a', -1);
+        nuevos.push(antes, abrir, texto, cerrar);
+        ultimo = fin;
+      }
+      if (ultimo === 0) {
+        nuevos.push(token);
+      } else {
+        const resto = new estado.Token('text', '', 0);
+        resto.content = token.content.slice(ultimo);
+        nuevos.push(resto);
+      }
+    }
+    bloque.children = nuevos;
   }
 });
 

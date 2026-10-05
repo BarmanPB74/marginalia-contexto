@@ -74,3 +74,12 @@ export function insertarEnlace(estado: EditorState): TransactionSpec {
     selection: EditorSelection.cursor(to + 3),
   };
 }
+
+/** Inserta `@AAAA-MM-DD` (por defecto, hoy) en el cursor: la nota aparece ese día en el Calendario. */
+export function insertarFecha(estado: EditorState, dia: string): TransactionSpec {
+  const { from, to } = estado.selection.main;
+  const antes = estado.sliceDoc(Math.max(0, from - 1), from);
+  // Una @fecha pegada a una palabra no cuenta (FORMATO_NOTAS.md): se separa con un espacio.
+  const texto = `${antes && !/\s/.test(antes) ? ' ' : ''}@${dia} `;
+  return { changes: { from, to, insert: texto }, selection: EditorSelection.cursor(from + texto.length) };
+}

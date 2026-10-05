@@ -1,3 +1,4 @@
+import { esDiaValido } from '../core/notas/fechas';
 import { esUlid } from '../core/notas/ulid';
 import type { NombreIcono } from '../ui/Icono';
 
@@ -32,4 +33,10 @@ export function rutaActual(hash: string): Ruta {
 export function idNotaEnRuta(hash: string): string | null {
   const [seccion, id, ...resto] = hash.replace(/^#\//, '').split('/');
   return seccion === 'notas' && id !== undefined && resto.length === 0 && esUlid(id) ? id : null;
+}
+
+/** `#/calendario/AAAA-MM-DD` → ese día; cualquier otra cosa → null. */
+export function diaEnRuta(hash: string): string | null {
+  const [seccion, dia, ...resto] = hash.replace(/^#\//, '').split('/');
+  return seccion === 'calendario' && dia !== undefined && resto.length === 0 && esDiaValido(dia) ? dia : null;
 }

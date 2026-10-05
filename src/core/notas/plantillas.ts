@@ -26,7 +26,8 @@ export const PLANTILLAS: readonly Plantilla[] = [
     nombre: 'Bitácora',
     titulo: 'Bitácora {{fecha}}',
     etiquetas: ['bitácora'],
-    cuerpo: '## {{hora}}\n\n',
+    // @fecha: enlace al día en el Calendario (y la nota aparece en ese día)
+    cuerpo: '@{{fecha}}\n\n## {{hora}}\n\n',
   },
   {
     id: 'reunion',

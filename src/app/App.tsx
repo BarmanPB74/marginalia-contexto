@@ -9,7 +9,7 @@ import { PantallaNotas } from '../features/notas/PantallaNotas';
 import { BarraInferior } from '../ui/BarraInferior';
 import { ProveedorEstado, useEstado } from './estado';
 import { Galeria } from './Galeria';
-import { idNotaEnRuta, rutaActual, type IdSeccion } from './rutas';
+import { diaEnRuta, idNotaEnRuta, rutaActual, type IdSeccion } from './rutas';
 
 const PANTALLAS = {
   notas: PantallaNotas,
@@ -28,7 +28,7 @@ function useHash() {
   return hash;
 }
 
-function Secciones({ ruta, idNota }: { ruta: IdSeccion; idNota: string | null }) {
+function Secciones({ ruta, idNota, dia }: { ruta: IdSeccion; idNota: string | null; dia: string | null }) {
   const { flotante, sonando, alternar, miniEscondido, cambiarAjustes } = useEstado();
   const Pantalla = PANTALLAS[ruta];
   // En Música ya está el reproductor grande. F1: siempre hay una canción de muestra; en F4, solo si hay algo cargado.
@@ -37,7 +37,13 @@ function Secciones({ ruta, idNota }: { ruta: IdSeccion; idNota: string | null })
   return (
     <div class={anclado ? 'con-mini-anclado' : undefined}>
       {/* key: al cambiar de nota se desmonta la anterior, que guarda lo pendiente */}
-      {idNota ? <PantallaNota key={idNota} id={idNota} /> : <Pantalla />}
+      {idNota ? (
+        <PantallaNota key={idNota} id={idNota} />
+      ) : ruta === 'calendario' ? (
+        <PantallaCalendario dia={dia} />
+      ) : (
+        <Pantalla />
+      )}
       {conMini && (
         <MiniReproductor
           titulo={CANCION_DEMO.titulo}
@@ -59,7 +65,7 @@ export function App() {
   const ruta = rutaActual(hash);
   return (
     <ProveedorEstado>
-      {ruta === 'galeria' ? <Galeria /> : <Secciones ruta={ruta} idNota={idNotaEnRuta(hash)} />}
+      {ruta === 'galeria' ? <Galeria /> : <Secciones ruta={ruta} idNota={idNotaEnRuta(hash)} dia={diaEnRuta(hash)} />}
     </ProveedorEstado>
   );
 }
