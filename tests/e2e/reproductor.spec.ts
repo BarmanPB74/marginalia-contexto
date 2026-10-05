@@ -124,6 +124,16 @@ test('pegar un enlace de YouTube Music: título por oEmbed, reproductor oficial 
   await expect(grande.getByText('Artista', { exact: true })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Canciones guardadas' }).getByText('Tema de prueba')).toBeVisible();
 
+  // Política de YouTube: visor de al menos 200 × 200 px, también en un teléfono estrecho
+  for (const ancho of [412, 320]) {
+    await page.setViewportSize({ width: ancho, height: 800 });
+    // medir sin la animación de entrada (escala 0.96 → 1)
+    await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
+    const caja = await grande.locator('iframe').boundingBox();
+    expect(caja?.width, `ancho a ${ancho}px`).toBeGreaterThanOrEqual(200);
+    expect(caja?.height, `alto a ${ancho}px`).toBeGreaterThanOrEqual(200);
+  }
+
   await page.reload();
   await page.goto('/#/notas');
   await expect(mini(page).getByText('Tema de prueba')).toBeVisible();

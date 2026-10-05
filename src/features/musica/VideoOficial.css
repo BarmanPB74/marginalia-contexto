@@ -1,4 +1,8 @@
 .video-oficial {
+  /* YouTube exige un visor de al menos 200 × 200 px (Required Minimum Functionality):
+     en pantallas estrechas el 16:9 quedaría más bajo, así que el alto nunca baja de 200 */
+  min-width: 200px;
+  min-height: 200px;
   overflow: hidden;
   border-radius: var(--radio);
   background: var(--papel-2);
