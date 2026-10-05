@@ -4,10 +4,10 @@
 > Lo actualiza `/cierre`. Si algo aquí contradice el código, arréglalo aquí.
 
 ## Ahora
-- **Fase actual:** F3 — Etiquetas y Calendario. **Entregables completos** (F2 cerrada el 2026-10-05: el autor probó el APK y todo bien).
-- **Estado:** rama `ccr-4bb4aef6-3n6fty`, PR #2 a `main` (F2 + pedidos + F3). `/auditar` F3 ✅.
-- **Última sesión:** 2026-10-05 — parser completo, filtro por etiqueta, autocompletar `#`/`@`, selector de fecha, vista Agenda.
-- **Siguiente paso concreto:** el autor prueba F3 en el teléfono (lista de abajo); si va bien, fusionar el PR #2 y `/inicio` de F4 (etiqueta de canción con segundo exacto, Share Intent desde YouTube Music).
+- **Fase actual:** F4 — Música y etiqueta de canción. Entregables hechos **salvo** «mini persistente entre secciones» (decisión del autor, abajo). F3 entregada y en el PR #2.
+- **Estado:** rama `ccr-4bb4aef6-3n6fty`, PR #2 (F2 + F3 + F4 + pedidos); CI con APK en verde (también el plugin Java del Share Intent).
+- **Última sesión:** 2026-10-05 — etiqueta ♪ con segundo exacto (historias 4 y 5), Share Intent, errores del reproductor, visor ≥ 200 × 200.
+- **Siguiente paso concreto:** el autor decide el reproductor flotante (A/B abajo) y prueba F4 en el teléfono; luego `/auditar` final de F4 y F5 (auditoría de seguridad).
 
 ## Decisiones tomadas (ADR en `docs/ARQUITECTURA.md`)
 - 001 Web + Capacitor + Preact · 002 `.md` fuente de verdad · 003 solo IFrame oficial · 004 MIT (Pablo, 2026) · 005 nombre "Marginalia", appId `io.github.barmanpb74.appnoti`
@@ -32,21 +32,22 @@
 - Plantillas estilo Obsidian (`{{titulo}}`, `{{fecha}}`, `{{hora}}`), de serie: en blanco, rápida, bitácora (empieza con `@fecha`), reunión.
 - 2026-10-05 (pedidos del autor): ADR-008 cifrado AES-256-GCM al crear/guardar, exportar .md/.txt/.html descifrado a `Documentos/Marginalia`; ADR-009 preferencias y canciones en `localStorage`; ADR-010 reproductor oficial controlado por `postMessage` (sin script externo); ADR-011 paleta blanca tipo Pixel + oscuro + movimiento suave. Notas en **tarjetas tipo recientes** por defecto (lista en Ajustes). Paleta de comandos (lupa o Ctrl+K). Calendario de mes con hoja del día y «Nueva bitácora». Globo de música escondible a un lado (botón, lanzarlo al borde o deslizar).
 - Mini reproductor: anclado o flotante (Ajustes); en Música no se muestra. Fuera de Música el iframe no existe: el mini lleva a Música (sin audio escondido, LEGAL §1).
+- F4: `cancion:` + `[♪ m:ss](yt:ID?t=S)`; `#/musica?yt=…&t=…` pone esa canción en ese segundo; Share Intent `ACTION_SEND text/plain` con `CompartidoPlugin.java` (texto no confiable, solo IDs válidos); errores 100/101/150 y sin red con aviso; visor ≥ 200 × 200.
 - F3: `core/parser/parseNota` (etiquetas con subetiquetas, sin ReDoS); `#/notas?etiqueta=x` filtra; autocompletar con `@codemirror/autocomplete` (`#` etiquetas existentes, `@` hoy/mañana/días); `SelectorFecha` propio en hoja; Calendario Mes | Agenda. Las llamadas al plugin de archivos van en fila (lectura colgada muy rara en e2e).
 
 ## Pendiente de decidir con el autor
-- ¿Reproductor tipo "imagen en imagen" (video pequeño visible) para que la música siga fuera de Música? Ver LEGAL §1.
+- **Reproductor fuera de Música** (LEGAL §1, reglas de YouTube: visor ≥ 200 × 200 px y nada encima): **A** seguir como ahora (la música suena en Música; el globo lleva allí) o **B** ventana flotante con el video de 200 × 200 siempre encima de todo, arrastrable; esconderla a un lado la pausa.
 - ¿Envolver la clave de cifrado con Android Keystore (plugin nativo) y bloqueo biométrico? (F5)
 - Pedidos aún sin fase: plantillas con gráficos/cálculos y plantillas propias; exportar a PDF/carta/documento legal; backlinks, nota diaria, grafo.
 
 ## Probar en el teléfono (lo que el entorno de Claude no puede verificar)
-- **F3 (APK del PR #2):** escribir `#es` → sale la lista con tus etiquetas, tocar una la completa. Escribir `@` → hoy, mañana, días; «Elegir en el calendario…» abre el mes. Botón «@ Fecha» de la barra (la barra cabe en una fila sobre el teclado).
-- Notas: la fila de etiquetas se desliza de lado; tocar una filtra; en lectura, tocar `#etiqueta` lleva al filtro.
-- Calendario: Mes | Agenda; en Agenda, «Ver días anteriores». Con muchas notas, el mes no se siente lento.
-- Que el autocompletar no estorbe al teclado de Android (autocorrector, dictado).
+- **F4 — historia 4:** en Música, con una canción sonando, «♪ Nueva nota con esta canción» → la nota guarda canción y segundo (píldora bajo el título). En el editor, botón ♪ → inserta `[♪ m:ss]`.
+- **F4 — historia 5:** en lectura, tocar ♪ (o la píldora) → Música suena desde ese segundo.
+- **Compartir:** en YouTube Music, Compartir → Marginalia (con la app cerrada y abierta) → se abre Música y suena. Compartir texto que no es de YouTube → aviso.
+- Un video que no se deja incrustar → aviso + «Abrir en YouTube Music». Modo avión → aviso de sin conexión.
+- **F3:** autocompletar `#`/`@` con el teclado de Android; «@ Fecha»; filtro por etiqueta; Agenda.
 
-## Resultado del spike del reproductor (F0, 2026-10-04)
-- `youtube-nocookie.com/embed` y `youtube.com/embed` cargan y suenan en la WebView (origen `https://localhost`): no hace falta el Plan B. Ya usado en Música (ADR-010).
+## Spike del reproductor (F0): `youtube-nocookie.com/embed` suena en la WebView (`https://localhost`); usado en Música (ADR-010).
 
 ## Permisos Android autorizados
 - `INTERNET` (reproductor). Verificado en el manifiesto compilado del APK de CI.
@@ -73,7 +74,7 @@
 - (vacío)
 
 ## Historial de sesiones
-- 2026-10-05 · F3 · parser completo, filtro por etiqueta, autocompletar `#`/`@`, selector de fecha, Agenda, 500 notas; disco en fila; `/auditar` F3 ✅; 272 unit + 29 e2e.
-- 2026-10-05 · F2 cerrada + pedidos · rediseño, tarjetas, paleta, calendario, cifrado, YouTube Music, copia ZIP, búsqueda por #/fecha; PR #2; probado en el teléfono por el autor.
+- 2026-10-05 · F4 · etiqueta ♪ con segundo (historias 4 y 5), Share Intent nativo, errores del reproductor, visor ≥ 200 × 200 (política de YouTube); 288 unit + 29 e2e.
+- 2026-10-05 · F2 cerrada (probada por el autor) + pedidos + F3: rediseño, tarjetas, paleta, calendario, cifrado, YouTube Music, ZIP; parser, filtro por etiqueta, autocompletar, selector de fecha, Agenda; PR #2.
 - 2026-10-05 · F2 · Almacen atómico, formato, ULID, repositorio/árbol, plantillas; pantalla de Notas con autoguardado; editor CodeMirror + lectura sanitizada (22 XSS bloqueados); bordes del sistema; APK de avance por `f2-avance`.
 - 2026-10-04/05 · F0 y F1 cerradas · repo, CI (APK, CodeQL, gitleaks, dependency-review), spike; tokens, fuentes, componentes, galería, icono EK.

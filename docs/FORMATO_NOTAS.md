@@ -53,7 +53,12 @@ Enlace a otra página: [[Pasado compuesto]]
 6. El parser es una función pura: `parseNota(texto) → { meta, fechas[], etiquetas[], canciones[], enlaces[] }`. Probada con casos límite (vacío, solo frontmatter, Unicode, bloques de código, fechas inválidas, archivos de 1 MB).
 7. Tamaño máximo de nota: 2 MB (rechazar o truncar con aviso al importar).
 
-## Captura de la canción (flujo)
+## Captura de la canción (flujo, implementado en F4)
+- En Música: «♪ Nueva nota con esta canción» → nota rápida con `cancion:` (yt, título, artista, `t` = segundo actual) y `[♪ m:ss](yt:ID?t=S)` en la primera línea.
+- En el editor: botón ♪ de la barra (o la paleta) → inserta el enlace de la última canción elegida en el segundo en que iba.
+- En lectura, el enlace ♪ va a `#/musica?yt=ID&t=S` (Música lo carga en ese segundo y limpia la ruta). La píldora bajo el título hace lo mismo con la canción principal.
+
+### Flujo original
 1. Hay una canción activa en el reproductor (ID, título, artista, `getCurrentTime()`).
 2. El usuario pulsa **♪** en el editor o "Nueva nota con esta canción" en el reproductor.
 3. Se crea/actualiza `cancion:` con el segundo actual (entero). Opcionalmente inserta el enlace en línea en la posición del cursor.
