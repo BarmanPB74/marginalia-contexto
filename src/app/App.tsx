@@ -4,11 +4,12 @@ import { PantallaCalendario } from '../features/calendario/PantallaCalendario';
 import { CANCION_DEMO } from '../features/musica/demo';
 import { MiniReproductor } from '../features/musica/MiniReproductor';
 import { PantallaMusica } from '../features/musica/PantallaMusica';
+import { PantallaNota } from '../features/notas/PantallaNota';
 import { PantallaNotas } from '../features/notas/PantallaNotas';
 import { BarraInferior } from '../ui/BarraInferior';
 import { ProveedorEstado, useEstado } from './estado';
 import { Galeria } from './Galeria';
-import { rutaActual, type IdSeccion } from './rutas';
+import { idNotaEnRuta, rutaActual, type IdSeccion } from './rutas';
 
 const PANTALLAS = {
   notas: PantallaNotas,
@@ -17,17 +18,17 @@ const PANTALLAS = {
   ajustes: PantallaAjustes,
 };
 
-function useRuta() {
-  const [ruta, setRuta] = useState(() => rutaActual(location.hash));
+function useHash() {
+  const [hash, setHash] = useState(() => location.hash);
   useEffect(() => {
-    const alCambiar = () => setRuta(rutaActual(location.hash));
+    const alCambiar = () => setHash(location.hash);
     addEventListener('hashchange', alCambiar);
     return () => removeEventListener('hashchange', alCambiar);
   }, []);
-  return ruta;
+  return hash;
 }
 
-function Secciones({ ruta }: { ruta: IdSeccion }) {
+function Secciones({ ruta, idNota }: { ruta: IdSeccion; idNota: string | null }) {
   const { flotante, sonando, alternar } = useEstado();
   const Pantalla = PANTALLAS[ruta];
   // En Música ya está el reproductor grande. F1: siempre hay una canción de muestra; en F4, solo si hay algo cargado.
@@ -35,7 +36,8 @@ function Secciones({ ruta }: { ruta: IdSeccion }) {
   const anclado = conMini && !flotante;
   return (
     <div class={anclado ? 'con-mini-anclado' : undefined}>
-      <Pantalla />
+      {/* key: al cambiar de nota se desmonta la anterior, que guarda lo pendiente */}
+      {idNota ? <PantallaNota key={idNota} id={idNota} /> : <Pantalla />}
       {conMini && (
         <MiniReproductor
           titulo={CANCION_DEMO.titulo}
@@ -51,8 +53,11 @@ function Secciones({ ruta }: { ruta: IdSeccion }) {
 }
 
 export function App() {
-  const ruta = useRuta();
+  const hash = useHash();
+  const ruta = rutaActual(hash);
   return (
-    <ProveedorEstado>{ruta === 'galeria' ? <Galeria /> : <Secciones ruta={ruta} />}</ProveedorEstado>
+    <ProveedorEstado>
+      {ruta === 'galeria' ? <Galeria /> : <Secciones ruta={ruta} idNota={idNotaEnRuta(hash)} />}
+    </ProveedorEstado>
   );
 }

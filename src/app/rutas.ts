@@ -1,3 +1,4 @@
+import { esUlid } from '../core/notas/ulid';
 import type { NombreIcono } from '../ui/Icono';
 
 export type IdSeccion = 'notas' | 'calendario' | 'musica' | 'ajustes';
@@ -22,7 +23,13 @@ export const SECCIONES: readonly Seccion[] = [
  * Lo vacío o desconocido abre Notas, la pantalla principal.
  */
 export function rutaActual(hash: string): Ruta {
-  const nombre = hash.replace(/^#\//, '');
+  const nombre = hash.replace(/^#\//, '').split('/')[0];
   if (nombre === 'galeria') return 'galeria';
   return SECCIONES.find((s) => s.id === nombre)?.id ?? 'notas';
+}
+
+/** `#/notas/<id>` → id de la nota abierta; cualquier otra cosa → null. */
+export function idNotaEnRuta(hash: string): string | null {
+  const [seccion, id, ...resto] = hash.replace(/^#\//, '').split('/');
+  return seccion === 'notas' && id !== undefined && resto.length === 0 && esUlid(id) ? id : null;
 }

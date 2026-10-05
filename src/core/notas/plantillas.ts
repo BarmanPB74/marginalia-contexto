@@ -26,7 +26,7 @@ export const PLANTILLAS: readonly Plantilla[] = [
     nombre: 'Bitácora',
     titulo: 'Bitácora {{fecha}}',
     etiquetas: ['bitácora'],
-    cuerpo: '# {{titulo}}\n\n## {{hora}}\n\n',
+    cuerpo: '## {{hora}}\n\n',
   },
   {
     id: 'reunion',
@@ -34,7 +34,6 @@ export const PLANTILLAS: readonly Plantilla[] = [
     titulo: 'Reunión {{fecha}}',
     etiquetas: ['reunión'],
     cuerpo:
-      '# {{titulo}}\n\n' +
       '**Fecha:** {{fecha}} {{hora}}\n' +
       '**Asistentes:** \n\n' +
       '## Temas\n\n- \n\n' +

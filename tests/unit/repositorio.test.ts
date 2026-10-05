@@ -51,7 +51,7 @@ describe('RepositorioNotas', () => {
     const { repo } = nuevo();
     const nota = await repo.crear({ plantilla: 'bitacora', titulo: 'Bitácora del viaje' });
     expect(nota.titulo).toBe('Bitácora del viaje');
-    expect(nota.cuerpo).toContain('# Bitácora del viaje');
+    expect(nota.cuerpo).not.toContain('Bitácora'); // el título vive solo en su campo
     expect(nota.cuerpo).toContain('## 08:30');
   });
 

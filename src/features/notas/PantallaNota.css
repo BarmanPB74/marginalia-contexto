@@ -1,0 +1,79 @@
+.nota__ruta {
+  margin-bottom: 8px;
+  font-family: var(--letra-mano);
+  font-size: var(--texto-s);
+  color: var(--tinta-suave);
+  overflow-wrap: anywhere;
+}
+
+.nota__ruta a {
+  color: inherit;
+}
+
+.nota__encabezado {
+  margin-bottom: 16px;
+}
+
+.nota__titulo {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: var(--toque);
+  padding: 0;
+  font-family: var(--letra-mano);
+  font-size: var(--texto-xl);
+  line-height: 1.2;
+  color: var(--tinta);
+  background: none;
+  border: 0;
+  outline: none;
+}
+
+.nota__titulo::placeholder,
+.nota__cuerpo::placeholder {
+  color: var(--tinta-suave);
+}
+
+/* Lienzo casi vacío: sin borde ni fondo, solo texto sobre el papel */
+.nota__cuerpo {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-height: 55vh;
+  /* crece con el texto: se desplaza la página, no el campo (WebView ≥ 123; si no, scroll interno) */
+  field-sizing: content;
+  padding: 0;
+  font-family: var(--letra-cuerpo);
+  font-size: var(--texto-m);
+  line-height: var(--interlineado);
+  color: var(--tinta);
+  background: none;
+  border: 0;
+  outline: none;
+  resize: none;
+}
+
+.nota__pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+  border-top: 1px solid var(--separador);
+}
+
+.nota__acciones {
+  display: flex;
+}
+
+.nota__estado {
+  font-size: var(--texto-xs);
+  color: var(--tinta-suave);
+}
+
+.nota__volver {
+  text-align: center;
+}
+
+.nota__pie + .selector-plantilla {
+  margin-top: 16px;
+}

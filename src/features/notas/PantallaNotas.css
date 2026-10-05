@@ -1,0 +1,29 @@
+.lista-notas {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lista-notas li {
+  /* Sangría por nivel del árbol; a partir del 6.º ya no se mete más para no estrechar el texto */
+  padding-left: calc(min(var(--nivel, 0), 6) * 20px);
+  border-bottom: 1px solid var(--separador);
+}
+
+.lista-notas__enlace {
+  display: flex;
+  align-items: center;
+  min-height: var(--toque);
+  padding: 4px 0;
+  font-family: var(--letra-mano);
+  font-size: var(--texto-m);
+  color: var(--tinta);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.lista-notas__aviso {
+  margin-top: 16px;
+  font-size: var(--texto-xs);
+  color: var(--tinta-suave);
+}
