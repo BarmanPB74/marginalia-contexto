@@ -50,3 +50,8 @@
   font-size: var(--texto-l);
   line-height: 1.3;
 }
+
+/* Recibe el foco al abrirse (para lectores de pantalla), sin dibujar el trazo de foco */
+.hoja__panel:focus-visible {
+  outline: none;
+}

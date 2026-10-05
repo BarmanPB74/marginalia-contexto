@@ -49,7 +49,7 @@
 }
 
 /* Autocompletar de # y @: una tarjeta pequeña con las opciones */
-.cm-tooltip.cm-tooltip-autocomplete.sugerencias {
+.editor-markdown .cm-tooltip.cm-tooltip-autocomplete.sugerencias {
   overflow: hidden;
   font-family: var(--letra-cuerpo);
   font-size: var(--texto-s);
@@ -61,12 +61,12 @@
   animation: aparecer var(--dur-corta) var(--curva) backwards;
 }
 
-.cm-tooltip.sugerencias > ul {
+.editor-markdown .cm-tooltip.cm-tooltip-autocomplete.sugerencias > ul {
   max-height: 40vh;
-  font-family: inherit;
+  font-family: var(--letra-cuerpo);
 }
 
-.cm-tooltip.sugerencias > ul > li {
+.editor-markdown .cm-tooltip.cm-tooltip-autocomplete.sugerencias > ul > li {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -75,19 +75,19 @@
   padding: 0 14px;
 }
 
-.cm-tooltip.sugerencias > ul > li[aria-selected] {
+.editor-markdown .cm-tooltip.cm-tooltip-autocomplete.sugerencias > ul > li[aria-selected] {
   color: var(--tinta);
   background: var(--acento-suave);
 }
 
-.cm-tooltip.sugerencias .cm-completionDetail {
+.editor-markdown .cm-tooltip.sugerencias .cm-completionDetail {
   margin: 0;
   font-family: var(--letra-mano);
   font-style: normal;
   color: var(--tinta-suave);
 }
 
-.cm-tooltip.sugerencias .cm-completionMatchedText {
+.editor-markdown .cm-tooltip.sugerencias .cm-completionMatchedText {
   text-decoration: none;
   font-weight: 600;
 }
