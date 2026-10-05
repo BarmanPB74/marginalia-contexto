@@ -1,3 +1,5 @@
+import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core';
+
 /**
  * Preferencias de la app (tema, reproductor, vista de notas). Son de este teléfono, no de las
  * notas: viven en `localStorage` de la WebView, que es privado de la app y se borra con ella.
@@ -61,6 +63,11 @@ export function aplicarTema(tema: Tema): void {
   const raiz = document.documentElement;
   if (tema === 'sistema') raiz.removeAttribute('data-tema');
   else raiz.setAttribute('data-tema', tema);
+  // Iconos de la barra de estado y de gestos: claros sobre el tema oscuro y al revés.
+  if (Capacitor.isNativePlatform()) {
+    const estilo = tema === 'oscuro' ? SystemBarsStyle.Dark : tema === 'claro' ? SystemBarsStyle.Light : SystemBarsStyle.Default;
+    void SystemBars.setStyle({ style: estilo }).catch(() => undefined);
+  }
   const papel = getComputedStyle(raiz).getPropertyValue('--papel').trim();
   if (!papel) return;
   for (const meta of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {

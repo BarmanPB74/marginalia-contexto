@@ -12,8 +12,8 @@ import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 const RES = 'android/app/src/main/res';
 // Android no lee variables CSS: estos dos valores repiten --papel y --tinta de src/ui/tokens.css
-const PAPEL = '#FAF7F0';
-const TINTA = '#1E1C19';
+const PAPEL = '#FCFCFF';
+const TINTA = '#1B1C20';
 const svgFuente = readFileSync('recursos/icono/marca-ek.svg', 'utf8');
 
 /** El mismo dibujo con otro grosor de trazo (en unidades del viewBox de 140×110). */
