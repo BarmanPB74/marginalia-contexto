@@ -12,6 +12,9 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(CompartidoPlugin.class);
         // Plugin propio: controla la app de Spotify del teléfono (ADR-013).
         registerPlugin(SpotifyPlugin.class);
+        // Plugins propios de seguridad (ADR-014): clave en Android Keystore y bloqueo con huella/PIN.
+        registerPlugin(BovedaPlugin.class);
+        registerPlugin(BloqueoPlugin.class);
         super.onCreate(savedInstanceState);
         // Endurecimiento de la WebView (docs/SEGURIDAD.md §3).
         // La app se sirve desde https://localhost, no desde file://, así que no necesita estos accesos.

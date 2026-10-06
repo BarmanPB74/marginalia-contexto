@@ -11,10 +11,14 @@ import type { Disco } from './almacen';
  *   en la nube: allowBackup=false). Ni el código de la app puede leer sus bytes.
  *
  * Formato del archivo: una línea de cabecera y el resto en Base64 (IV ‖ texto cifrado ‖ etiqueta).
+ * La cabecera dice qué clave lo cifró (ADR-014):
+ * - `v1`: clave no extraíble en IndexedDB de la WebView (ADR-008; navegador y versiones anteriores).
+ * - `v2`: clave de datos envuelta por Android Keystore (`boveda.ts`): en disco solo queda envuelta.
  * Los archivos sin cabecera se leen tal cual (notas de antes del cifrado o importadas):
  * se cifran al volver a guardarse, o de una vez con `cifrarPendientes`.
  */
 export const CABECERA = 'MARGINALIA-CIFRADO v1\n';
+export const CABECERA_V2 = 'MARGINALIA-CIFRADO v2\n';
 const TEMPORAL = '.tmp';
 
 export class NoSePuedeDescifrar extends Error {
@@ -24,7 +28,7 @@ export class NoSePuedeDescifrar extends Error {
   }
 }
 
-export const estaCifrado = (texto: string) => texto.startsWith(CABECERA);
+export const estaCifrado = (texto: string) => texto.startsWith(CABECERA) || texto.startsWith(CABECERA_V2);
 
 const rutaFinal = (ruta: string) => (ruta.endsWith(TEMPORAL) ? ruta.slice(0, -TEMPORAL.length) : ruta);
 const codificador = new TextEncoder();
@@ -42,7 +46,7 @@ function deBase64(texto: string): Uint8Array<ArrayBuffer> {
   return bytes;
 }
 
-export async function cifrarTexto(clave: CryptoKey, texto: string, ruta: string): Promise<string> {
+export async function cifrarTexto(clave: CryptoKey, texto: string, ruta: string, cabecera = CABECERA): Promise<string> {
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const cifrado = await crypto.subtle.encrypt(
     { name: 'AES-GCM', iv, additionalData: codificador.encode(rutaFinal(ruta)) },
@@ -52,12 +56,12 @@ export async function cifrarTexto(clave: CryptoKey, texto: string, ruta: string)
   const todo = new Uint8Array(iv.length + cifrado.byteLength);
   todo.set(iv);
   todo.set(new Uint8Array(cifrado), iv.length);
-  return CABECERA + aBase64(todo);
+  return cabecera + aBase64(todo);
 }
 
 export async function descifrarTexto(clave: CryptoKey, contenido: string, ruta: string): Promise<string> {
   try {
-    const todo = deBase64(contenido.slice(CABECERA.length));
+    const todo = deBase64(contenido.slice(contenido.indexOf('\n') + 1));
     const claro = await crypto.subtle.decrypt(
       { name: 'AES-GCM', iv: todo.subarray(0, 12), additionalData: codificador.encode(rutaFinal(ruta)) },
       clave,
@@ -69,16 +73,35 @@ export async function descifrarTexto(clave: CryptoKey, contenido: string, ruta: 
   }
 }
 
+/** Qué clave usar para cada versión y con cuál se escribe. */
+export interface Claves {
+  /** Versión con la que se escribe todo lo nuevo (o cómo averiguarla, una vez) */
+  escribir: 'v1' | 'v2' | (() => Promise<'v1' | 'v2'>);
+  /** Clave v1; `null` si ya no existe (migración terminada) */
+  v1?: () => Promise<CryptoKey | null>;
+  v2?: () => Promise<CryptoKey>;
+}
+
 /** Envuelve un `Disco`: lo que se escribe sale cifrado y lo que se lee entra en claro. */
-export function discoCifrado(disco: Disco, obtenerClave: () => Promise<CryptoKey>): Disco {
+export function discoCifrado(disco: Disco, claves: Claves | (() => Promise<CryptoKey>)): Disco {
+  const c: Claves = typeof claves === 'function' ? { escribir: 'v1', v1: claves } : claves;
+  async function clave(version: 'v1' | 'v2', ruta: string): Promise<CryptoKey> {
+    const obtener = version === 'v2' ? c.v2 : c.v1;
+    const k = obtener ? await obtener() : null;
+    if (!k) throw new NoSePuedeDescifrar(ruta);
+    return k;
+  }
   return {
     async leer(ruta) {
       const contenido = await disco.leer(ruta);
       if (contenido === null || !estaCifrado(contenido)) return contenido;
-      return descifrarTexto(await obtenerClave(), contenido, ruta);
+      const version = contenido.startsWith(CABECERA_V2) ? 'v2' : 'v1';
+      return descifrarTexto(await clave(version, ruta), contenido, ruta);
     },
     async escribir(ruta, contenido) {
-      await disco.escribir(ruta, await cifrarTexto(await obtenerClave(), contenido, ruta));
+      const version = typeof c.escribir === 'function' ? await c.escribir() : c.escribir;
+      const cabecera = version === 'v2' ? CABECERA_V2 : CABECERA;
+      await disco.escribir(ruta, await cifrarTexto(await clave(version, ruta), contenido, ruta, cabecera));
     },
     renombrar: (origen, destino) => disco.renombrar(origen, destino),
     borrar: (ruta) => disco.borrar(ruta),
@@ -89,22 +112,47 @@ export function discoCifrado(disco: Disco, obtenerClave: () => Promise<CryptoKey
 /**
  * Cifra de una vez los archivos `.md` de `carpeta` que aún están en claro. `crudo` lee sin
  * descifrar; `escribir` guarda por el camino normal (atómico y cifrado). Devuelve cuántos cifró.
+ * Con `destino` (p. ej. `CABECERA_V2`) también vuelve a cifrar los que tengan otra cabecera,
+ * leyéndolos con `leerClaro`: es la migración v1 → v2. Un archivo que no se pueda descifrar se
+ * deja como está (y la clave vieja no se borra, ver `quedanConCabecera`).
  */
 export async function cifrarPendientes(
   crudo: Disco,
   escribir: (ruta: string, contenido: string) => Promise<void>,
   carpeta: string,
+  opciones: { destino?: string; leerClaro?: (ruta: string) => Promise<string | null> } = {},
 ): Promise<number> {
   let cifrados = 0;
   for (const nombre of await crudo.listar(carpeta)) {
     if (!nombre.endsWith('.md')) continue;
     const ruta = `${carpeta}/${nombre}`;
     const contenido = await crudo.leer(ruta);
-    if (contenido === null || estaCifrado(contenido)) continue;
-    await escribir(ruta, contenido);
+    if (contenido === null) continue;
+    const hecho = opciones.destino ? contenido.startsWith(opciones.destino) : estaCifrado(contenido);
+    if (hecho) continue;
+    let claro: string | null = contenido;
+    if (estaCifrado(contenido)) {
+      if (!opciones.leerClaro) continue;
+      try {
+        claro = await opciones.leerClaro(ruta);
+      } catch {
+        continue;
+      }
+    }
+    if (claro === null) continue;
+    await escribir(ruta, claro);
     cifrados++;
   }
   return cifrados;
+}
+
+/** ¿Queda algún archivo de `carpeta` (también temporales) con esta cabecera? */
+export async function quedanConCabecera(crudo: Disco, carpeta: string, cabecera: string): Promise<boolean> {
+  for (const nombre of await crudo.listar(carpeta)) {
+    const contenido = await crudo.leer(`${carpeta}/${nombre}`);
+    if (contenido?.startsWith(cabecera)) return true;
+  }
+  return false;
 }
 
 const BASE = 'marginalia-claves';
@@ -120,15 +168,40 @@ function pedir<T>(peticion: IDBRequest<T>): Promise<T> {
 
 let clavePrometida: Promise<CryptoKey> | undefined;
 
+async function abrirBase(): Promise<IDBDatabase> {
+  const apertura = indexedDB.open(BASE, 1);
+  apertura.onupgradeneeded = () => apertura.result.createObjectStore(ALMACEN);
+  return pedir(apertura);
+}
+
+/** La clave v1 si existe, sin crearla (para leer notas viejas durante la migración). */
+export async function claveV1SiExiste(): Promise<CryptoKey | null> {
+  if (typeof indexedDB === 'undefined') return null;
+  const db = await abrirBase();
+  const guardada = await pedir(db.transaction(ALMACEN).objectStore(ALMACEN).get(ID_CLAVE));
+  return guardada instanceof CryptoKey ? guardada : null;
+}
+
+/** Borra la clave v1 cuando ya ninguna nota la necesita (migración a Keystore terminada). */
+export async function borrarClaveV1(): Promise<void> {
+  if (typeof indexedDB === 'undefined') return;
+  const db = await abrirBase();
+  const t = db.transaction(ALMACEN, 'readwrite');
+  t.objectStore(ALMACEN).delete(ID_CLAVE);
+  await new Promise<void>((resolver, rechazar) => {
+    t.oncomplete = () => resolver();
+    t.onerror = () => rechazar(t.error ?? new Error('IndexedDB'));
+  });
+  clavePrometida = undefined;
+}
+
 /**
  * Clave de las notas de este teléfono: la crea la primera vez (no extraíble) y la guarda en
  * IndexedDB. Si IndexedDB no existe (pruebas), falla: el llamador decide qué hacer.
  */
 export function claveDelDispositivo(): Promise<CryptoKey> {
   clavePrometida ??= (async () => {
-    const apertura = indexedDB.open(BASE, 1);
-    apertura.onupgradeneeded = () => apertura.result.createObjectStore(ALMACEN);
-    const db = await pedir(apertura);
+    const db = await abrirBase();
     const guardada = await pedir(db.transaction(ALMACEN).objectStore(ALMACEN).get(ID_CLAVE));
     if (guardada instanceof CryptoKey) return guardada;
     const nueva = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);

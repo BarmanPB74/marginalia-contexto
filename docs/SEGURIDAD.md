@@ -28,7 +28,7 @@ Objetivo: cumplir **OWASP MASVS nivel 1** en toda la app y nivel 2 en almacenami
 | Privacidad | Fuga a terceros | Sin analíticas ni trackers; `youtube-nocookie.com` para el embed cuando sea posible |
 
 ## 3. Configuración Android obligatoria
-- Permisos: solo `INTERNET`.
+- Permisos: `INTERNET`; `USE_BIOMETRIC` y `USE_FINGERPRINT` (normales, sin diálogo; los declara `androidx.biometric` para el bloqueo opcional, ADR-014).
 - `android:allowBackup="false"`, `android:usesCleartextTraffic="false"`, `network_security_config.xml` solo HTTPS.
 - `android:exported` explícito en cada componente; el único *intent-filter* de entrada es `ACTION_SEND` con `text/plain`.
 - `WebView`: `allowFileAccess=false`, `allowContentAccess=false`, `setJavaScriptEnabled` solo lo necesario, sin depuración remota en *release*.
@@ -71,7 +71,8 @@ Entregable: `docs/seguridad/AUDITORIA-F5.md` con tabla *hallazgo → severidad �
 ## 6. Cifrado y bloqueo
 - **Hecho (ADR-008, 2026-10-05):** cifrado en reposo con WebCrypto AES-256-GCM (`src/core/almacen/cifrado.ts`), sin criptografía propia. Una nota se cifra en el mismo momento en que se crea; exportar la descifra a un formato legible. Pruebas: ida y vuelta, IV distinto cada vez, archivo alterado / de otra ruta / con otra clave → no se descifra.
 - Qué **no** protege: teléfono con root o malware con acceso a la app, la app ya abierta, capturas de pantalla.
-- Pendiente F5: envolver la clave con Android Keystore (hoy vive no extraíble en IndexedDB de la WebView); bloqueo con biometría/PIN (BiometricPrompt), opcional en Ajustes.
+- **Hecho (ADR-014, 2026-10-06):** clave de datos envuelta por Android Keystore (`claves/notas.v2`), migración v1 → v2 y borrado de la clave de IndexedDB; bloqueo opcional con huella/PIN (BiometricPrompt) y vista previa oculta en «recientes». Pruebas: `boveda.test.ts`, `candado.test.tsx`.
+- Recuperación: la clave depende de este teléfono. Si se pierde (reinstalar, cambiar de teléfono, fallo del Keystore), las notas solo vuelven desde una copia ZIP: hacer copias.
 - Exportación cifrada opcional con contraseña (derivación Argon2id/PBKDF2 con parámetros documentados).
 
 ## 7. Privacidad

@@ -5,7 +5,7 @@
 
 ## Resumen
 - **0 críticos, 0 altos abiertos** en lo que afecta a la app. Los «altos» de MobSF son propios de un APK *debug* (firma de depuración, `debuggable=true`) y se cierran con la build *release* de F6.
-- Corregidos en esta fase: 3 (H1–H3). Abiertos con decisión del autor: 2 (H6, H7). Aceptados: 3.
+- Corregidos en esta fase: 5 (H1–H3, H6, H7 — estos dos por decisión del autor, ADR-014). Aceptados: 3. H4–H5 pasan a F6.
 - Fuzzing: 7 pruebas nuevas (`tests/unit/fuzz.test.ts`), ~10 000 entradas hostiles con semilla fija: ningún fallo.
 
 ## Herramientas y qué se hizo
@@ -30,8 +30,8 @@
 | H3 | CSP sin `form-action` | Baja | `index.html` | `form-action 'self'` | e2e en verde |
 | H4 | `android:debuggable=true`, firma de depuración, WebView depurable | Alta según MobSF / **aceptada en debug** | MobSF | Build *release* firmada (F6). Capacitor solo activa la depuración de la WebView si la app es *debuggable* | F6: MobSF sobre el APK release |
 | H5 | `minSdk 24` (Android 7) permite instalar en versiones sin parches | Baja en este modelo de amenazas | MobSF | Decisión del autor (F6): subir a 26/29 deja fuera teléfonos antiguos | — |
-| H6 | La clave de cifrado vive en IndexedDB de la WebView (no extraíble para JS, pero sin Android Keystore) | Media | `src/core/almacen/cifrado.ts`, ADR-008 | **Pendiente de decisión del autor**: envolverla con Android Keystore (plugin nativo) | — |
-| H7 | Sin bloqueo de la app (biometría/PIN): con el teléfono desbloqueado, las notas se leen | Media | Diseño actual | **Pendiente de decisión del autor**: BiometricPrompt opcional en Ajustes | — |
+| H6 | La clave de cifrado vive en IndexedDB de la WebView (no extraíble para JS, pero sin Android Keystore) | Media | `src/core/almacen/cifrado.ts`, ADR-008 | **Corregido (ADR-014):** clave envuelta por Android Keystore, migración v1 → v2, clave v1 borrada al terminar | `boveda.test.ts` (7); en el teléfono: `notas/*.md` con cabecera v2 |
+| H7 | Sin bloqueo de la app (biometría/PIN): con el teléfono desbloqueado, las notas se leen | Media | Diseño actual | **Corregido (ADR-014):** bloqueo opcional con BiometricPrompt, al abrir y tras 1 min fuera; oculta «recientes» | `candado.test.tsx` (4); probar en el teléfono |
 | A1 | `ProfileInstallReceiver` exportado | Info | MobSF | Protegido por `android.permission.DUMP` (solo sistema/adb). Componente de AndroidX | Aceptado |
 | A2 | `MainActivity` exportada con `ACTION_SEND text/plain` | Info | Semgrep, manifiesto | Necesaria para Compartir. Texto recortado a 2000 caracteres; solo se aceptan IDs válidos (fuzzing) | Aceptado |
 | A3 | Confía en certificados del sistema (no *pinning*) | Info | MobSF | Solo se conecta a YouTube (oEmbed, miniaturas, iframe); *pinning* rompería al rotar sus certificados | Aceptado |
@@ -42,8 +42,8 @@
 | STORAGE-1 datos sensibles en almacenamiento privado | ✅ | `Directory.Data`; cifrado AES-256-GCM (ADR-008) |
 | STORAGE-2 sin fugas (copias, registros) | ✅ | `allowBackup=false`, reglas de extracción, sin `console.log`/`Log.*` |
 | CRYPTO-1 criptografía estándar | ✅ | WebCrypto AES-GCM, IV aleatorio, AAD = ruta; pruebas en `cifrado.test.ts` |
-| CRYPTO-2 gestión de claves | ⚠️ | Clave no extraíble en IndexedDB; Keystore pendiente (H6) |
-| AUTH | ⚠️ / n/a | Sin cuentas; bloqueo local pendiente (H7). Spotify: autoriza su app, sin tokens |
+| CRYPTO-2 gestión de claves | ✅ | Clave envuelta por Android Keystore (H6, ADR-014) |
+| AUTH | ✅ / n/a | Sin cuentas; bloqueo local opcional con BiometricPrompt (H7). Spotify: autoriza su app, sin tokens |
 | NETWORK-1 tráfico seguro | ✅ | `cleartextTrafficPermitted=false`, solo HTTPS, CSP con *allowlist* |
 | PLATFORM-1 IPC segura | ✅ | 1 actividad y 1 receptor exportados (A1, A2); FileProvider no exportado (H2) |
 | PLATFORM-2 WebView segura | ✅ | `allowFileAccess/ContentAccess=false`, CSP `script-src 'self'`, `postMessage` solo del origen y ventana del reproductor |
@@ -53,6 +53,6 @@
 | PRIVACY-1 mínimo de datos, sin rastreadores | ✅ | MobSF: 0 rastreadores; PRIVACIDAD.md |
 
 ## Verificación manual en el teléfono (pendiente del autor)
-1. `adb shell run-as io.github.barmanpb74.appnoti ls files/notas` → los `.md` empiezan por `MARGINALIA-CIFRADO v1`.
+1. `adb shell run-as io.github.barmanpb74.appnoti head -c 22 files/notas/<id>.md` → `MARGINALIA-CIFRADO v2` (tras abrir la app una vez); `files/claves/notas.v2` existe y es Base64 ilegible.
 2. `adb logcat | grep -i marginalia` mientras se escribe una nota → no aparece su texto.
 3. `adb shell ls /sdcard/Documents/Marginalia` → solo lo exportado a mano.

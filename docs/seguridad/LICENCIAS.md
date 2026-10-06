@@ -29,6 +29,7 @@ Todo lo que entra en el APK es compatible con la licencia MIT del proyecto. Gene
 | AndroidX (appcompat, coordinatorlayout, core-splashscreen, webkit…) | Apache-2.0 | vía Capacitor |
 | Spotify App Remote SDK 0.8.0 (`.aar`) | Apache-2.0 | ADR-013; descargado y verificado por SHA256 en CI |
 | Gson 2.14.0 | Apache-2.0 | lo exige el SDK de Spotify |
+| androidx.biometric 1.1.0 | Apache-2.0 | bloqueo con huella/PIN (ADR-014) |
 
 ## Recursos
 | Recurso | Licencia | Nota |

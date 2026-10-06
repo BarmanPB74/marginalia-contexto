@@ -8,6 +8,7 @@ import { MiniReproductor } from '../features/musica/MiniReproductor';
 import { PantallaMusica } from '../features/musica/PantallaMusica';
 import { PantallaNota } from '../features/notas/PantallaNota';
 import { PantallaNotas } from '../features/notas/PantallaNotas';
+import { Candado } from '../features/seguridad/Candado';
 import { BarraInferior } from '../ui/BarraInferior';
 import { ProveedorEstado, useEstado } from './estado';
 import { Galeria } from './Galeria';
@@ -115,12 +116,21 @@ function Secciones({ ruta, idNota, dia, etiqueta, cancion: pedida }: PropsSeccio
   );
 }
 
-export function App() {
-  const hash = useHash();
+function ConCandado({ hash }: { hash: string }) {
+  const { bloqueo } = useEstado();
   const ruta = rutaActual(hash);
   return (
-    <ProveedorEstado>
+    <Candado activo={bloqueo}>
       {ruta === 'galeria' ? <Galeria /> : <Secciones ruta={ruta} idNota={idNotaEnRuta(hash)} dia={diaEnRuta(hash)} etiqueta={etiquetaEnRuta(hash)} cancion={cancionEnRuta(hash)} />}
+    </Candado>
+  );
+}
+
+export function App() {
+  const hash = useHash();
+  return (
+    <ProveedorEstado>
+      <ConCandado hash={hash} />
     </ProveedorEstado>
   );
 }

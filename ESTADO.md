@@ -5,8 +5,8 @@
 
 ## Ahora
 - **Fase actual:** F5 — Seguridad (empieza 2026-10-06). F4 cerrada: PR #2 fusionado; Spotify en segundo plano (ADR-013) **probado por el autor en el teléfono**.
-- **Última sesión:** 2026-10-06 — PR #3 (Spotify) abierto. Auditoría F5 (`docs/seguridad/AUDITORIA-F5.md`): npm audit/osv 0, MobSF, apktool, Semgrep, fuzzing; corregidos uuid, FileProvider y CSP; `LICENCIAS.md`.
-- **Siguiente paso concreto:** el autor decide H6 (clave con Android Keystore) y H7 (bloqueo biométrico); luego implementarlos, hacer las comprobaciones `adb` del informe y cerrar F5.
+- **Última sesión:** 2026-10-06 — Auditoría F5 (`docs/seguridad/AUDITORIA-F5.md`) y ADR-014: clave en Android Keystore con migración v1 → v2 y bloqueo opcional con huella/PIN. Todo en PR #3.
+- **Siguiente paso concreto:** el autor prueba en el teléfono (lista de abajo, **antes hacer una copia ZIP**); si va bien, fusionar PR #3 y cerrar F5; luego F6.
 
 ## Decisiones tomadas (ADR en `docs/ARQUITECTURA.md`)
 - 001 Web + Capacitor + Preact · 002 `.md` fuente de verdad · 003 solo IFrame oficial · 004 MIT (Pablo, 2026) · 005 nombre "Marginalia", appId `io.github.barmanpb74.appnoti`
@@ -36,23 +36,23 @@
 - F3: `core/parser/parseNota` (etiquetas con subetiquetas, sin ReDoS); `#/notas?etiqueta=x` filtra; autocompletar con `@codemirror/autocomplete` (`#` etiquetas existentes, `@` hoy/mañana/días); `SelectorFecha` propio en hoja; Calendario Mes | Agenda. Las llamadas al plugin de archivos van en fila (lectura colgada muy rara en e2e).
 
 ## Pendiente de decidir con el autor
-- ¿Envolver la clave de cifrado con Android Keystore (plugin nativo) y bloqueo biométrico? (F5, H6/H7 de la auditoría) · ¿Subir `minSdk` 24 → 26/29? (H5, F6)
+- ¿Subir `minSdk` 24 → 26/29? (H5 de la auditoría, F6)
 - Pedidos aún sin fase: plantillas con gráficos/cálculos y plantillas propias; exportar a PDF/carta/documento legal; backlinks, nota diaria, grafo.
 
 ## Probar en el teléfono (lo que el entorno de Claude no puede verificar)
+- **ADR-014 (antes: Ajustes → Exportar notas ZIP):** abrir la app → las notas de antes se leen igual (migración a v2); cerrar y abrir → siguen. Ajustes → «Bloqueo con huella o PIN» pide confirmar; cerrar y abrir → candado; salir 30 s → no pide; salir > 1 min → pide; en «recientes» no se ve el contenido (Android 13+). Elegir ZIP y autorizar Spotify con el bloqueo activo no deben bloquear.
 - **Ventana flotante:** en Música poner una canción, ir a Notas → el video sigue sonando en la ventana, sin cortes; arrastrarla por la barra; ⇥ la esconde y pausa; la pestaña ♪ la trae; × la cierra. Que el teclado no la deje tapada.
 - **F4 — historias 4 y 5:** «♪ Nueva nota con esta canción» → la nota guarda canción y segundo (píldora bajo el título); botón ♪ del editor → inserta `[♪ m:ss]`; en lectura, tocar ♪ (o la píldora) → Música suena desde ese segundo.
-- **Compartir:** en YouTube Music, Compartir → Marginalia (con la app cerrada y abierta) → se abre Música y suena. Compartir texto que no es de YouTube → aviso. Un video que no se deja incrustar → aviso + «Abrir en YouTube Music». Modo avión → aviso de sin conexión.
-- **F3:** autocompletar `#`/`@` con el teclado de Android; «@ Fecha»; filtro por etiqueta; Agenda.
+- **Compartir:** en YouTube Music, Compartir → Marginalia (con la app cerrada y abierta) → se abre Música y suena. Compartir texto que no es de YouTube → aviso. Un video que no se deja incrustar → aviso + «Abrir en YouTube Music». Modo avión → aviso de sin conexión. **F3:** autocompletar `#`/`@` con el teclado de Android; «@ Fecha»; filtro por etiqueta; Agenda.
 
 ## Permisos Android autorizados
-- `INTERNET` (reproductor). Verificado en el manifiesto compilado del APK de CI.
-- Nota: `android.permission.DUMP` aparece en el APK como **protección** del `ProfileInstallReceiver` de AndroidX (solo adb/sistema pueden llamarlo); no es un permiso que la app pida.
+- `INTERNET` (reproductor). Verificado en el manifiesto compilado del APK de CI · `USE_BIOMETRIC` + `USE_FINGERPRINT` (ADR-014, normales: Android no pregunta; los declara `androidx.biometric` para el bloqueo opcional).
+- `android.permission.DUMP` aparece en el APK como **protección** del `ProfileInstallReceiver` de AndroidX (solo adb/sistema pueden llamarlo); no es un permiso que la app pida.
 
 ## Dependencias justificadas
 - `preact` 11 · UI de 4 kB · MIT · `@capacitor/core` + `@capacitor/android` 8.5 · puente y proyecto Android · MIT
 - CodeMirror: `@codemirror/state` 6.7.6, `view` 6.43.13, `commands` 6.11.1, `language` 6.12.4, `@lezer/markdown` 1.7.2, `@lezer/highlight` 1.2.5 · editor · MIT · `markdown-it` 15.0.2 · lectura · MIT (trae `entities` BSD-2 → atribución en F6; `argparse` PSF-2.0 solo en su CLI, no entra al bundle) · `dompurify` 3.4.16 · sanitizar · MPL-2.0 o Apache-2.0 (usamos Apache-2.0)
-- Android: Spotify App Remote SDK 0.8.0 (`.aar`, Apache-2.0, beta oficial, 130 kB, sin permisos; descargado y verificado en CI) + `gson` 2.14.0 (Apache-2.0, lo exige el SDK)
+- Android: Spotify App Remote SDK 0.8.0 (`.aar`, Apache-2.0, beta oficial, 130 kB, sin permisos; descargado y verificado en CI) + `gson` 2.14.0 (Apache-2.0, lo exige el SDK) · `androidx.biometric` 1.1.0 (Apache-2.0, estable oficial; bloqueo, ADR-014)
 - `@capacitor/filesystem` 8.1.4 · notas en la carpeta privada y exportar a Documentos · MIT · no añade permisos · `yaml` 2.9.1 · frontmatter · ISC · Cifrado, búsqueda, enlaces de música: **sin dependencias nuevas** (WebCrypto, código propio) · `fflate` 0.8.3 · ZIP de copia · MIT · sin dependencias · ~8 kB · `@codemirror/autocomplete` 6.20.3 · autocompletar `#`/`@` · MIT · oficial de CodeMirror, reutiliza state/view
 - Fuentes (no son paquetes npm): Newsreader 400/400i/600, Kalam 400, JetBrains Mono 400 · @fontsource 5.3.0, latino · OFL-1.1 con `OFL.txt` en cada carpeta · 120 kB en total
 - Dev: `vite` 8 (build) MIT · `@preact/preset-vite` MIT · `typescript` 6.0 Apache-2.0 · `eslint` 10 + `@eslint/js` + `typescript-eslint` + `globals` MIT · `vitest` 5 + `jsdom` MIT · `@playwright/test` Apache-2.0 · `@capacitor/cli` MIT· Licencias: todas compatibles (`docs/seguridad/LICENCIAS.md`, F5)
@@ -71,7 +71,7 @@
 - (vacío)
 
 ## Historial de sesiones
-- 2026-10-06 · F5 (inicio) · PR #3 Spotify; auditoría propia con MobSF, apktool, Semgrep, osv, fuzzing (7 pruebas); 3 hallazgos corregidos, 2 a decidir; 324 unit + 31 e2e.
+- 2026-10-06 · F5 · PR #3 Spotify; auditoría (MobSF, apktool, Semgrep, osv, fuzzing); 5 hallazgos corregidos; ADR-014 Keystore + bloqueo; 335 unit + 31 e2e.
 - 2026-10-06 · F4+ · PR #2 fusionado; Spotify en segundo plano (ADR-013): plugin nativo, panel en Música, ♪ y rutas `sp=`, compartir, firma estable; 316 unit + 31 e2e.
 - 2026-10-05/06 · F4 · ♪ con segundo (historias 4 y 5), Share Intent nativo, errores del reproductor, visor ≥ 200 × 200; ventana flotante con el video (opción B, ADR-012), mismo iframe sin recargar, nada delante (e2e en 25 puntos); 291 unit + 30 e2e.
 - 2026-10-05 · F2 cerrada (probada por el autor) + pedidos + F3: rediseño, tarjetas, paleta, calendario, cifrado, YouTube Music, ZIP; parser, filtro por etiqueta, autocompletar, selector de fecha, Agenda; PR #2.
