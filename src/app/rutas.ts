@@ -54,13 +54,19 @@ export function etiquetaEnRuta(hash: string): string | null {
   }
 }
 
-/** `#/musica?yt=ID&t=99` → la canción que hay que poner (desde una etiqueta ♪); si no, null. */
-export function cancionEnRuta(hash: string): { yt: string; t: number } | null {
+/**
+ * `#/musica?yt=ID&t=99` (YouTube) o `#/musica?sp=track:ID&t=99` (Spotify) → la canción que hay
+ * que poner desde una etiqueta ♪; si no, null.
+ */
+export function cancionEnRuta(hash: string): { yt?: string; spotify?: string; t: number } | null {
   const [ruta, consulta = ''] = hash.replace(/^#\//, '').split('?');
   if (ruta !== 'musica') return null;
   const p = new URLSearchParams(consulta);
+  const n = Number(p.get('t') ?? 0);
+  const t = Number.isInteger(n) && n >= 0 && n <= 86400 ? n : 0;
   const yt = p.get('yt') ?? '';
-  if (!/^[A-Za-z0-9_-]{11}$/.test(yt)) return null;
-  const t = Number(p.get('t') ?? 0);
-  return { yt, t: Number.isInteger(t) && t >= 0 && t <= 86400 ? t : 0 };
+  if (/^[A-Za-z0-9_-]{11}$/.test(yt)) return { yt, t };
+  const sp = `spotify:${p.get('sp') ?? ''}`;
+  if (/^spotify:(track|episode):[A-Za-z0-9]{22}$/.test(sp)) return { spotify: sp, t };
+  return null;
 }

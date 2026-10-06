@@ -20,7 +20,8 @@ Objetivo: cumplir **OWASP MASVS nivel 1** en toda la app y nivel 2 en almacenami
 | WebView | Puente JS expuesto a páginas ajenas | Sin `addJavascriptInterface` propio; navegación limitada a un *allowlist*; iframes solo de `youtube-nocookie.com`; mensajes del reproductor aceptados solo de ese origen y de su ventana |
 | Enlaces pegados | URL hostil en "Pega un enlace de YouTube Music" | Solo hosts de YouTube en lista blanca, IDs validados (`^[A-Za-z0-9_-]{11}$`, listas 10–64); nada más del enlace llega al iframe |
 | Importación ZIP/MD | *Zip-slip*, archivos gigantes, YAML hostil | Validar rutas, límites de tamaño/cantidad, parser YAML seguro (sin tipos ejecutables), esquema |
-| Share Intent | Texto malicioso entrante | Tratar como no confiable: extraer solo ID de 11 caracteres válido, ignorar el resto |
+| Share Intent | Texto malicioso entrante | Tratar como no confiable: extraer solo ID de 11 caracteres válido (o URI de Spotify de 22), ignorar el resto |
+| Spotify (ADR-013) | Órdenes o datos hostiles por el puente | El plugin solo acepta Client ID `^[0-9a-f]{32}$` y URIs `spotify:(track\|episode\|album\|playlist):[A-Za-z0-9]{22}`; lo que devuelve se valida (`estadoSeguro`). Sin tokens guardados; SDK descargado con SHA256 fijo; keystore de firma solo como secreto de GitHub |
 | Cadena de suministro | Dependencia comprometida | Pocas dependencias, `package-lock.json` fijo, `npm audit`, Dependabot, `dependency-review`, revisar permisos de plugins de Capacitor |
 | Repositorio público | Secretos filtrados, keystore expuesta | `.gitignore` estricto, `gitleaks`, secretos solo en GitHub Secrets, push protection activado |
 | Red | Tráfico en claro / MITM | `cleartextTrafficPermitted=false`; solo HTTPS |
@@ -74,4 +75,4 @@ Entregable: `docs/seguridad/AUDITORIA-F5.md` con tabla *hallazgo → severidad �
 - Exportación cifrada opcional con contraseña (derivación Argon2id/PBKDF2 con parámetros documentados).
 
 ## 7. Privacidad
-Documentar en `PRIVACIDAD.md`: no hay cuentas, no hay servidor, no hay analíticas; los datos viven en el dispositivo; la única conexión es la del reproductor de YouTube, que está sujeta a las políticas de Google. Decir qué guarda la app y cómo borrarlo todo.
+Documentar en `PRIVACIDAD.md`: no hay cuentas, no hay servidor, no hay analíticas; los datos viven en el dispositivo; la única conexión es la del reproductor de YouTube, que está sujeta a las políticas de Google. Con Spotify (ADR-013) la app no se conecta a nada: habla con la app de Spotify del teléfono, que tiene su propia política. Decir qué guarda la app y cómo borrarlo todo.

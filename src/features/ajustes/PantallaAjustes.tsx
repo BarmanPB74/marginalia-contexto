@@ -2,6 +2,7 @@ import { useState } from 'preact/hooks';
 import { useEstado } from '../../app/estado';
 import type { Tema, VistaNotas } from '../../app/ajustes';
 import { Boton } from '../../ui/Boton';
+import { CampoTexto } from '../../ui/CampoTexto';
 import { Encabezado } from '../../ui/Encabezado';
 import { Interruptor } from '../../ui/Interruptor';
 import { Pagina } from '../../ui/Pagina';
@@ -23,7 +24,11 @@ const VISTAS: { valor: VistaNotas; etiqueta: string }[] = [
 
 /** Lista plana, sin tarjetas (DISENO.md). */
 export function PantallaAjustes() {
-  const { flotante, setFlotante, tema, vistaNotas, miniEscondido, cambiarAjustes, abrirComandos } = useEstado();
+  const { flotante, setFlotante, tema, vistaNotas, miniEscondido, cambiarAjustes, abrirComandos, spotifyClientId } =
+    useEstado();
+  // Se guarda solo cuando es válido (o vacío, para quitarlo)
+  const [clientId, setClientId] = useState(spotifyClientId);
+  const clientIdValido = /^[0-9a-f]{32}$/.test(clientId.trim().toLowerCase());
   const repo = useRepositorio();
   const [aviso, setAviso] = useState('');
   const [ocupado, setOcupado] = useState(false);
@@ -78,6 +83,28 @@ export function PantallaAjustes() {
             />
           </li>
         )}
+        <li>
+          <p class="ajustes__titulo">Spotify</p>
+          <CampoTexto
+            etiqueta="Client ID de tu app de Spotify"
+            marcador="32 letras y números"
+            valor={clientId}
+            alCambiar={(v) => {
+              setClientId(v);
+              const limpio = v.trim().toLowerCase();
+              if (!limpio || /^[0-9a-f]{32}$/.test(limpio)) cambiarAjustes({ spotifyClientId: limpio });
+            }}
+          />
+          {clientId.trim() && !clientIdValido && (
+            <p class="ajustes__aviso" role="alert">
+              Ese Client ID no es válido: cópialo tal cual del Dashboard de Spotify.
+            </p>
+          )}
+          <p class="ajustes__pista">
+            Spotify suena en su propia app, también en segundo plano. Necesitas Premium y registrar tu app en el
+            Dashboard de Spotify (pasos en docs/LEGAL.md). El Client ID no es secreto y se queda en este teléfono.
+          </p>
+        </li>
         <li>
           <p class="ajustes__titulo">Copia de seguridad</p>
           <div class="ajustes__botones">

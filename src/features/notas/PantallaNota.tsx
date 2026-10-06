@@ -9,7 +9,7 @@ import { claveEtiqueta, etiquetasDeNota } from '../../core/parser/parser';
 import { Hoja } from '../../ui/Hoja';
 import { SelectorFecha } from '../../ui/SelectorFecha';
 import type { Comando } from '../comandos/comandos';
-import { cancionDeNota, enlaceCancion, minutoSegundo, rutaCancion } from '../../core/musica/etiqueta';
+import { URI_SPOTIFY, cancionDeNota, enlaceCancion, idDe, minutoSegundo, rutaCancion } from '../../core/musica/etiqueta';
 import { Boton } from '../../ui/Boton';
 import { EstadoVacio } from '../../ui/EstadoVacio';
 import { Icono } from '../../ui/Icono';
@@ -119,18 +119,29 @@ export function PantallaNota({ id }: { id: string }) {
     setRangoFecha({ desde: from, hasta: to });
   }
 
-  /** ♪: la última canción elegida en Música, en el segundo en que iba (historia 4). */
+  /** ♪: lo que suena en la fuente elegida (YouTube o Spotify), en el segundo en que iba (historia 4). */
   function ponerCancion() {
-    const cancion = estado?.cancion;
     const editor = vista.current;
-    if (!cancion?.enlace.video) {
-      estado?.avisar('Elige una canción en Música y vuelve: ♪ guardará el segundo en que iba.');
+    const uriSpotify = estado?.spotify.estado?.uri;
+    const enSpotify = estado?.fuente === 'spotify';
+    const id = enSpotify
+      ? uriSpotify && URI_SPOTIFY.test(uriSpotify) && estado?.spotify.conectado
+        ? uriSpotify
+        : null
+      : (estado?.cancion?.enlace.video ?? null);
+    if (!id) {
+      estado?.avisar(
+        enSpotify
+          ? 'Conecta Spotify en Música y pon una canción: ♪ guardará el segundo en que va.'
+          : 'Elige una canción en Música y vuelve: ♪ guardará el segundo en que iba.',
+      );
       return;
     }
     if (!editor) return;
+    const segundo = enSpotify ? (estado?.spotify.segundo() ?? 0) : (estado?.info.posicion ?? 0);
     const { from, to } = editor.state.selection.main;
     const antes = editor.state.sliceDoc(Math.max(0, from - 1), from);
-    const texto = `${antes && !/\s/.test(antes) ? ' ' : ''}${enlaceCancion(cancion.enlace.video, estado?.info.posicion ?? 0)} `;
+    const texto = `${antes && !/\s/.test(antes) ? ' ' : ''}${enlaceCancion(id, segundo)} `;
     editor.dispatch({ changes: { from, to, insert: texto }, selection: { anchor: from + texto.length } });
     editor.focus();
   }
@@ -315,7 +326,7 @@ export function PantallaNota({ id }: { id: string }) {
         const c = cancionDeNota(nota);
         if (!c) return null;
         return (
-          <a class="nota__cancion" href={rutaCancion(c.yt, c.t ?? 0)}>
+          <a class="nota__cancion" href={rutaCancion(idDe(c), c.t ?? 0)}>
             <span aria-hidden="true">♪</span>
             <span class="nota__cancion-texto">
               {c.titulo ?? 'Canción'}

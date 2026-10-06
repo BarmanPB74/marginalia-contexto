@@ -35,11 +35,11 @@ interface PropsSecciones {
   idNota: string | null;
   dia: string | null;
   etiqueta: string | null;
-  cancion: { yt: string; t: number } | null;
+  cancion: ReturnType<typeof cancionEnRuta>;
 }
 
 function Secciones({ ruta, idNota, dia, etiqueta, cancion: pedida }: PropsSecciones) {
-  const { flotante, sonando, miniEscondido, cambiarAjustes, comandosAbiertos, cancion, aviso, avisar, flotando, setFlotando } =
+  const { flotante, sonando, miniEscondido, cambiarAjustes, comandosAbiertos, cancion, aviso, avisar, flotando, setFlotando, fuente, spotify } =
     useEstado();
   const Pantalla = PANTALLAS[ruta];
   const enMusica = ruta === 'musica' && !idNota;
@@ -55,7 +55,8 @@ function Secciones({ ruta, idNota, dia, etiqueta, cancion: pedida }: PropsSeccio
   // `antes.current` aún es la ruta anterior en este render: así el reproductor pasa a flotar en el
   // mismo cuadro, sin desmontarse ni un instante (desmontar el iframe cortaría la canción).
   const saliendoSonando = antes.current && !enMusica && sonando;
-  const modoCapa: ModoCapa | null = !cancion ? null : enMusica ? 'musica' : flotando || saliendoSonando ? 'flotante' : null;
+  // Con Spotify (ADR-013) no hay video: suena en la app de Spotify
+  const modoCapa: ModoCapa | null = !cancion || fuente === 'spotify' ? null : enMusica ? 'musica' : flotando || saliendoSonando ? 'flotante' : null;
   // En Música ya está el reproductor grande; fuera, si flota el video, el globo dibujado sobra.
   const conMini = !enMusica && modoCapa !== 'flotante';
   const anclado = conMini && !flotante && !miniEscondido;
@@ -74,6 +75,18 @@ function Secciones({ ruta, idNota, dia, etiqueta, cancion: pedida }: PropsSeccio
         <Pantalla />
       )}
       {conMini && (
+        fuente === 'spotify' ? (
+          <MiniReproductor
+            titulo={spotify.estado?.titulo ?? 'Spotify'}
+            artista={spotify.conectado ? (spotify.estado?.artista ?? '') : 'Toca para conectar'}
+            sonando={spotify.sonando}
+            // Spotify suena en su app: el globo lo pausa o reanuda sin salir de aquí
+            alAlternar={() => (spotify.conectado ? spotify.alternar() : (location.hash = '#/musica'))}
+            modo={flotante ? 'flotante' : 'anclado'}
+            escondido={miniEscondido}
+            alEsconder={(lado) => cambiarAjustes({ miniEscondido: lado })}
+          />
+        ) : (
         <MiniReproductor
           titulo={cancion?.titulo ?? 'Nada sonando'}
           artista={cancion ? cancion.artista : 'Toca para elegir música'}
@@ -85,6 +98,7 @@ function Secciones({ ruta, idNota, dia, etiqueta, cancion: pedida }: PropsSeccio
           escondido={miniEscondido}
           alEsconder={(lado) => cambiarAjustes({ miniEscondido: lado })}
         />
+        )
       )}
       <BarraInferior actual={ruta} />
       {/* Siempre en el mismo sitio del árbol: cambiar de modo no recarga el iframe */}

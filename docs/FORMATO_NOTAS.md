@@ -40,7 +40,7 @@ Enlace a otra página: [[Pasado compuesto]]
 | Etiqueta de tema | `#etiqueta` o `etiquetas:` en frontmatter | Filtros y búsqueda |
 | Fecha en calendario | `fecha:` en frontmatter **o** `@AAAA-MM-DD` / `@AAAA-MM-DD HH:mm` en el texto | La nota aparece en ese día. Una nota puede tener varias fechas. |
 | Canción principal | `cancion:` en frontmatter | Insignia ♪ en la lista; botón de reproducir desde `t` |
-| Canción en línea | `[♪ m:ss](yt:VIDEOID?t=SEGUNDOS)` | Enlace estándar con esquema `yt:`; la app lo convierte en botón |
+| Canción en línea | `[♪ m:ss](yt:VIDEOID?t=SEGUNDOS)` o `[♪ m:ss](spotify:track:ID?t=SEGUNDOS)` | Enlace estándar con esquema `yt:` o `spotify:`; la app lo convierte en botón |
 | Enlace entre páginas | `[[Título de página]]` | Navegación; se resuelve por título (insensible a mayúsculas) |
 | Callout | `> [!nota] texto` (también `[!ojo]`, `[!tarea]`) | Cita con trazo; se degrada a blockquote |
 
@@ -48,7 +48,7 @@ Enlace a otra página: [[Pasado compuesto]]
 1. No interpretar `#`, `@` ni `[[ ]]` dentro de bloques de código ni de código en línea.
 2. `#etiqueta`: solo si va precedido de inicio de línea, espacio o `(` y seguido de letra/dígito (los encabezados `# Título` NO son etiquetas). Permitir letras con tilde y `ñ`, `_`, `-` y `/` (subetiquetas: `#proyectos/marginalia`). Solo números (`#1`, `#2026`) no cuenta. Máximo 64 caracteres. `#Estudio` y `#estudio` son la misma (se comparan en minúsculas). En lectura enlaza a `#/notas?etiqueta=…`.
 3. Fechas: validar calendario real (`@2026-02-30` es inválida y se ignora). Zona horaria: la del dispositivo; guardar ISO 8601 con offset en el frontmatter.
-4. `yt:` solo acepta IDs que cumplan `^[A-Za-z0-9_-]{11}$`. Todo lo demás se trata como texto.
+4. `yt:` solo acepta IDs que cumplan `^[A-Za-z0-9_-]{11}$`; `spotify:` solo `spotify:(track|episode):[A-Za-z0-9]{22}` (ADR-013). En `cancion:` va `yt:` **o** `spotify:` (p. ej. `spotify: spotify:track:4uLU6hMCjMI75M1A2tKUQC`). Todo lo demás se trata como texto.
 5. Frontmatter: YAML con esquema validado; campos desconocidos se **preservan** al guardar (no perder datos de otros editores).
 6. El parser es una función pura: `parseNota(texto) → { meta, fechas[], etiquetas[], canciones[], enlaces[] }`. Probada con casos límite (vacío, solo frontmatter, Unicode, bloques de código, fechas inválidas, archivos de 1 MB).
 7. Tamaño máximo de nota: 2 MB (rechazar o truncar con aviso al importar).
@@ -56,6 +56,7 @@ Enlace a otra página: [[Pasado compuesto]]
 ## Captura de la canción (flujo, implementado en F4)
 - En Música: «♪ Nueva nota con esta canción» → nota rápida con `cancion:` (yt, título, artista, `t` = segundo actual) y `[♪ m:ss](yt:ID?t=S)` en la primera línea.
 - En el editor: botón ♪ de la barra (o la paleta) → inserta el enlace de la última canción elegida en el segundo en que iba.
+- Con la fuente Spotify, lo mismo con la URI de la pista y el segundo de la app de Spotify; en lectura va a `#/musica?sp=track:ID&t=S` y Spotify suena desde ese segundo.
 - En lectura, el enlace ♪ va a `#/musica?yt=ID&t=S` (Música lo carga en ese segundo y limpia la ruta). La píldora bajo el título hace lo mismo con la canción principal.
 
 ### Flujo original

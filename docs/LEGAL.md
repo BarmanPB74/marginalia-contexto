@@ -27,6 +27,20 @@ Share Intent (F4): «Compartir → Marginalia» solo recibe texto plano y la app
 
 Si el reproductor incrustado no es viable en la WebView, se aplica el **Plan B** de `docs/ARQUITECTURA.md` (Intent + Share Intent). Nunca se recurre a una vía no oficial.
 
+## 1 bis. Spotify (ADR-013, 2026-10-06)
+Vía oficial: **Spotify App Remote SDK** (Android, Apache-2.0). Marginalia controla la app oficial de Spotify instalada en el teléfono (reproducir, pausar, saltar, leer qué suena y en qué segundo). La música suena **en la app de Spotify**, con su interfaz y sus reglas, y por eso sigue en segundo plano: no se separa ni se oculta nada de ningún reproductor.
+- Prohibido igual que con YouTube: descargar, grabar o extraer audio; guardar contenido; usar contraseñas de la persona. Solo se guardan URI, título, artista y segundo.
+- Autorización: la pide la app de Spotify (pantalla propia). No hay tokens en Marginalia.
+- Términos del Developer Program (verificados 2026-10-06): en **modo desarrollo** la cuenta dueña de la app necesita **Premium** y solo pueden usarla hasta **5** cuentas que el autor añada en el Dashboard. Para más personas hace falta pedir cuota ampliada a Spotify (F6, si se publica).
+- El SDK está en beta y Spotify puede cambiarlo; si deja de funcionar, la fuente YouTube no se ve afectada.
+
+**Puesta en marcha (una vez, la hace el autor):**
+1. Crea un keystore propio y guárdalo fuera del repo: `keytool -genkeypair -v -keystore marginalia.keystore -alias marginalia -keyalg RSA -keysize 2048 -validity 10000`.
+2. En GitHub → Settings → Secrets → Actions: `MARGINALIA_KEYSTORE_B64` = `base64 -w0 marginalia.keystore` y `MARGINALIA_KEYSTORE_PASS` = su contraseña.
+3. Lanza CI: el paso «Huella SHA-1 de la firma» imprime la SHA-1.
+4. En developer.spotify.com/dashboard crea una app (API: *Android*), con paquete `io.github.barmanpb74.appnoti`, esa SHA-1 y la URI de redirección `marginalia://spotify`. En *User Management* añade tu correo de Spotify.
+5. Copia el *Client ID* en Marginalia → Ajustes → Spotify, y en Música elige «Spotify» → «Conectar con Spotify».
+
 ## 2. Licencia del proyecto
 - Código propio: **MIT** (`LICENSE`, con el nombre del autor y el año). Alternativa: Apache-2.0 (ADR-004).
 - Todas las dependencias deben tener licencia compatible (MIT, BSD, Apache-2.0, ISC, MPL-2.0 usada sin modificar). Evitar GPL/AGPL salvo decisión explícita del autor.

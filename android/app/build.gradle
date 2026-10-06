@@ -16,6 +16,20 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        // ADR-013: Spotify reconoce la app por la huella SHA-1 de su firma. La firma debug de CI
+        // cambia en cada ejecución; si el secreto MARGINALIA_KEYSTORE_B64 existe, CI lo deja en
+        // un archivo temporal y la firma es siempre la misma. El keystore nunca entra al repo.
+        debug {
+            def estable = System.getenv('MARGINALIA_KEYSTORE')
+            if (estable && file(estable).exists()) {
+                storeFile file(estable)
+                storePassword System.getenv('MARGINALIA_KEYSTORE_PASS')
+                keyAlias System.getenv('MARGINALIA_KEY_ALIAS') ?: 'marginalia'
+                keyPassword System.getenv('MARGINALIA_KEYSTORE_PASS')
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
@@ -40,6 +54,10 @@ dependencies {
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')
+    // Spotify App Remote (ADR-013): el .aar oficial lo descarga y verifica scripts/spotify-sdk.sh
+    // (Apache-2.0, github.com/spotify/android-sdk). Gson lo necesita el SDK para sus mensajes.
+    implementation(name: 'spotify-app-remote-release-0.8.0', ext: 'aar')
+    implementation "com.google.code.gson:gson:2.14.0"
 }
 
 apply from: 'capacitor.build.gradle'
