@@ -5,7 +5,10 @@
   min-height: 100vh;
   margin: 0 auto;
   /* abajo deja sitio a la barra inferior fija (y al mini reproductor si va anclado) */
-  padding: 24px 24px calc(48px + var(--alto-barra) + var(--reserva-mini, 0px) + env(safe-area-inset-bottom));
+  padding: calc(24px + var(--margen-arriba)) var(--margen-lado)
+    calc(48px + var(--alto-barra) + var(--reserva-mini, 0px) + var(--margen-abajo));
+  /* Cada pantalla entra con un fundido corto hacia arriba */
+  animation: entrar var(--dur-media) var(--curva) backwards;
 }
 
 .con-mini-anclado {

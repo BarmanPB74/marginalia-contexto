@@ -1,0 +1,158 @@
+.calendario__mes {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.calendario__nombre {
+  margin: 0;
+  font-family: var(--letra-mano);
+  font-size: var(--texto-l);
+  font-weight: 400;
+}
+
+.calendario__flecha {
+  display: grid;
+  place-items: center;
+  width: var(--toque);
+  height: var(--toque);
+  padding: 0;
+  color: var(--tinta);
+  background: none;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.calendario__flecha:active {
+  background: var(--papel-2);
+}
+
+.calendario__rejilla {
+  padding: 4px 0 8px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--separador);
+  /* el gesto horizontal es del calendario; el vertical, de la página */
+  touch-action: pan-y;
+}
+
+.calendario__semana,
+.calendario__dias {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.calendario__dia-semana {
+  padding: 4px 0;
+  font-family: var(--letra-mano);
+  font-size: var(--texto-xs);
+  color: var(--tinta-suave);
+  text-align: center;
+}
+
+/* Cambiar de mes desliza la cuadrícula en la dirección del gesto */
+.calendario__dias--despues {
+  animation: mes-despues var(--dur-media) var(--curva) both;
+}
+
+.calendario__dias--antes {
+  animation: mes-antes var(--dur-media) var(--curva) both;
+}
+
+@keyframes mes-despues {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
+@keyframes mes-antes {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+}
+
+.calendario__celda--elegida .celda-dia__numero {
+  outline: var(--trazo) solid var(--acento);
+  outline-offset: 1px;
+}
+
+.calendario__agenda {
+  margin-top: 16px;
+}
+
+.calendario__vacio {
+  margin: 8px 0;
+  font-size: var(--texto-s);
+  color: var(--tinta-suave);
+}
+
+.calendario__lista,
+.calendario__lista ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.calendario__lista > li {
+  padding: 4px 0 8px;
+  border-bottom: 1px solid var(--separador);
+  animation: entrar var(--dur-media) var(--curva) backwards;
+}
+
+.calendario__agenda-dia {
+  display: block;
+  padding-top: 6px;
+  font-size: var(--texto-s);
+  color: var(--tinta-suave);
+  text-decoration: none;
+}
+
+.calendario__agenda-dia::first-letter {
+  text-transform: uppercase;
+}
+
+.calendario__nota {
+  display: flex;
+  align-items: center;
+  min-height: var(--toque);
+  font-family: var(--letra-mano);
+  font-size: var(--texto-m);
+  color: var(--tinta);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.calendario__lista--hoja > li {
+  padding: 0;
+}
+
+.calendario__crear {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.hoja__titulo::first-letter {
+  text-transform: uppercase;
+}
+
+.calendario__agenda--sola {
+  margin-top: 8px;
+}
+
+.calendario__agenda-dia--hoy {
+  color: var(--acento);
+}
+
+.calendario__lista--anteriores {
+  opacity: 0.75;
+}
+
+.segmentado + .calendario__mes,
+.segmentado + .calendario__agenda {
+  margin-top: 12px;
+}

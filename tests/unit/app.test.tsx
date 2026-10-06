@@ -2,7 +2,6 @@ import { render } from 'preact';
 import { act } from 'preact/test-utils';
 import { afterEach, describe, expect, it } from 'vitest';
 import { App } from '../../src/app/App';
-import { urlEmbed } from '../../src/spike/SpikeReproductor';
 
 let contenedor: HTMLElement;
 
@@ -37,14 +36,9 @@ describe('App', () => {
     expect(contenedor.querySelector('nav')).toBeNull();
   });
 
-  it('Música no carga ningún iframe hasta que se pide la prueba', () => {
+  it('Música no carga ningún iframe hasta que se elige una canción', () => {
     montar('#/musica');
     expect(contenedor.querySelector('h1')?.textContent).toBe('Música');
     expect(contenedor.querySelector('iframe')).toBeNull();
-  });
-
-  it('el spike solo apunta a dominios oficiales de YouTube por https', () => {
-    expect(urlEmbed('nocookie')).toBe('https://www.youtube-nocookie.com/embed/M7lc1UVf-VE');
-    expect(urlEmbed('youtube')).toBe('https://www.youtube.com/embed/M7lc1UVf-VE');
   });
 });

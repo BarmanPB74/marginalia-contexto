@@ -8,8 +8,13 @@ const fuentes = import.meta.glob<string>('../../src/**/*.{css,ts,tsx}', {
   eager: true,
 });
 
-function token(nombre: string): string {
-  const coincidencia = new RegExp(`--${nombre}\\s*:\\s*([^;]+);`).exec(tokensCss);
+/** Bloque del tema oscuro fijado en Ajustes (el de la media query repite los mismos valores). */
+const bloqueOscuro = /:root\[data-tema='oscuro'\]\s*\{([^}]*)\}/.exec(tokensCss)?.[1] ?? '';
+const bloqueOscuroSistema =
+  /prefers-color-scheme:\s*dark\)\s*\{\s*:root:not\(\[data-tema='claro'\]\)\s*\{([^}]*)\}/.exec(tokensCss)?.[1] ?? '';
+
+function token(nombre: string, css = tokensCss): string {
+  const coincidencia = new RegExp(`--${nombre}\\s*:\\s*([^;]+);`).exec(css);
   if (!coincidencia?.[1]) throw new Error(`Falta el token --${nombre}`);
   return coincidencia[1].trim();
 }
@@ -28,6 +33,11 @@ function contraste(a: string, b: string): number {
   return (claro + 0.05) / (oscuro + 0.05);
 }
 
+const TEMAS = [
+  ['claro', tokensCss],
+  ['oscuro', bloqueOscuro],
+] as const;
+
 describe('tokens de diseño', () => {
   it('define todos los tokens de DISENO.md', () => {
     for (const nombre of ['papel', 'papel-2', 'tinta', 'tinta-suave', 'acento', 'marca', 'trazo', 'radio']) {
@@ -35,15 +45,22 @@ describe('tokens de diseño', () => {
     }
   });
 
-  it('tinta y acento sobre papel tienen contraste ≥ 7:1 (AAA)', () => {
-    expect(contraste(token('tinta'), token('papel'))).toBeGreaterThanOrEqual(7);
-    expect(contraste(token('tinta'), token('papel-2'))).toBeGreaterThanOrEqual(7);
-    expect(contraste(token('acento'), token('papel'))).toBeGreaterThanOrEqual(7);
+  it.each(TEMAS)('tema %s: tinta y acento sobre papel tienen contraste ≥ 7:1 (AAA)', (_, css) => {
+    expect(contraste(token('tinta', css), token('papel', css))).toBeGreaterThanOrEqual(7);
+    expect(contraste(token('tinta', css), token('papel-2', css))).toBeGreaterThanOrEqual(7);
+    expect(contraste(token('tinta', css), token('superficie', css))).toBeGreaterThanOrEqual(7);
+    expect(contraste(token('acento', css), token('papel', css))).toBeGreaterThanOrEqual(7);
   });
 
-  it('la tinta suave (texto secundario) llega al menos a 4.5:1 (AA)', () => {
-    expect(contraste(token('tinta-suave'), token('papel'))).toBeGreaterThanOrEqual(4.5);
-    expect(contraste(token('tinta-suave'), token('papel-2'))).toBeGreaterThanOrEqual(4.5);
+  it.each(TEMAS)('tema %s: la tinta suave (texto secundario) llega al menos a 4.5:1 (AA)', (_, css) => {
+    expect(contraste(token('tinta-suave', css), token('papel', css))).toBeGreaterThanOrEqual(4.5);
+    expect(contraste(token('tinta-suave', css), token('papel-2', css))).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('el oscuro del teléfono y el fijado en Ajustes son idénticos', () => {
+    const limpiar = (css: string) => css.replace(/\s+/g, ' ').replace(/color-scheme: dark;/, '').trim();
+    expect(bloqueOscuro).not.toBe('');
+    expect(limpiar(bloqueOscuroSistema)).toBe(limpiar(bloqueOscuro));
   });
 
   it('no hay colores sueltos fuera de tokens.css', () => {

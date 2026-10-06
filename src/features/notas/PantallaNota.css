@@ -1,0 +1,149 @@
+.nota__arriba {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: -8px 0 4px -12px;
+}
+
+.nota__volver-boton {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--toque);
+  height: var(--toque);
+  padding: 0;
+  color: var(--tinta);
+  background: none;
+  border: 0;
+  border-radius: var(--radio);
+  cursor: pointer;
+}
+
+.nota__volver-boton:active {
+  background: var(--papel-2);
+}
+
+.nota__ruta {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--letra-mano);
+  font-size: var(--texto-s);
+  color: var(--tinta-suave);
+  overflow-wrap: anywhere;
+}
+
+.nota__ruta a {
+  color: inherit;
+}
+
+.nota__encabezado {
+  margin-bottom: 16px;
+}
+
+.nota__titulo {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: var(--toque);
+  padding: 0;
+  font-family: var(--letra-mano);
+  font-size: var(--texto-xl);
+  line-height: 1.2;
+  color: var(--tinta);
+  background: none;
+  border: 0;
+  outline: none;
+}
+
+.nota__titulo::placeholder {
+  color: var(--tinta-suave);
+}
+
+.nota__pie {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+  border-top: 1px solid var(--separador);
+}
+
+.nota__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.nota__estados {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nota__cifrada {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--texto-xs);
+  color: var(--tinta-suave);
+}
+
+.nota__aviso,
+.nota__pista {
+  margin: 8px 0 0;
+  font-size: var(--texto-s);
+  color: var(--tinta-suave);
+}
+
+.nota__formatos {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nota__formatos .boton {
+  width: 100%;
+  padding-left: 0;
+  text-align: left;
+}
+
+.nota__estado {
+  font-size: var(--texto-xs);
+  color: var(--tinta-suave);
+}
+
+.nota__volver {
+  text-align: center;
+}
+
+.nota__pie + .selector-plantilla {
+  margin-top: 16px;
+}
+
+/* Canción principal de la nota: una píldora que vuelve a sonar desde su segundo */
+.nota__cancion {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  min-height: 40px;
+  margin: -6px 0 16px;
+  padding: 0 14px;
+  font-family: var(--letra-mano);
+  font-size: var(--texto-s);
+  color: var(--tinta);
+  text-decoration: none;
+  background: var(--acento-suave);
+  border-radius: var(--radio);
+}
+
+.nota__cancion-texto {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.nota__cancion-t {
+  flex: none;
+  color: var(--tinta-suave);
+}

@@ -20,6 +20,8 @@ interface Medidas {
 interface Pantalla extends Medidas {
   /** alto ocupado abajo (barra inferior + zona de gestos) que el flotante no debe tapar */
   reservaInferior: number;
+  /** alto de la barra de estado de Android, arriba */
+  reservaSuperior?: number;
 }
 
 const MARGEN = 8;
@@ -30,6 +32,16 @@ export function limitarPosicion(punto: Punto, caja: Medidas, pantalla: Pantalla)
   const maxY = pantalla.alto - pantalla.reservaInferior - caja.alto - MARGEN;
   return {
     x: Math.max(MARGEN, Math.min(punto.x, maxX)),
-    y: Math.max(MARGEN, Math.min(punto.y, maxY)),
+    y: Math.max(MARGEN + (pantalla.reservaSuperior ?? 0), Math.min(punto.y, maxY)),
   };
+}
+
+/** Si el dedo suelta a menos de esto del canto, el globo se esconde de ese lado. */
+export const BORDE_ESCONDER = 12;
+
+/** Lado hacia el que se esconde un globo lanzado contra el borde; `null` si se soltó dentro. */
+export function ladoParaEsconder(x: number, anchoPantalla: number): 'izquierda' | 'derecha' | null {
+  if (x <= BORDE_ESCONDER) return 'izquierda';
+  if (x >= anchoPantalla - BORDE_ESCONDER) return 'derecha';
+  return null;
 }

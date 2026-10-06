@@ -1,0 +1,93 @@
+/* Lienzo casi vacío: el editor se ve como el papel, sin bordes ni números de línea. */
+.editor-markdown {
+  min-height: 55vh;
+}
+
+.editor-markdown .cm-editor {
+  min-height: 55vh;
+  font-family: var(--letra-cuerpo);
+  font-size: var(--texto-m);
+  line-height: var(--interlineado);
+  color: var(--tinta);
+  background: none;
+}
+
+.editor-markdown .cm-editor.cm-focused {
+  outline: none;
+}
+
+.editor-markdown .cm-scroller {
+  font-family: inherit;
+  line-height: inherit;
+  /* crece con el texto: se desplaza la página, no el editor */
+  overflow: visible;
+}
+
+.editor-markdown .cm-content {
+  min-height: 55vh;
+  padding: 0;
+  caret-color: var(--tinta);
+}
+
+.editor-markdown .cm-line {
+  padding: 0;
+}
+
+.editor-markdown .cm-placeholder {
+  color: var(--tinta-suave);
+}
+
+.editor-markdown .cm-cursor {
+  border-left-color: var(--tinta);
+}
+
+/* Selección con el mismo resaltador de "hoy" (DISENO.md: --marca) */
+.editor-markdown .cm-editor .cm-selectionBackground,
+.editor-markdown .cm-editor.cm-focused .cm-selectionBackground,
+.editor-markdown .cm-content ::selection {
+  background: var(--marca);
+}
+
+/* Autocompletar de # y @: una tarjeta pequeña con las opciones */
+.editor-markdown .cm-tooltip.cm-tooltip-autocomplete.sugerencias {
+  overflow: hidden;
+  font-family: var(--letra-cuerpo);
+  font-size: var(--texto-s);
+  color: var(--tinta);
+  background: var(--superficie);
+  border: var(--trazo) solid var(--contorno);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+  animation: aparecer var(--dur-corta) var(--curva) backwards;
+}
+
+.editor-markdown .cm-tooltip.cm-tooltip-autocomplete.sugerencias > ul {
+  max-height: 40vh;
+  font-family: var(--letra-cuerpo);
+}
+
+.editor-markdown .cm-tooltip.cm-tooltip-autocomplete.sugerencias > ul > li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 44px;
+  padding: 0 14px;
+}
+
+.editor-markdown .cm-tooltip.cm-tooltip-autocomplete.sugerencias > ul > li[aria-selected] {
+  color: var(--tinta);
+  background: var(--acento-suave);
+}
+
+.editor-markdown .cm-tooltip.sugerencias .cm-completionDetail {
+  margin: 0;
+  font-family: var(--letra-mano);
+  font-style: normal;
+  color: var(--tinta-suave);
+}
+
+.editor-markdown .cm-tooltip.sugerencias .cm-completionMatchedText {
+  text-decoration: none;
+  font-weight: 600;
+}

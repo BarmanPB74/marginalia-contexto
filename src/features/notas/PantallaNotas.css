@@ -1,0 +1,85 @@
+.lista-notas {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lista-notas li {
+  /* Sangría por nivel del árbol; a partir del 6.º ya no se mete más para no estrechar el texto */
+  padding-left: calc(min(var(--nivel, 0), 6) * 20px);
+  border-bottom: 1px solid var(--separador);
+}
+
+.lista-notas__enlace {
+  display: flex;
+  align-items: center;
+  min-height: var(--toque);
+  padding: 4px 0;
+  font-family: var(--letra-mano);
+  font-size: var(--texto-m);
+  color: var(--tinta);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.lista-notas__aviso {
+  margin-top: 16px;
+  font-size: var(--texto-xs);
+  color: var(--tinta-suave);
+}
+
+.lista-notas li {
+  animation: entrar var(--dur-media) var(--curva) backwards;
+}
+
+/* Filtro por etiqueta: fila de píldoras que se desliza de lado */
+.filtro-etiquetas {
+  display: flex;
+  gap: 8px;
+  margin: 0 calc(-1 * var(--margen-lado)) 4px;
+  padding: 4px var(--margen-lado) 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.filtro-etiquetas::-webkit-scrollbar {
+  display: none;
+}
+
+.filtro-etiquetas__chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  font-family: var(--letra-mano);
+  font-size: var(--texto-s);
+  color: var(--tinta);
+  background: none;
+  border: var(--trazo) solid var(--separador);
+  border-radius: var(--radio);
+  cursor: pointer;
+}
+
+/* El área táctil llega a 48 px aunque la píldora se vea más fina */
+.filtro-etiquetas__chip {
+  position: relative;
+}
+
+.filtro-etiquetas__chip::after {
+  position: absolute;
+  inset: -4px 0;
+  content: '';
+}
+
+.filtro-etiquetas__chip[aria-pressed='true'] {
+  background: var(--acento-suave);
+  border-color: transparent;
+}
+
+.filtro-etiquetas__cuenta {
+  font-family: var(--letra-cuerpo);
+  font-size: var(--texto-xs);
+  color: var(--tinta-suave);
+}

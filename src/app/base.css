@@ -1,6 +1,5 @@
 /* Base global. Solo usa tokens de src/ui/tokens.css: aquí no se escriben colores. */
 :root {
-  color-scheme: light;
   background: var(--papel);
   color: var(--tinta);
   font-family: var(--letra-cuerpo);
@@ -10,7 +9,52 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--textura) var(--papel);
+  background: var(--papel);
+  /* Cambiar de tema (claro ↔ oscuro) se funde en vez de saltar */
+  transition:
+    background-color var(--dur-media) var(--curva),
+    color var(--dur-media) var(--curva);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Movimiento suave compartido (docs/DISENO.md § Movimiento). Con "reducir movimiento" duran 0 ms. */
+@keyframes entrar {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@keyframes subir {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes fundir {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Lo que se toca responde con un hundimiento leve */
+button,
+a {
+  transition:
+    transform var(--dur-corta) var(--curva),
+    background-color var(--dur-corta) var(--curva),
+    color var(--dur-corta) var(--curva);
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 /* Texto enriquecido básico */
@@ -37,40 +81,37 @@ code {
   outline-offset: 3px;
 }
 
-/* SPIKE F0 — se borra junto con src/spike/ */
-.spike {
-  margin-top: 48px;
-  width: 100%;
-  max-width: 480px;
+/* Aviso corto tras una herramienta (exportar, importar…): sube sobre la barra y se va solo */
+.aviso-global {
+  position: fixed;
+  right: 12px;
+  bottom: calc(var(--alto-barra) + var(--margen-abajo) + 12px);
+  left: 12px;
+  z-index: 60;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
+  justify-content: center;
+  pointer-events: none;
 }
 
-.spike-nota {
-  margin: 0;
-  font-size: var(--texto-xs);
-  color: var(--tinta-suave);
-}
-
-.spike-botones {
-  display: flex;
-  gap: 12px;
-}
-
-.spike-botones button {
+.aviso-global__texto {
+  max-width: 560px;
   min-height: var(--toque);
-  padding: 0 16px;
-  background: none;
-  color: inherit;
+  padding: 10px 16px;
   font: inherit;
-  border: var(--trazo) solid var(--tinta);
+  font-size: var(--texto-s);
+  color: var(--papel);
+  text-align: start;
+  background: var(--tinta);
+  border: 0;
   border-radius: var(--radio);
+  box-shadow: var(--sombra);
+  pointer-events: auto;
+  animation: subir-aviso var(--dur-media) var(--curva) backwards;
 }
 
-.spike-iframe {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  border: 0;
+@keyframes subir-aviso {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
 }

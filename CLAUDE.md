@@ -50,7 +50,7 @@ Atajos: `/inicio`, `/fase`, `/auditar`, `/cierre` (ver `.claude/commands/`).
 4. **Nunca** subir secretos, keystores, `.env`, tokens ni la imagen de referencia al repo. Verifica con `gitleaks` antes de cada commit grande.
 5. **Cada dependencia nueva** se justifica en una línea (qué hace, licencia, mantenimiento, tamaño) y pasa `npm audit`. Preferir pocas y pequeñas.
 6. **Markdown seguro**: todo HTML renderizado pasa por sanitización (DOMPurify). Nunca `innerHTML` con contenido de usuario sin sanitizar.
-7. **El archivo `.md` es la fuente de verdad**; los índices (SQLite) son reconstruibles. Nunca atrapar las notas en un formato propietario.
+7. **El archivo `.md` es la fuente de verdad**; los índices son reconstruibles. Nunca atrapar las notas en un formato propietario.
 8. **Diseño**: respetar `docs/DISENO.md`. Si algo se ve ruidoso, se quita. No añadir color, sombra ni animación sin necesidad.
 9. **Alcance**: no añadir funciones fuera de la fase actual. Las ideas nuevas van a la sección "Banco de ideas" de `ESTADO.md`, no al código.
 10. **Honestidad técnica**: si algo no se puede verificar en el entorno (p. ej. probar en un teléfono real), dilo y deja el paso de verificación manual descrito en `ESTADO.md`.
@@ -60,7 +60,7 @@ Atajos: `/inicio`, `/fase`, `/auditar`, `/cierre` (ver `.claude/commands/`).
 - TypeScript estricto + Vite + Preact
 - Capacitor (Android) — empaqueta la app web como APK
 - CodeMirror 6 (editor Markdown), `markdown-it` o `marked` + DOMPurify (render)
-- Archivos `.md` en almacenamiento privado de la app + índice SQLite reconstruible
+- Archivos `.md` en almacenamiento privado de la app + índice en memoria reconstruible (ADR-007)
 - Vitest (unitarias) + Playwright (e2e sobre la build web)
 - GitHub Actions: lint, test, build APK debug, CodeQL, gitleaks, dependency-review
 - Verifica las **versiones actuales** en documentación oficial al empezar; no fijes versiones de memoria.

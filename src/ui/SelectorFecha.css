@@ -1,0 +1,36 @@
+.selector-fecha__mes {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.selector-fecha__nombre {
+  margin: 0;
+  font-family: var(--letra-mano);
+  font-size: var(--texto-m);
+}
+
+.selector-fecha__flecha {
+  display: grid;
+  place-items: center;
+  width: var(--toque);
+  height: var(--toque);
+  padding: 0;
+  color: var(--tinta);
+  background: none;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.selector-fecha__dias {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.selector-fecha__pie {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  border-top: 1px solid var(--separador);
+}

@@ -34,15 +34,35 @@ test('flotante: se arrastra por el asa y se queda donde se suelta', async ({ pag
   expect(despues?.y).toBeCloseTo(antes.y - 300, 0);
 });
 
-test('flotante: aunque se lance fuera, no sale de la pantalla ni tapa la barra', async ({ page }) => {
+test('flotante: lanzado contra un lado se esconde en una pestaña, y vuelve con un toque', async ({ page }) => {
+  await activarFlotante(page);
+  const a = await page.getByRole('button', { name: 'Mover reproductor' }).boundingBox();
+  const vista = page.viewportSize();
+  if (!a || !vista) throw new Error('sin cajas');
+  await page.mouse.move(a.x + 10, a.y + 10);
+  await page.mouse.down();
+  await page.mouse.move(vista.width - 2, a.y - 100, { steps: 8 });
+  await page.mouse.up();
+  await expect(mini(page)).toHaveCount(0);
+  const pestana = page.getByRole('button', { name: /Mostrar reproductor/ });
+  // Entra deslizándose desde el borde: al terminar queda pegada al canto derecho
+  await expect.poll(async () => {
+    const p = await pestana.boundingBox();
+    return p ? Math.round(p.x + p.width) : null;
+  }).toBe(vista.width);
+  await pestana.click();
+  await expect(mini(page)).toBeVisible();
+});
+
+test('flotante: aunque se lance fuera por arriba o abajo, no sale de la pantalla ni tapa la barra', async ({ page }) => {
   await activarFlotante(page);
   const a = await page.getByRole('button', { name: 'Mover reproductor' }).boundingBox();
   if (!a) throw new Error('sin asa');
   const vista = page.viewportSize();
   if (!vista) throw new Error('sin viewport');
   for (const [x, y] of [
-    [-500, -500],
-    [vista.width + 500, vista.height + 500],
+    [vista.width / 2, -500],
+    [vista.width / 2, vista.height + 500],
   ] as const) {
     const actual = await page.getByRole('button', { name: 'Mover reproductor' }).boundingBox();
     if (!actual) throw new Error('sin asa');
@@ -60,10 +80,9 @@ test('flotante: aunque se lance fuera, no sale de la pantalla ni tapa la barra',
   }
 });
 
-test('el mini y el grande comparten estado, y todo lo tocable mide ≥ 48 px', async ({ page }) => {
+test('el mini: todo lo tocable mide ≥ 48 px y «Reproducir» lleva a Música', async ({ page }) => {
   await activarFlotante(page);
-  await mini(page).getByRole('button', { name: 'Reproducir' }).click();
-  await expect(mini(page).getByRole('button', { name: 'Pausar' })).toBeVisible();
+  await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
   const cajas = await mini(page).locator('button, a').evaluateAll((els) =>
     els.map((el) => el.getBoundingClientRect()).map((c) => [c.width, c.height]),
   );
@@ -71,15 +90,14 @@ test('el mini y el grande comparten estado, y todo lo tocable mide ≥ 48 px', a
     expect(ancho).toBeGreaterThanOrEqual(48);
     expect(alto).toBeGreaterThanOrEqual(48);
   }
-  await mini(page).getByRole('link').click();
+  await mini(page).getByRole('button', { name: 'Reproducir' }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Música' })).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Reproductor', exact: true }).getByRole('button', { name: 'Pausar' })).toBeVisible();
   await expect(mini(page)).toHaveCount(0);
 });
 
 test('las líneas de progreso y volumen se ven: tienen alto y casi todo el ancho', async ({ page }) => {
-  await page.goto('/#/musica');
-  const grande = page.getByRole('region', { name: 'Reproductor', exact: true });
+  await page.goto('/#/galeria');
+  const grande = page.getByRole('region', { name: 'Reproductor', exact: true }).first();
   const r = await grande.boundingBox();
   if (!r) throw new Error('sin caja');
   for (const nombre of ['Progreso', 'Volumen']) {
@@ -88,4 +106,35 @@ test('las líneas de progreso y volumen se ven: tienen alto y casi todo el ancho
     expect(caja.height, nombre).toBeGreaterThanOrEqual(1);
     expect(caja.width, nombre).toBeGreaterThan(r.width * 0.5);
   }
+});
+
+test('pegar un enlace de YouTube Music: título por oEmbed, reproductor oficial y queda guardada', async ({ page }) => {
+  // Sin depender de la red: oEmbed responde lo de siempre y el reproductor no se descarga
+  await page.route('https://www.youtube.com/oembed**', (r) =>
+    r.fulfill({ json: { title: 'Tema de prueba', author_name: 'Artista - Topic' }, headers: { 'access-control-allow-origin': '*' } }),
+  );
+  await page.route('https://www.youtube-nocookie.com/**', (r) => r.fulfill({ body: '<html></html>', contentType: 'text/html' }));
+  await page.route('https://i.ytimg.com/**', (r) => r.abort());
+  await page.goto('/#/musica');
+  await page.getByLabel('Enlace de YouTube Music').fill('https://music.youtube.com/watch?v=dQw4w9WgXcQ&si=x');
+  await page.getByRole('button', { name: 'Añadir' }).click();
+  const grande = page.getByRole('region', { name: 'Reproductor', exact: true });
+  await expect(page.locator('iframe[title="Reproductor de YouTube"]')).toHaveAttribute('src', /^https:\/\/www\.youtube-nocookie\.com\/embed\/dQw4w9WgXcQ\?/);
+  await expect(grande.getByText('Tema de prueba')).toBeVisible();
+  await expect(grande.getByText('Artista', { exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Canciones guardadas' }).getByText('Tema de prueba')).toBeVisible();
+
+  // Política de YouTube: visor de al menos 200 × 200 px, también en un teléfono estrecho
+  for (const ancho of [412, 320]) {
+    await page.setViewportSize({ width: ancho, height: 800 });
+    // medir sin la animación de entrada (escala 0.96 → 1)
+    await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
+    const caja = await page.locator('iframe[title="Reproductor de YouTube"]').boundingBox();
+    expect(caja?.width, `ancho a ${ancho}px`).toBeGreaterThanOrEqual(200);
+    expect(caja?.height, `alto a ${ancho}px`).toBeGreaterThanOrEqual(200);
+  }
+
+  await page.reload();
+  await page.goto('/#/notas');
+  await expect(mini(page).getByText('Tema de prueba')).toBeVisible();
 });

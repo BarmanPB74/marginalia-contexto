@@ -2,7 +2,7 @@ import { render, type ComponentChild } from 'preact';
 import { act } from 'preact/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../../src/app/App';
-import { formatearTiempo, limitarPosicion } from '../../src/features/musica/tiempo';
+import { formatearTiempo, ladoParaEsconder, limitarPosicion } from '../../src/features/musica/tiempo';
 import { MiniReproductor } from '../../src/features/musica/MiniReproductor';
 import { Reproductor } from '../../src/features/musica/Reproductor';
 
@@ -51,6 +51,10 @@ describe('limitarPosicion', () => {
   it('no deja salir por ningún borde (margen de 8 px) ni tapar la barra inferior', () => {
     expect(limitarPosicion({ x: -100, y: -100 }, caja, pantalla)).toEqual({ x: 8, y: 8 });
     expect(limitarPosicion({ x: 999, y: 999 }, caja, pantalla)).toEqual({ x: 390 - 200 - 8, y: 844 - 64 - 64 - 8 });
+  });
+
+  it('tampoco se mete bajo la barra de estado de Android', () => {
+    expect(limitarPosicion({ x: 50, y: 0 }, caja, { ...pantalla, reservaSuperior: 32 })).toEqual({ x: 50, y: 40 });
   });
 });
 
@@ -106,7 +110,7 @@ describe('preferencia de reproductor flotante', () => {
     location.hash = '#/musica';
     c = montar(<App />);
     expect(c.querySelector('.mini')).toBeNull();
-    expect(c.querySelector('.reproductor')).not.toBeNull();
+    expect(c.querySelector('.estado-vacio')?.textContent).toContain('Nada sonando');
   });
 
   it('el interruptor de Ajustes lo vuelve flotante', () => {
@@ -117,5 +121,90 @@ describe('preferencia de reproductor flotante', () => {
     act(() => interruptor.click());
     expect(c.querySelector('.mini--flotante')).not.toBeNull();
     expect(c.querySelector('.mini--anclado')).toBeNull();
+  });
+});
+
+describe('esconder el globo de música a un lado', () => {
+  it('ladoParaEsconder: solo al soltar pegado al canto', () => {
+    expect(ladoParaEsconder(5, 390)).toBe('izquierda');
+    expect(ladoParaEsconder(386, 390)).toBe('derecha');
+    expect(ladoParaEsconder(200, 390)).toBeNull();
+  });
+
+  it('el botón lo esconde, queda una pestaña y un toque lo trae de vuelta (y se recuerda)', () => {
+    location.hash = '#/notas';
+    let c = montar(<App />);
+    act(() => (c.querySelector('button[aria-label="Esconder reproductor a un lado"]') as HTMLButtonElement).click());
+    expect(c.querySelector('.mini')).toBeNull();
+    const pestana = c.querySelector('.mini-pestana') as HTMLButtonElement;
+    expect(pestana.getAttribute('aria-label')).toMatch(/^Mostrar reproductor/);
+    expect(c.querySelector('.con-mini-anclado')).toBeNull();
+
+    // Al volver a abrir la app sigue escondido
+    render(null, c);
+    c.remove();
+    c = montar(<App />);
+    act(() => (c.querySelector('.mini-pestana') as HTMLButtonElement).click());
+    expect(c.querySelector('.mini--anclado')).not.toBeNull();
+    expect(c.querySelector('.mini-pestana')).toBeNull();
+  });
+});
+
+describe('tema', () => {
+  it('Ajustes → Oscuro marca <html> y se recuerda; Sistema lo quita', () => {
+    location.hash = '#/ajustes';
+    const c = montar(<App />);
+    const opcion = (nombre: string) =>
+      [...c.querySelectorAll('[role="radiogroup"][aria-label="Tema"] [role="radio"]')].find(
+        (b) => b.textContent === nombre,
+      ) as HTMLButtonElement;
+    act(() => opcion('Oscuro').click());
+    expect(document.documentElement.dataset['tema']).toBe('oscuro');
+    expect(opcion('Oscuro').getAttribute('aria-checked')).toBe('true');
+    expect(localStorage.getItem('marginalia.ajustes.v1')).toContain('oscuro');
+    act(() => opcion('Sistema').click());
+    expect(document.documentElement.hasAttribute('data-tema')).toBe(false);
+  });
+});
+
+describe('Música con YouTube Music', () => {
+  const GUARDADA = [
+    { clave: 'dQw4w9WgXcQ', enlace: { video: 'dQw4w9WgXcQ' }, titulo: 'Tema guardado', artista: 'Alguien' },
+  ];
+
+  it('con una canción guardada: reproductor oficial sin cookies dentro del dibujo, y el mini la muestra', () => {
+    localStorage.setItem('marginalia.canciones.v1', JSON.stringify(GUARDADA));
+    location.hash = '#/musica';
+    let c = montar(<App />);
+    const marco = c.querySelector('iframe');
+    expect(marco?.getAttribute('src')).toMatch(/^https:\/\/www\.youtube-nocookie\.com\/embed\/dQw4w9WgXcQ\?/);
+    expect(c.querySelector('.reproductor .video-oficial')).not.toBeNull();
+    expect(c.querySelector('.reproductor__titulo')?.textContent).toBe('Tema guardado');
+    expect(c.querySelector('a[href^="https://music.youtube.com/watch?v=dQw4w9WgXcQ"]')).not.toBeNull();
+    render(null, c);
+    c.remove();
+
+    location.hash = '#/notas';
+    c = montar(<App />);
+    expect(c.querySelector('.mini__titulo')?.textContent).toBe('Tema guardado');
+    expect(c.querySelector('img.mini__portada')?.getAttribute('src')).toBe('https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg');
+    expect(c.querySelector('iframe')).toBeNull(); // fuera de Música no hay audio escondido
+    act(() => (c.querySelector('button[aria-label="Reproducir"]') as HTMLButtonElement).click());
+    expect(location.hash).toBe('#/musica');
+  });
+
+  it('un enlace que no es de YouTube se rechaza con una pista', () => {
+    location.hash = '#/musica';
+    const c = montar(<App />);
+    const entrada = c.querySelector('input[aria-label="Enlace de YouTube Music"]') as HTMLInputElement;
+    act(() => {
+      entrada.value = 'https://evil.com/watch?v=dQw4w9WgXcQ';
+      entrada.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    act(() => {
+      (c.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit', { cancelable: true }));
+    });
+    expect(c.querySelector('[role="alert"]')?.textContent).toContain('no parece un enlace');
+    expect(c.querySelector('iframe')).toBeNull();
   });
 });

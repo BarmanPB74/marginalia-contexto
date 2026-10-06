@@ -16,6 +16,15 @@ Prohibido (no implementar, no sugerir, no "solo de prueba"):
 - Usar credenciales de usuario de Google/YouTube o automatizar su cuenta.
 - Almacenar el contenido multimedia en la app. Solo se guardan: ID, título, artista y segundo (metadatos).
 
+Aplicación (2026-10-05): la app lee enlaces de YouTube Music/YouTube que la persona pega (lo que da «Compartir → Copiar enlace»), los reproduce en el iframe oficial visible y con sus controles, y lo controla por `postMessage` (el protocolo de la IFrame API, ADR-010). No hay inicio de sesión ni acceso a la cuenta (no existe API oficial para eso). Al salir de Música el reproductor se desmonta y la música para: no hay audio con el video escondido. Reproductor fuera de Música (ADR-012, opción B elegida por el autor el 2026-10-06): ventana flotante con el **video visible** (264 × 200), por encima de todo, sin nada delante; esconderla a un lado **pausa** la música (nunca audio con el video oculto); cerrarla la para.
+
+Reglas comprobadas el 2026-10-05 en la «Required Minimum Functionality» de la API de YouTube (developers.google.com/youtube/terms/required-minimum-functionality), que limitan ese diseño:
+- «Embedded players must have a viewport that is at least 200px by 200px» → el visor de Música tiene `min-width/min-height: 200px` (e2e a 412 y 320 px).
+- Nada puede tapar el reproductor ni sus controles (overlays, marcos u otros elementos delante).
+- No iniciar la reproducción automática hasta que más de la mitad del reproductor sea visible (el de Música está arriba del todo al abrir).
+
+Share Intent (F4): «Compartir → Marginalia» solo recibe texto plano y la app solo usa un enlace de YouTube con ID válido; no se usa ninguna API no oficial.
+
 Si el reproductor incrustado no es viable en la WebView, se aplica el **Plan B** de `docs/ARQUITECTURA.md` (Intent + Share Intent). Nunca se recurre a una vía no oficial.
 
 ## 2. Licencia del proyecto

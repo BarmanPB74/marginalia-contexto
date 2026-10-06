@@ -1,0 +1,33 @@
+/* Va pegada al teclado: con el teclado abierto Capacitor deja --margen-abajo en 0. */
+.barra-formato {
+  position: fixed;
+  inset: auto 0 var(--margen-abajo);
+  display: grid;
+  /* tantas columnas como botones, en una sola fila */
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  min-height: var(--toque);
+  background: var(--papel-2);
+  border-top: 1px solid var(--separador);
+}
+
+.barra-formato__boton {
+  min-height: var(--toque);
+  padding: 0;
+  font-family: var(--letra-mano);
+  font-size: var(--texto-s);
+  color: var(--tinta);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.barra-formato__boton:active {
+  background: var(--papel-2);
+}
+
+/* Mientras se escribe, la barra de secciones y el mini reproductor dejan sitio al texto. */
+.escribiendo .barra-inferior,
+.escribiendo .mini {
+  display: none;
+}

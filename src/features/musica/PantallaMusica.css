@@ -1,0 +1,144 @@
+.musica__pegar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.musica__entrada {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--toque);
+  padding: 0 14px;
+  font: inherit;
+  font-size: var(--texto-s);
+  color: var(--tinta);
+  background: var(--papel-2);
+  border: var(--trazo) solid transparent;
+  border-radius: var(--radio);
+  outline: none;
+  transition: border-color var(--dur-corta) var(--curva);
+}
+
+.musica__entrada:focus {
+  border-color: var(--acento);
+}
+
+.musica__entrada::placeholder {
+  color: var(--tinta-suave);
+}
+
+.musica__error {
+  margin: 0 0 12px;
+  font-size: var(--texto-s);
+  color: var(--tinta-suave);
+}
+
+.musica__pegar + .reproductor,
+.musica__pegar + .estado-vacio {
+  margin-top: 12px;
+}
+
+.musica__abrir {
+  margin: 8px 0 0;
+  font-size: var(--texto-s);
+  text-align: center;
+}
+
+.musica__guardadas {
+  margin-top: 24px;
+}
+
+.musica__subtitulo {
+  margin: 0 0 4px;
+  font-family: var(--letra-mano);
+  font-size: var(--texto-l);
+  font-weight: 400;
+}
+
+.musica__lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.musica__fila {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--separador);
+  animation: entrar var(--dur-media) var(--curva) backwards;
+}
+
+.musica__elegir {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  min-height: 64px;
+  padding: 6px 0;
+  font: inherit;
+  color: var(--tinta);
+  text-align: start;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.musica__mini {
+  display: block;
+  flex: none;
+  width: 64px;
+  height: 36px;
+  object-fit: cover;
+  background: var(--acento-suave);
+  border-radius: 6px 5px 7px 4px / 5px 7px 4px 6px;
+}
+
+.musica__datos {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.musica__titulo,
+.musica__artista {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.musica__titulo {
+  font-family: var(--letra-mano);
+  font-size: var(--texto-m);
+}
+
+.musica__fila--actual .musica__titulo {
+  color: var(--acento);
+}
+
+.musica__artista {
+  font-size: var(--texto-xs);
+  color: var(--tinta-suave);
+}
+
+.musica__quitar {
+  text-decoration: none;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--toque);
+  height: var(--toque);
+  padding: 0;
+  font-size: var(--texto-l);
+  color: var(--tinta-suave);
+  background: none;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.musica__acciones {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}

@@ -1,0 +1,32 @@
+.segmentado {
+  display: flex;
+  width: 100%;
+  border: var(--trazo) solid var(--contorno);
+  border-radius: var(--radio);
+  overflow: hidden;
+}
+
+.segmentado__opcion {
+  flex: 1;
+  min-height: var(--toque);
+  padding: 0 8px;
+  font-family: var(--letra-mano);
+  font-size: var(--texto-s);
+  color: var(--tinta);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.segmentado__opcion + .segmentado__opcion {
+  border-left: 1px solid var(--separador);
+}
+
+.segmentado__opcion[aria-checked='true'] {
+  background: var(--acento-suave);
+}
+
+/* Aquí el hundimiento general se ve raro (los botones están pegados) */
+.segmentado__opcion:active:not(:disabled) {
+  transform: none;
+}

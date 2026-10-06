@@ -11,6 +11,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     include: ['tests/unit/**/*.test.{ts,tsx}'],
+    setupFiles: ['tests/unit/preparar.ts'],
     // Procesar CSS: sin esto Vitest entrega los .css (también con ?raw) vacíos y las
     // pruebas de tokens pasarían en falso.
     css: true,

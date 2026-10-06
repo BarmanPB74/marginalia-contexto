@@ -20,8 +20,11 @@
   flex: none;
   width: 44px;
   height: 24px;
-  border: var(--trazo) solid var(--tinta);
+  border: var(--trazo) solid var(--contorno);
   border-radius: 13px 11px 12px 12px / 12px 13px 11px 12px;
+  transition:
+    background-color var(--dur-media) var(--curva),
+    border-color var(--dur-media) var(--curva);
 }
 
 .interruptor__punto {
@@ -34,10 +37,23 @@
   border-radius: 50%;
   background: var(--papel);
   translate: 0 -50%;
-  transition: left var(--transicion), background-color var(--transicion);
+  transition:
+    left var(--dur-media) var(--curva),
+    background-color var(--dur-media) var(--curva),
+    scale var(--dur-corta) var(--curva);
+}
+
+.interruptor:active .interruptor__punto {
+  scale: 1.2;
+}
+
+.interruptor[aria-checked='true'] .interruptor__pista {
+  background: var(--acento-suave);
+  border-color: var(--acento);
 }
 
 .interruptor[aria-checked='true'] .interruptor__punto {
   left: 23px;
-  background: var(--tinta);
+  background: var(--acento);
+  border-color: var(--acento);
 }

@@ -1,0 +1,104 @@
+/* Tipografía de lectura: Newsreader, interlineado amplio, ancho cómodo (DISENO.md). */
+.lectura {
+  min-height: 55vh;
+  font-size: var(--texto-m);
+  line-height: var(--interlineado);
+  overflow-wrap: anywhere;
+}
+
+.lectura--vacia {
+  margin: 0;
+  color: var(--tinta-suave);
+}
+
+.lectura > :first-child {
+  margin-top: 0;
+}
+
+.lectura h1,
+.lectura h2,
+.lectura h3,
+.lectura h4 {
+  margin: 1.4em 0 0.4em;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.lectura h1 {
+  font-size: var(--texto-l);
+}
+
+.lectura h2,
+.lectura h3,
+.lectura h4 {
+  font-size: var(--texto-m);
+}
+
+.lectura p,
+.lectura ul,
+.lectura ol,
+.lectura blockquote,
+.lectura pre,
+.lectura table {
+  margin: 0 0 0.9em;
+}
+
+.lectura ul,
+.lectura ol {
+  padding-left: 1.4em;
+}
+
+/* Tareas: la casilla ocupa el lugar de la viñeta */
+.lectura li.tarea {
+  margin-left: -1.4em;
+  list-style: none;
+}
+
+.lectura li.tarea input {
+  width: 1em;
+  height: 1em;
+  margin: 0 0.4em 0 0;
+  vertical-align: -0.1em;
+  accent-color: var(--tinta);
+}
+
+.lectura blockquote {
+  padding-left: 14px;
+  color: var(--tinta-suave);
+  border-left: var(--trazo) solid var(--tinta);
+}
+
+.lectura pre {
+  padding: 12px;
+  overflow-x: auto;
+  border: var(--trazo) solid var(--separador);
+  border-radius: var(--radio);
+}
+
+.lectura pre code {
+  background: none;
+}
+
+.lectura table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+.lectura th,
+.lectura td {
+  padding: 4px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--separador);
+}
+
+.lectura hr {
+  margin: 1.6em 0;
+  border: 0;
+  border-top: 1px solid var(--separador);
+}
+
+.lectura img {
+  max-width: 100%;
+}

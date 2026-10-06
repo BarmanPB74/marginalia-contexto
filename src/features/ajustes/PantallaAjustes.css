@@ -5,12 +5,43 @@
 }
 
 .ajustes li {
-  padding: 4px 0 12px;
+  padding: 8px 0 14px;
   border-bottom: 1px solid var(--separador);
 }
 
+.ajustes__titulo {
+  margin: 4px 0 8px;
+  font-family: var(--letra-mano);
+  font-size: var(--texto-m);
+}
+
 .ajustes__pista {
-  margin: -6px 0 0;
+  margin: 6px 0 0;
   font-size: var(--texto-s);
   color: var(--tinta-suave);
+}
+
+/* Después de un interruptor, la pista se acerca a él */
+.interruptor + .ajustes__pista {
+  margin-top: -6px;
+}
+
+.ajustes__pista--suelta {
+  margin-top: 0;
+}
+
+.ajustes__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ajustes__aviso {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  font-size: var(--texto-s);
+  background: var(--acento-suave);
+  border-radius: var(--radio);
+  overflow-wrap: anywhere;
+  animation: aparecer var(--dur-media) var(--curva) backwards;
 }

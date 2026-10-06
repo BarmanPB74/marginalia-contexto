@@ -3,6 +3,10 @@ import { expect, test } from '@playwright/test';
 test.beforeEach(async ({ page }) => {
   await page.goto('/#/galeria');
   await page.evaluate(() => document.fonts.ready);
+  // Medir con las animaciones de entrada ya terminadas (escalan un poco al aparecer)
+  await page.evaluate(() =>
+    Promise.all(document.getAnimations().filter((a) => a.effect?.getTiming().iterations !== Infinity).map((a) => a.finished)),
+  );
 });
 
 test('la galería muestra todos los componentes base', async ({ page }) => {

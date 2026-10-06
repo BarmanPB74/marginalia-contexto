@@ -1,0 +1,32 @@
+.selector-plantilla {
+  margin-bottom: 24px;
+}
+
+.selector-plantilla__titulo {
+  margin: 0 0 8px;
+  font-family: var(--letra-mano);
+  font-size: var(--texto-s);
+  color: var(--tinta-suave);
+}
+
+.selector-plantilla__lista {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Las opciones se leen como una lista, alineadas a la izquierda */
+.selector-plantilla__lista .boton {
+  width: 100%;
+  padding-left: 0;
+  text-align: left;
+}
+
+.selector-plantilla__pie {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+  border-top: 1px solid var(--separador);
+}
