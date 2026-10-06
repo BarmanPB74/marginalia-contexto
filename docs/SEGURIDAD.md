@@ -20,14 +20,15 @@ Objetivo: cumplir **OWASP MASVS nivel 1** en toda la app y nivel 2 en almacenami
 | WebView | Puente JS expuesto a páginas ajenas | Sin `addJavascriptInterface` propio; navegación limitada a un *allowlist*; iframes solo de `youtube-nocookie.com`; mensajes del reproductor aceptados solo de ese origen y de su ventana |
 | Enlaces pegados | URL hostil en "Pega un enlace de YouTube Music" | Solo hosts de YouTube en lista blanca, IDs validados (`^[A-Za-z0-9_-]{11}$`, listas 10–64); nada más del enlace llega al iframe |
 | Importación ZIP/MD | *Zip-slip*, archivos gigantes, YAML hostil | Validar rutas, límites de tamaño/cantidad, parser YAML seguro (sin tipos ejecutables), esquema |
-| Share Intent | Texto malicioso entrante | Tratar como no confiable: extraer solo ID de 11 caracteres válido, ignorar el resto |
+| Share Intent | Texto malicioso entrante | Tratar como no confiable: extraer solo ID de 11 caracteres válido (o URI de Spotify de 22), ignorar el resto |
+| Spotify (ADR-013) | Órdenes o datos hostiles por el puente | El plugin solo acepta Client ID `^[0-9a-f]{32}$` y URIs `spotify:(track\|episode\|album\|playlist):[A-Za-z0-9]{22}`; lo que devuelve se valida (`estadoSeguro`). Sin tokens guardados; SDK descargado con SHA256 fijo; keystore de firma solo como secreto de GitHub |
 | Cadena de suministro | Dependencia comprometida | Pocas dependencias, `package-lock.json` fijo, `npm audit`, Dependabot, `dependency-review`, revisar permisos de plugins de Capacitor |
 | Repositorio público | Secretos filtrados, keystore expuesta | `.gitignore` estricto, `gitleaks`, secretos solo en GitHub Secrets, push protection activado |
 | Red | Tráfico en claro / MITM | `cleartextTrafficPermitted=false`; solo HTTPS |
 | Privacidad | Fuga a terceros | Sin analíticas ni trackers; `youtube-nocookie.com` para el embed cuando sea posible |
 
 ## 3. Configuración Android obligatoria
-- Permisos: solo `INTERNET`.
+- Permisos: `INTERNET`; `USE_BIOMETRIC` y `USE_FINGERPRINT` (normales, sin diálogo; los declara `androidx.biometric` para el bloqueo opcional, ADR-014).
 - `android:allowBackup="false"`, `android:usesCleartextTraffic="false"`, `network_security_config.xml` solo HTTPS.
 - `android:exported` explícito en cada componente; el único *intent-filter* de entrada es `ACTION_SEND` con `text/plain`.
 - `WebView`: `allowFileAccess=false`, `allowContentAccess=false`, `setJavaScriptEnabled` solo lo necesario, sin depuración remota en *release*.
@@ -49,7 +50,7 @@ Objetivo: cumplir **OWASP MASVS nivel 1** en toda la app y nivel 2 en almacenami
 **F2:** pruebas de XSS en Markdown (`<script>`, `onerror=`, `javascript:`, `data:`), YAML hostil, notas de 2 MB; escritura atómica de archivos (escribir a temporal + renombrar) para no corromper notas.
 **F3:** parser sin ReDoS (probar con entradas largas/patológicas y tiempo máximo); fechas inválidas ignoradas.
 **F4:** *allowlist* de `frame-src`; validación estricta del ID de video; *Share Intent* tratado como entrada no confiable; sin servicios en segundo plano innecesarios.
-**F5:** auditoría completa (sección 5).
+**F5:** auditoría completa (sección 5) → `docs/seguridad/AUDITORIA-F5.md` (2026-10-06; quedan H6 y H7 por decidir).
 **F6:** APK release firmado; checksum SHA-256; SBOM; revisión de `PRIVACIDAD.md`, `SECURITY.md` y licencias de terceros.
 
 ## 5. Fase 5 — Auditoría propia (el "ethical hacking" de este proyecto)
@@ -70,8 +71,9 @@ Entregable: `docs/seguridad/AUDITORIA-F5.md` con tabla *hallazgo → severidad �
 ## 6. Cifrado y bloqueo
 - **Hecho (ADR-008, 2026-10-05):** cifrado en reposo con WebCrypto AES-256-GCM (`src/core/almacen/cifrado.ts`), sin criptografía propia. Una nota se cifra en el mismo momento en que se crea; exportar la descifra a un formato legible. Pruebas: ida y vuelta, IV distinto cada vez, archivo alterado / de otra ruta / con otra clave → no se descifra.
 - Qué **no** protege: teléfono con root o malware con acceso a la app, la app ya abierta, capturas de pantalla.
-- Pendiente F5: envolver la clave con Android Keystore (hoy vive no extraíble en IndexedDB de la WebView); bloqueo con biometría/PIN (BiometricPrompt), opcional en Ajustes.
+- **Hecho (ADR-014, 2026-10-06):** clave de datos envuelta por Android Keystore (`claves/notas.v2`), migración v1 → v2 y borrado de la clave de IndexedDB; bloqueo opcional con huella/PIN (BiometricPrompt) y vista previa oculta en «recientes». Pruebas: `boveda.test.ts`, `candado.test.tsx`.
+- Recuperación: la clave depende de este teléfono. Si se pierde (reinstalar, cambiar de teléfono, fallo del Keystore), las notas solo vuelven desde una copia ZIP: hacer copias.
 - Exportación cifrada opcional con contraseña (derivación Argon2id/PBKDF2 con parámetros documentados).
 
 ## 7. Privacidad
-Documentar en `PRIVACIDAD.md`: no hay cuentas, no hay servidor, no hay analíticas; los datos viven en el dispositivo; la única conexión es la del reproductor de YouTube, que está sujeta a las políticas de Google. Decir qué guarda la app y cómo borrarlo todo.
+Documentar en `PRIVACIDAD.md`: no hay cuentas, no hay servidor, no hay analíticas; los datos viven en el dispositivo; la única conexión es la del reproductor de YouTube, que está sujeta a las políticas de Google. Con Spotify (ADR-013) la app no se conecta a nada: habla con la app de Spotify del teléfono, que tiene su propia política. Decir qué guarda la app y cómo borrarlo todo.

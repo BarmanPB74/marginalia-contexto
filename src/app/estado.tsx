@@ -6,6 +6,8 @@ import type { Comando } from '../features/comandos/comandos';
 import { escucharCompartido } from '../features/musica/compartido';
 import { claveDe, metadatos } from '../core/musica/canciones';
 import type { ControlVideo, InfoVideo } from '../features/musica/VideoOficial';
+import { useSpotify, type ControlSpotify } from '../features/musica/useSpotify';
+import type { EnlaceSpotify } from '../core/musica/spotify';
 import { aplicarTema, guardarAjustes, leerAjustes, type Ajustes } from './ajustes';
 
 interface EstadoApp extends Ajustes {
@@ -33,6 +35,10 @@ interface EstadoApp extends Ajustes {
   setFlotando: (v: boolean) => void;
   /** Cierra la ventana flotante (la música para) */
   cerrarFlotante: () => void;
+  /** Spotify App Remote (ADR-013): suena en la app de Spotify, también en segundo plano */
+  spotify: ControlSpotify;
+  /** Pasa a Spotify (pausa YouTube) y pone esa URI desde `t` segundos */
+  ponerSpotify: (uri: string, t?: number) => void;
   /** Paleta de comandos abierta. */
   comandosAbiertos: boolean;
   abrirComandos: (abierta: boolean) => void;
@@ -56,6 +62,7 @@ export function ProveedorEstado({ children }: { children: ComponentChildren }) {
   const [comandosAbiertos, abrirComandos] = useState(false);
   const [comandosLocales, setComandosLocales] = useState<Comando[]>([]);
   const [aviso, avisar] = useState('');
+  const spotify = useSpotify();
 
   useEffect(() => {
     if (!aviso) return;
@@ -85,6 +92,8 @@ export function ProveedorEstado({ children }: { children: ComponentChildren }) {
       guardarCanciones(lista);
       return lista;
     });
+    // Una sola música a la vez: YouTube empieza, Spotify se pausa
+    spotify.pausar();
     // Canción nueva: sin el error de la anterior
     setInfo({ sonando: true, posicion: inicio, duracion: 0 });
     setEleccion((e) => ({ vez: e.vez + 1, inicio }));
@@ -98,14 +107,33 @@ export function ProveedorEstado({ children }: { children: ComponentChildren }) {
     });
   }
 
-  // «Compartir → Marginalia» desde YouTube Music: se guarda, se abre Música y suena
+  function pausarYoutube() {
+    control.current?.pausar();
+    setFlotando(false);
+    setInfo((i) => ({ ...i, sonando: false }));
+  }
+
+  // Lo usan efectos montados una vez: lee los ajustes del almacenamiento, no del cierre
+  function ponerSpotify(uri: string, t = 0) {
+    pausarYoutube();
+    cambiarAjustes({ fuente: 'spotify' });
+    void spotify.reproducir(leerAjustes().spotifyClientId, uri, t);
+  }
+
+  // «Compartir → Marginalia» desde YouTube Music o Spotify: se abre Música y suena
   useEffect(
     () =>
-      escucharCompartido((enlace: EnlaceMusica | null) => {
-        if (!enlace) {
-          avisar('Lo compartido no es un enlace de YouTube Music.');
+      escucharCompartido((enlace: EnlaceMusica | null, deSpotify: EnlaceSpotify | null) => {
+        if (deSpotify) {
+          location.hash = '#/musica';
+          ponerSpotify(deSpotify.uri);
           return;
         }
+        if (!enlace) {
+          avisar('Lo compartido no es un enlace de YouTube Music ni de Spotify.');
+          return;
+        }
+        cambiarAjustes({ fuente: 'youtube' });
         const clave = claveDe(enlace);
         elegirCancion(
           { clave, enlace, titulo: enlace.video ? 'Canción de YouTube' : 'Lista de YouTube Music', artista: '' },
@@ -148,6 +176,7 @@ export function ProveedorEstado({ children }: { children: ComponentChildren }) {
             if (info.sonando) control.current.pausar();
             else control.current.reproducir();
           }
+          if (!info.sonando) spotify.pausar();
           setInfo((i) => ({ ...i, sonando: !i.sonando }));
         },
         cancion: canciones[0] ?? null,
@@ -169,6 +198,8 @@ export function ProveedorEstado({ children }: { children: ComponentChildren }) {
           setFlotando(false);
           setInfo((i) => ({ ...i, sonando: false }));
         },
+        spotify,
+        ponerSpotify,
         comandosAbiertos,
         abrirComandos,
         comandosLocales,

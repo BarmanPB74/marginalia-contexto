@@ -1,0 +1,25 @@
+.candado {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: var(--margen-arriba) var(--margen-lado) var(--margen-abajo);
+  text-align: center;
+  background: var(--papel);
+  color: var(--tinta);
+}
+
+.candado__titulo {
+  margin: 0;
+  font-family: var(--letra-mano);
+  font-size: var(--texto-l);
+}
+
+.candado__pista,
+.candado__error {
+  margin: 0 0 8px;
+  font-size: var(--texto-s);
+  color: var(--tinta-suave);
+}

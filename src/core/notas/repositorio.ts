@@ -1,5 +1,5 @@
 import type { Almacen } from '../almacen/almacen';
-import { conCancionPrincipal, enlaceCancion, type EtiquetaCancion } from '../musica/etiqueta';
+import { conCancionPrincipal, enlaceCancion, idDe, type EtiquetaCancion } from '../musica/etiqueta';
 import { esDiaValido } from './fechas';
 import { escribirNota, isoConOffset, leerNota, NotaInvalida, TAMANO_MAXIMO, type Nota } from './nota';
 import { aplicarPlantilla, buscarPlantilla } from './plantillas';
@@ -58,7 +58,7 @@ export class RepositorioNotas {
     };
     const final = opciones.cancion
       ? conCancionPrincipal(
-          { ...nota, cuerpo: `${enlaceCancion(opciones.cancion.yt, opciones.cancion.t ?? 0)}\n\n${nota.cuerpo}` },
+          { ...nota, cuerpo: `${enlaceCancion(idDe(opciones.cancion), opciones.cancion.t ?? 0)}\n\n${nota.cuerpo}` },
           opciones.cancion,
         )
       : nota;

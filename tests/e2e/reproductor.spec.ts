@@ -138,3 +138,17 @@ test('pegar un enlace de YouTube Music: título por oEmbed, reproductor oficial 
   await page.goto('/#/notas');
   await expect(mini(page).getByText('Tema de prueba')).toBeVisible();
 });
+
+test('fuente Spotify (ADR-013): sin video, aviso claro, el globo dice Spotify y nada se desborda', async ({ page }) => {
+  await page.goto('/#/musica');
+  await page.getByRole('radio', { name: 'Spotify' }).click();
+  await expect(page.getByText('Spotify suena en su propia app.')).toBeVisible();
+  await expect(page.locator('iframe')).toHaveCount(0);
+  const ancho = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+  expect(ancho).toBeLessThanOrEqual(0);
+  await page.goto('/#/notas');
+  await expect(mini(page)).toContainText('Spotify');
+  // Se recuerda al volver
+  await page.goto('/#/musica');
+  await expect(page.getByRole('radio', { name: 'Spotify' })).toHaveAttribute('aria-checked', 'true');
+});

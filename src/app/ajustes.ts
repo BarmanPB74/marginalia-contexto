@@ -9,12 +9,19 @@ export type Tema = 'sistema' | 'claro' | 'oscuro';
 export type VistaNotas = 'tarjetas' | 'lista';
 /** Lado de la pantalla donde se escondió el globo de música; `null` = visible. */
 export type LadoEscondido = 'izquierda' | 'derecha' | null;
+/** De dónde suena la música (ADR-013): reproductor de YouTube o la app de Spotify. */
+export type Fuente = 'youtube' | 'spotify';
 
 export interface Ajustes {
   tema: Tema;
   flotante: boolean;
   vistaNotas: VistaNotas;
   miniEscondido: LadoEscondido;
+  fuente: Fuente;
+  /** Client ID público de la app de Spotify del autor (Dashboard). No es un secreto. */
+  spotifyClientId: string;
+  /** Pedir huella/PIN al abrir y al volver tras un rato (ADR-014). Solo en el teléfono. */
+  bloqueo: boolean;
 }
 
 export const AJUSTES_INICIALES: Ajustes = {
@@ -22,6 +29,9 @@ export const AJUSTES_INICIALES: Ajustes = {
   flotante: false,
   vistaNotas: 'tarjetas',
   miniEscondido: null,
+  fuente: 'youtube',
+  spotifyClientId: '',
+  bloqueo: false,
 };
 
 const CLAVE = 'marginalia.ajustes.v1';
@@ -37,12 +47,15 @@ export function leerAjustes(): Ajustes {
   } catch {
     // almacenamiento bloqueado o JSON roto: valores iniciales
   }
-  const { tema, flotante, vistaNotas, miniEscondido } = guardado;
+  const { tema, flotante, vistaNotas, miniEscondido, fuente, spotifyClientId, bloqueo } = guardado;
   return {
     tema: TEMAS.includes(tema as Tema) ? (tema as Tema) : AJUSTES_INICIALES.tema,
     flotante: typeof flotante === 'boolean' ? flotante : AJUSTES_INICIALES.flotante,
     vistaNotas: VISTAS.includes(vistaNotas as VistaNotas) ? (vistaNotas as VistaNotas) : AJUSTES_INICIALES.vistaNotas,
     miniEscondido: miniEscondido === 'izquierda' || miniEscondido === 'derecha' ? miniEscondido : null,
+    fuente: fuente === 'spotify' ? 'spotify' : 'youtube',
+    spotifyClientId: typeof spotifyClientId === 'string' && /^[0-9a-f]{32}$/.test(spotifyClientId) ? spotifyClientId : '',
+    bloqueo: bloqueo === true,
   };
 }
 

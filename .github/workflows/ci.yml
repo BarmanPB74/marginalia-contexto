@@ -51,9 +51,29 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npx cap sync android
+      # ADR-013: SDK oficial de Spotify App Remote, descargado y verificado por SHA256.
+      - name: SDK de Spotify
+        run: sh scripts/spotify-sdk.sh
+      # Firma estable opcional (Spotify reconoce la app por su SHA-1). Sin el secreto, firma debug normal.
+      - name: Firma estable
+        env:
+          KEYSTORE_B64: ${{ secrets.MARGINALIA_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            printf '%s' "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/marginalia.keystore"
+            echo "MARGINALIA_KEYSTORE=$RUNNER_TEMP/marginalia.keystore" >> "$GITHUB_ENV"
+          else
+            echo "Sin MARGINALIA_KEYSTORE_B64: la huella cambiará en cada ejecución."
+          fi
       - name: Compilar APK debug
         working-directory: android
+        env:
+          MARGINALIA_KEYSTORE_PASS: ${{ secrets.MARGINALIA_KEYSTORE_PASS }}
         run: ./gradlew assembleDebug --no-daemon
+      - name: Huella SHA-1 de la firma (para el Dashboard de Spotify)
+        run: |
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$APKSIGNER" verify --print-certs android/app/build/outputs/apk/debug/app-debug.apk | grep -E "SHA-1|DN"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: marginalia-debug-apk

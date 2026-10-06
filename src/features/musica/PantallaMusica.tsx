@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { cancionDeNota, minutoSegundo, rutaCancion } from '../../core/musica/etiqueta';
+import { cancionDeNota, idDe, minutoSegundo, rutaCancion } from '../../core/musica/etiqueta';
 import type { Nota } from '../../core/notas/nota';
 import { useEstado } from '../../app/estado';
 import { claveDe, metadatos, miniatura, type Cancion } from '../../core/musica/canciones';
@@ -12,6 +12,10 @@ import { Miniatura } from './Miniatura';
 import { Reproductor } from './Reproductor';
 import { useRepositorio } from '../notas/contexto';
 import { ID_HUECO } from './CapaVideo';
+import { PanelSpotify } from './PanelSpotify';
+import { Segmentado } from '../../ui/Segmentado';
+import type { Fuente } from '../../app/ajustes';
+import type { cancionEnRuta } from '../../app/rutas';
 import './PantallaMusica.css';
 
 /**
@@ -19,14 +23,27 @@ import './PantallaMusica.css';
  * incrustado, con los controles dibujados de la app encima. Las canciones quedan guardadas
  * (solo enlace y metadatos). Sin cuentas: YouTube Music no ofrece una API oficial para
  * conectarse a la cuenta de alguien, así que se usa lo que comparte su botón «Compartir».
+ * Con la fuente «Spotify» (ADR-013) se controla la app de Spotify, que suena en segundo plano.
  */
-export function PantallaMusica({ pedida = null }: { pedida?: { yt: string; t: number } | null }) {
+const FUENTES: { valor: Fuente; etiqueta: string }[] = [
+  { valor: 'youtube', etiqueta: 'YouTube Music' },
+  { valor: 'spotify', etiqueta: 'Spotify' },
+];
+
+export function PantallaMusica({ pedida = null }: { pedida?: ReturnType<typeof cancionEnRuta> }) {
   const e = useEstado();
   const repo = useRepositorio();
 
   // Una etiqueta ♪ de una nota pide esta canción desde este segundo (historia 5)
   useEffect(() => {
     if (!pedida) return;
+    if (pedida.spotify) {
+      e.ponerSpotify(pedida.spotify, pedida.t);
+      location.replace('#/musica');
+      return;
+    }
+    if (!pedida.yt) return;
+    e.cambiarAjustes({ fuente: 'youtube' });
     const guardada = e.canciones.find((c) => c.clave === pedida.yt);
     const cancion: Cancion = guardada ?? {
       clave: pedida.yt,
@@ -38,12 +55,11 @@ export function PantallaMusica({ pedida = null }: { pedida?: { yt: string; t: nu
     // Que «atrás» o recargar no la vuelvan a pedir
     location.replace('#/musica');
     if (!guardada) {
-      void metadatos({ video: pedida.yt }).then(
-        (datos) => datos && e.datosCancion(pedida.yt, datos),
-      );
+      const yt = pedida.yt;
+      void metadatos({ video: yt }).then((datos) => datos && e.datosCancion(yt, datos));
     }
     // Solo cuando cambia lo pedido
-  }, [pedida?.yt, pedida?.t]);
+  }, [pedida?.yt, pedida?.spotify, pedida?.t]);
   const [texto, setTexto] = useState('');
   const [error, setError] = useState('');
   const [buscando, setBuscando] = useState(false);
@@ -109,6 +125,30 @@ export function PantallaMusica({ pedida = null }: { pedida?: { yt: string; t: nu
     });
     location.hash = `#/notas/${nota.id}`;
   }
+
+  /** Lo mismo con Spotify: la URI y el segundo en que iba. */
+  async function notaConSpotify(uri: string, segundo: number) {
+    const estado = e.spotify.estado;
+    const nota = await repo.crear({
+      plantilla: 'rapida',
+      cancion: {
+        spotify: uri,
+        ...(estado?.titulo ? { titulo: estado.titulo } : {}),
+        ...(estado?.artista ? { artista: estado.artista } : {}),
+        t: segundo,
+      },
+    });
+    location.hash = `#/notas/${nota.id}`;
+  }
+
+  function cambiarFuente(fuente: Fuente) {
+    // Una sola música a la vez
+    if (fuente === 'spotify') {
+      e.control.current?.pausar();
+      e.alCambiarVideo({ sonando: false });
+    } else e.spotify.pausar();
+    e.cambiarAjustes({ fuente });
+  }
   return (
     <Pagina>
       <Encabezado
@@ -116,6 +156,14 @@ export function PantallaMusica({ pedida = null }: { pedida?: { yt: string; t: nu
         iconos={[{ icono: 'buscar', etiqueta: 'Buscar y comandos', alTocar: () => e.abrirComandos(true) }]}
       />
 
+      <div class="musica__fuente">
+        <Segmentado etiqueta="Fuente de música" opciones={FUENTES} valor={e.fuente} alCambiar={cambiarFuente} />
+      </div>
+
+      {e.fuente === 'spotify' ? (
+        <PanelSpotify alNotaConCancion={(uri, segundo) => void notaConSpotify(uri, segundo)} />
+      ) : (
+      <>
       <form class="musica__pegar" onSubmit={(ev) => void anadir(ev)}>
         <input
           class="musica__entrada"
@@ -182,6 +230,8 @@ export function PantallaMusica({ pedida = null }: { pedida?: { yt: string; t: nu
           </a>
         </p>
       )}
+      </>
+      )}
 
       {conCancion.length > 0 && (
         <section class="musica__guardadas" aria-label="Notas con canción">
@@ -201,7 +251,7 @@ export function PantallaMusica({ pedida = null }: { pedida?: { yt: string; t: nu
                       </span>
                     </span>
                   </a>
-                  <a class="musica__quitar" href={rutaCancion(c.yt, c.t ?? 0)} aria-label={`Reproducir «${c.titulo ?? 'canción'}» desde su segundo`}>
+                  <a class="musica__quitar" href={rutaCancion(idDe(c), c.t ?? 0)} aria-label={`Reproducir «${c.titulo ?? 'canción'}» desde su segundo`}>
                     ▷
                   </a>
                 </li>
@@ -211,7 +261,7 @@ export function PantallaMusica({ pedida = null }: { pedida?: { yt: string; t: nu
         </section>
       )}
 
-      {e.canciones.length > 0 && (
+      {e.fuente === 'youtube' && e.canciones.length > 0 && (
         <section class="musica__guardadas" aria-label="Canciones guardadas">
           <h2 class="musica__subtitulo">Guardadas</h2>
           <ul class="musica__lista">

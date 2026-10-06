@@ -2,12 +2,14 @@ import { useState } from 'preact/hooks';
 import { useEstado } from '../../app/estado';
 import type { Tema, VistaNotas } from '../../app/ajustes';
 import { Boton } from '../../ui/Boton';
+import { CampoTexto } from '../../ui/CampoTexto';
 import { Encabezado } from '../../ui/Encabezado';
 import { Interruptor } from '../../ui/Interruptor';
 import { Pagina } from '../../ui/Pagina';
 import { Segmentado } from '../../ui/Segmentado';
 import { useRepositorio } from '../notas/contexto';
 import { elegirZip, exportarCopia, importarCopia } from '../notas/copia';
+import { Bloqueo, enTelefono } from '../seguridad/nativo';
 import './PantallaAjustes.css';
 
 const TEMAS: { valor: Tema; etiqueta: string }[] = [
@@ -23,7 +25,30 @@ const VISTAS: { valor: VistaNotas; etiqueta: string }[] = [
 
 /** Lista plana, sin tarjetas (DISENO.md). */
 export function PantallaAjustes() {
-  const { flotante, setFlotante, tema, vistaNotas, miniEscondido, cambiarAjustes, abrirComandos } = useEstado();
+  const { flotante, setFlotante, tema, vistaNotas, miniEscondido, cambiarAjustes, abrirComandos, spotifyClientId, bloqueo } =
+    useEstado();
+  const [avisoBloqueo, setAvisoBloqueo] = useState('');
+
+  /** Activar o quitar el bloqueo pide primero huella/PIN: así nadie se queda fuera ni lo quita a escondidas. */
+  async function cambiarBloqueo(activar: boolean) {
+    setAvisoBloqueo('');
+    try {
+      if (activar && !(await Bloqueo.disponible()).disponible) {
+        setAvisoBloqueo('Primero pon un bloqueo de pantalla en el teléfono (PIN, patrón o huella).');
+        return;
+      }
+      await Bloqueo.autenticar({
+        titulo: 'Marginalia',
+        subtitulo: activar ? 'Confirma para activar el bloqueo' : 'Confirma para quitar el bloqueo',
+      });
+      cambiarAjustes({ bloqueo: activar });
+    } catch (e) {
+      if ((e as { code?: unknown } | null)?.code !== 'CANCELADO') setAvisoBloqueo('No se pudo comprobar. Prueba otra vez.');
+    }
+  }
+  // Se guarda solo cuando es válido (o vacío, para quitarlo)
+  const [clientId, setClientId] = useState(spotifyClientId);
+  const clientIdValido = /^[0-9a-f]{32}$/.test(clientId.trim().toLowerCase());
   const repo = useRepositorio();
   const [aviso, setAviso] = useState('');
   const [ocupado, setOcupado] = useState(false);
@@ -79,6 +104,28 @@ export function PantallaAjustes() {
           </li>
         )}
         <li>
+          <p class="ajustes__titulo">Spotify</p>
+          <CampoTexto
+            etiqueta="Client ID de tu app de Spotify"
+            marcador="32 letras y números"
+            valor={clientId}
+            alCambiar={(v) => {
+              setClientId(v);
+              const limpio = v.trim().toLowerCase();
+              if (!limpio || /^[0-9a-f]{32}$/.test(limpio)) cambiarAjustes({ spotifyClientId: limpio });
+            }}
+          />
+          {clientId.trim() && !clientIdValido && (
+            <p class="ajustes__aviso" role="alert">
+              Ese Client ID no es válido: cópialo tal cual del Dashboard de Spotify.
+            </p>
+          )}
+          <p class="ajustes__pista">
+            Spotify suena en su propia app, también en segundo plano. Necesitas Premium y registrar tu app en el
+            Dashboard de Spotify (pasos en docs/LEGAL.md). El Client ID no es secreto y se queda en este teléfono.
+          </p>
+        </li>
+        <li>
           <p class="ajustes__titulo">Copia de seguridad</p>
           <div class="ajustes__botones">
             <Boton desactivado={ocupado} alTocar={() => void trabajar(() => exportarCopia(repo))}>
@@ -107,9 +154,21 @@ export function PantallaAjustes() {
         </li>
         <li>
           <p class="ajustes__titulo">Privacidad</p>
+          {enTelefono() && (
+            <>
+              <Interruptor etiqueta="Bloqueo con huella o PIN" activo={bloqueo} alCambiar={(v) => void cambiarBloqueo(v)} />
+              <p class="ajustes__pista">Al abrir Marginalia y al volver tras un minuto fuera. Usa el bloqueo del propio teléfono.</p>
+              {avisoBloqueo && (
+                <p class="ajustes__aviso" role="alert">
+                  {avisoBloqueo}
+                </p>
+              )}
+            </>
+          )}
           <p class="ajustes__pista ajustes__pista--suelta">
-            Cada nota se cifra (AES-256-GCM) en cuanto se crea, con una clave que nunca sale de este teléfono.
-            Al exportarla se guarda descifrada, en un formato que cualquier app puede leer.
+            Cada nota se cifra (AES-256-GCM) en cuanto se crea. En el teléfono, la clave está protegida por el
+            almacén de claves de Android (Keystore) y nunca sale de él. Al exportar, la copia va descifrada para que
+            cualquier app pueda leerla: guarda el ZIP en un lugar seguro.
           </p>
         </li>
       </ul>

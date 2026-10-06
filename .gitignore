@@ -31,3 +31,6 @@ android/local.properties
 .vscode/
 *.log
 capturas/
+
+# SDK de Spotify: se descarga en CI con scripts/spotify-sdk.sh (verifica SHA256)
+android/app/libs/*.aar

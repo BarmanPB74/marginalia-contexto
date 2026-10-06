@@ -45,7 +45,7 @@ Atajos: `/inicio`, `/fase`, `/auditar`, `/cierre` (ver `.claude/commands/`).
 ## 4. Reglas inquebrantables
 
 1. **Legalidad**: solo YouTube IFrame Player oficial. Prohibido extraer/descargar audio o video, usar `yt-dlp`, NewPipe Extractor, `ytmusicapi` u otras APIs no oficiales, bloquear anuncios o forzar reproducción en segundo plano. Detalle en `docs/LEGAL.md`.
-2. **Local-first**: los datos nunca salen del dispositivo. Sin analíticas, sin trackers, sin cuentas. Única red permitida: el reproductor de YouTube, bajo demanda.
+2. **Local-first**: los datos nunca salen del dispositivo. Sin analíticas, sin trackers, sin cuentas. Única red permitida: el reproductor de YouTube, bajo demanda. Spotify (ADR-013) solo por el SDK oficial App Remote, que habla con la app de Spotify del teléfono.
 3. **Permisos Android mínimos**: solo `INTERNET`. Cualquier permiso nuevo requiere justificarlo en `ESTADO.md` y en `docs/SEGURIDAD.md`.
 4. **Nunca** subir secretos, keystores, `.env`, tokens ni la imagen de referencia al repo. Verifica con `gitleaks` antes de cada commit grande.
 5. **Cada dependencia nueva** se justifica en una línea (qué hace, licencia, mantenimiento, tamaño) y pasa `npm audit`. Preferir pocas y pequeñas.

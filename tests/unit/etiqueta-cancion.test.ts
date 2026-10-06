@@ -43,11 +43,15 @@ describe('enlace en línea', () => {
     expect(minutoSegundo(3725)).toBe('1:02:05');
     expect(enlaceCancion('dQw4w9WgXcQ', 99.9)).toBe('[♪ 1:39](yt:dQw4w9WgXcQ?t=99)');
     expect(() => enlaceCancion('mal')).toThrow();
+    expect(enlaceCancion('spotify:track:4uLU6hMCjMI75M1A2tKUQC', 99)).toBe('[♪ 1:39](spotify:track:4uLU6hMCjMI75M1A2tKUQC?t=99)');
   });
 
   it('leerHrefCancion solo acepta IDs válidos', () => {
-    expect(leerHrefCancion('yt:dQw4w9WgXcQ?t=99')).toEqual({ yt: 'dQw4w9WgXcQ', t: 99 });
-    expect(leerHrefCancion('yt:dQw4w9WgXcQ')).toEqual({ yt: 'dQw4w9WgXcQ', t: 0 });
+    expect(leerHrefCancion('yt:dQw4w9WgXcQ?t=99')).toEqual({ id: 'dQw4w9WgXcQ', t: 99 });
+    expect(leerHrefCancion('yt:dQw4w9WgXcQ')).toEqual({ id: 'dQw4w9WgXcQ', t: 0 });
+    expect(leerHrefCancion('spotify:track:4uLU6hMCjMI75M1A2tKUQC?t=99')).toEqual({ id: 'spotify:track:4uLU6hMCjMI75M1A2tKUQC', t: 99 });
+    expect(leerHrefCancion('spotify:playlist:4uLU6hMCjMI75M1A2tKUQC')).toBeNull();
+    expect(leerHrefCancion('spotify:track:corto')).toBeNull();
     expect(leerHrefCancion('yt:dQw4w9WgXcQ?t=99&x=1')).toBeNull();
     expect(leerHrefCancion('yt:javascript:alert(1)')).toBeNull();
   });
@@ -66,5 +70,18 @@ describe('ruta de canción', () => {
     expect(cancionEnRuta('#/musica?yt=dQw4w9WgXcQ&t=-1')).toEqual({ yt: 'dQw4w9WgXcQ', t: 0 });
     expect(cancionEnRuta('#/musica?yt=malo')).toBeNull();
     expect(cancionEnRuta('#/notas?yt=dQw4w9WgXcQ')).toBeNull();
+  });
+});
+
+describe('Spotify en la etiqueta', () => {
+  it('frontmatter con spotify: se escribe y se vuelve a leer', () => {
+    const n = conCancionPrincipal(base, { spotify: 'spotify:track:4uLU6hMCjMI75M1A2tKUQC', titulo: 'Tema', t: 42 });
+    expect(cancionDeNota(leerNota(escribirNota(n)))).toEqual({ spotify: 'spotify:track:4uLU6hMCjMI75M1A2tKUQC', titulo: 'Tema', t: 42 });
+    expect(cancionDeNota({ extra: { cancion: { spotify: 'spotify:artist:4uLU6hMCjMI75M1A2tKUQC' } } })).toBeNull();
+  });
+
+  it('en lectura, ♪ de Spotify lleva a Música con sp=', () => {
+    const html = renderMarkdown('Sonaba [♪ 0:42](spotify:track:4uLU6hMCjMI75M1A2tKUQC?t=42)');
+    expect(html).toContain('<a href="#/musica?sp=track%3A4uLU6hMCjMI75M1A2tKUQC&amp;t=42" class="enlace-cancion">♪ 0:42</a>');
   });
 });
