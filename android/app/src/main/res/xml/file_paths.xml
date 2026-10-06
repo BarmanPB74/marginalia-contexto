@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Rutas que el FileProvider puede compartir (solo con un permiso concedido por la app).
+  Auditoría F5: la plantilla de Capacitor abría todo el almacenamiento externo (external-path ".").
+  Capacitor solo lo usa para la foto temporal del selector de archivos (getExternalFilesDir) y la caché.
+-->
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <external-path name="my_images" path="." />
+    <external-files-path name="my_images" path="." />
     <cache-path name="my_cache_images" path="." />
 </paths>

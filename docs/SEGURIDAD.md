@@ -50,7 +50,7 @@ Objetivo: cumplir **OWASP MASVS nivel 1** en toda la app y nivel 2 en almacenami
 **F2:** pruebas de XSS en Markdown (`<script>`, `onerror=`, `javascript:`, `data:`), YAML hostil, notas de 2 MB; escritura atómica de archivos (escribir a temporal + renombrar) para no corromper notas.
 **F3:** parser sin ReDoS (probar con entradas largas/patológicas y tiempo máximo); fechas inválidas ignoradas.
 **F4:** *allowlist* de `frame-src`; validación estricta del ID de video; *Share Intent* tratado como entrada no confiable; sin servicios en segundo plano innecesarios.
-**F5:** auditoría completa (sección 5).
+**F5:** auditoría completa (sección 5) → `docs/seguridad/AUDITORIA-F5.md` (2026-10-06; quedan H6 y H7 por decidir).
 **F6:** APK release firmado; checksum SHA-256; SBOM; revisión de `PRIVACIDAD.md`, `SECURITY.md` y licencias de terceros.
 
 ## 5. Fase 5 — Auditoría propia (el "ethical hacking" de este proyecto)

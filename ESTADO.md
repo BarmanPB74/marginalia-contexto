@@ -5,8 +5,8 @@
 
 ## Ahora
 - **Fase actual:** F5 — Seguridad (empieza 2026-10-06). F4 cerrada: PR #2 fusionado; Spotify en segundo plano (ADR-013) **probado por el autor en el teléfono**.
-- **Última sesión:** 2026-10-06 — Spotify App Remote: plugin nativo, fuente YouTube | Spotify en Música, ♪ con segundo de Spotify, `sp=`, compartir desde Spotify, Client ID en Ajustes, firma estable en CI.
-- **Siguiente paso concreto:** PR de Spotify a main; F5: auditoría estática del APK, fuzzing del parser/importador, licencias; decidir con el autor Keystore + bloqueo biométrico.
+- **Última sesión:** 2026-10-06 — PR #3 (Spotify) abierto. Auditoría F5 (`docs/seguridad/AUDITORIA-F5.md`): npm audit/osv 0, MobSF, apktool, Semgrep, fuzzing; corregidos uuid, FileProvider y CSP; `LICENCIAS.md`.
+- **Siguiente paso concreto:** el autor decide H6 (clave con Android Keystore) y H7 (bloqueo biométrico); luego implementarlos, hacer las comprobaciones `adb` del informe y cerrar F5.
 
 ## Decisiones tomadas (ADR en `docs/ARQUITECTURA.md`)
 - 001 Web + Capacitor + Preact · 002 `.md` fuente de verdad · 003 solo IFrame oficial · 004 MIT (Pablo, 2026) · 005 nombre "Marginalia", appId `io.github.barmanpb74.appnoti`
@@ -36,7 +36,7 @@
 - F3: `core/parser/parseNota` (etiquetas con subetiquetas, sin ReDoS); `#/notas?etiqueta=x` filtra; autocompletar con `@codemirror/autocomplete` (`#` etiquetas existentes, `@` hoy/mañana/días); `SelectorFecha` propio en hoja; Calendario Mes | Agenda. Las llamadas al plugin de archivos van en fila (lectura colgada muy rara en e2e).
 
 ## Pendiente de decidir con el autor
-- ¿Envolver la clave de cifrado con Android Keystore (plugin nativo) y bloqueo biométrico? (F5)
+- ¿Envolver la clave de cifrado con Android Keystore (plugin nativo) y bloqueo biométrico? (F5, H6/H7 de la auditoría) · ¿Subir `minSdk` 24 → 26/29? (H5, F6)
 - Pedidos aún sin fase: plantillas con gráficos/cálculos y plantillas propias; exportar a PDF/carta/documento legal; backlinks, nota diaria, grafo.
 
 ## Probar en el teléfono (lo que el entorno de Claude no puede verificar)
@@ -55,8 +55,7 @@
 - Android: Spotify App Remote SDK 0.8.0 (`.aar`, Apache-2.0, beta oficial, 130 kB, sin permisos; descargado y verificado en CI) + `gson` 2.14.0 (Apache-2.0, lo exige el SDK)
 - `@capacitor/filesystem` 8.1.4 · notas en la carpeta privada y exportar a Documentos · MIT · no añade permisos · `yaml` 2.9.1 · frontmatter · ISC · Cifrado, búsqueda, enlaces de música: **sin dependencias nuevas** (WebCrypto, código propio) · `fflate` 0.8.3 · ZIP de copia · MIT · sin dependencias · ~8 kB · `@codemirror/autocomplete` 6.20.3 · autocompletar `#`/`@` · MIT · oficial de CodeMirror, reutiliza state/view
 - Fuentes (no son paquetes npm): Newsreader 400/400i/600, Kalam 400, JetBrains Mono 400 · @fontsource 5.3.0, latino · OFL-1.1 con `OFL.txt` en cada carpeta · 120 kB en total
-- Dev: `vite` 8 (build) MIT · `@preact/preset-vite` MIT · `typescript` 6.0 Apache-2.0 · `eslint` 10 + `@eslint/js` + `typescript-eslint` + `globals` MIT · `vitest` 5 + `jsdom` MIT · `@playwright/test` Apache-2.0 · `@capacitor/cli` MIT
-- Auditoría de licencias (2026-10-04): todas compatibles; MPL-2.0 solo en `lightningcss` (herramienta de build, sin modificar).
+- Dev: `vite` 8 (build) MIT · `@preact/preset-vite` MIT · `typescript` 6.0 Apache-2.0 · `eslint` 10 + `@eslint/js` + `typescript-eslint` + `globals` MIT · `vitest` 5 + `jsdom` MIT · `@playwright/test` Apache-2.0 · `@capacitor/cli` MIT· Licencias: todas compatibles (`docs/seguridad/LICENCIAS.md`, F5)
 
 ## Riesgos abiertos
 - Bundle JS 678 kB (≈230 kB gzip) tras CodeMirror + autocompletar + markdown-it. Presupuesto: arranque en frío < 2 s. Si el autor nota lentitud al abrir, cargar editor y lectura con `import()` al abrir una nota.
@@ -64,13 +63,15 @@
 - e2e con 6 navegadores a la vez: 1 de 116 falló al recargar 0,9 s después de escribir (el guardado aún no había terminado). Mismo límite que matar la app justo al teclear.
 - `gitleaks` no está en el entorno de Claude: solo corre en CI (verde en el PR #2). El selector de archivos depende del `WebChromeClient` de Capacitor: probar en el teléfono.
 - Exportar a `Documentos` en Android ≤ 10 necesita un permiso que no pedimos (regla 3): mostrar alternativa (compartir) si el autor lo usa ahí.
-- `npm audit` (dev): 3 moderadas en `@capacitor/cli` → `xcode` → `uuid` (herramienta de iOS, no se usa; producción limpia). Revisar cuando salga un CLI corregido.
+- `overrides` fuerza `uuid` 11.1.1 bajo `xcode` (H1): quitarlo cuando `@capacitor/cli` lo traiga.
+- Test `etiquetas.test.tsx` («con una etiqueta en la ruta…») falló 2 veces en ~15 ejecuciones completas; no se reproduce aislado ni con CPU forzada. Vigilar en CI.
 - Build *release* sin minificación ni firma todavía (corresponde a F6).
 
 ## Banco de ideas (NO construir sin decisión del autor)
 - (vacío)
 
 ## Historial de sesiones
+- 2026-10-06 · F5 (inicio) · PR #3 Spotify; auditoría propia con MobSF, apktool, Semgrep, osv, fuzzing (7 pruebas); 3 hallazgos corregidos, 2 a decidir; 324 unit + 31 e2e.
 - 2026-10-06 · F4+ · PR #2 fusionado; Spotify en segundo plano (ADR-013): plugin nativo, panel en Música, ♪ y rutas `sp=`, compartir, firma estable; 316 unit + 31 e2e.
 - 2026-10-05/06 · F4 · ♪ con segundo (historias 4 y 5), Share Intent nativo, errores del reproductor, visor ≥ 200 × 200; ventana flotante con el video (opción B, ADR-012), mismo iframe sin recargar, nada delante (e2e en 25 puntos); 291 unit + 30 e2e.
 - 2026-10-05 · F2 cerrada (probada por el autor) + pedidos + F3: rediseño, tarjetas, paleta, calendario, cifrado, YouTube Music, ZIP; parser, filtro por etiqueta, autocompletar, selector de fecha, Agenda; PR #2.
