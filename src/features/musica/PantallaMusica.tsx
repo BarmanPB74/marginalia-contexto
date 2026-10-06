@@ -11,7 +11,7 @@ import { Pagina } from '../../ui/Pagina';
 import { Miniatura } from './Miniatura';
 import { Reproductor } from './Reproductor';
 import { useRepositorio } from '../notas/contexto';
-import { VideoOficial } from './VideoOficial';
+import { ID_HUECO } from './CapaVideo';
 import './PantallaMusica.css';
 
 /**
@@ -147,14 +147,8 @@ export function PantallaMusica({ pedida = null }: { pedida?: { yt: string; t: nu
           alAlternar={e.alternar}
           alAnterior={() => e.control.current?.anterior()}
           alSiguiente={() => e.control.current?.siguiente()}
-          video={
-            <VideoOficial
-              key={`${actual.clave}-${e.eleccion.vez}`}
-              enlace={{ ...actual.enlace, ...(e.eleccion.inicio ? { inicio: e.eleccion.inicio } : {}) }}
-              alCambiar={e.alCambiarVideo}
-              control={e.control}
-            />
-          }
+          // El reproductor oficial vive en la raíz de la app (CapaVideo) y se coloca sobre este hueco
+          video={<div id={ID_HUECO} class="video-oficial" />}
         />
       ) : (
         <EstadoVacio

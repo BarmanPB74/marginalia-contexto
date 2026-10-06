@@ -79,8 +79,8 @@ export function VideoOficial({ enlace, alCambiar, control }: Props) {
     return () => {
       removeEventListener('message', alMensaje);
       control.current = null;
-      // Al salir de Música el reproductor se desmonta y la música para (no hay audio escondido).
-      avisar.current({ sonando: false });
+      // Cambiar de canción monta otro iframe: el estado real llega del nuevo (infoDelivery).
+      // Quitar el reproductor del todo lo marca quien lo quita (cerrarFlotante).
     };
   }, [control]);
 

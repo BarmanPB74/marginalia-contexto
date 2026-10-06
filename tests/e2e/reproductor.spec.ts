@@ -119,7 +119,7 @@ test('pegar un enlace de YouTube Music: título por oEmbed, reproductor oficial 
   await page.getByLabel('Enlace de YouTube Music').fill('https://music.youtube.com/watch?v=dQw4w9WgXcQ&si=x');
   await page.getByRole('button', { name: 'Añadir' }).click();
   const grande = page.getByRole('region', { name: 'Reproductor', exact: true });
-  await expect(grande.locator('iframe')).toHaveAttribute('src', /^https:\/\/www\.youtube-nocookie\.com\/embed\/dQw4w9WgXcQ\?/);
+  await expect(page.locator('iframe[title="Reproductor de YouTube"]')).toHaveAttribute('src', /^https:\/\/www\.youtube-nocookie\.com\/embed\/dQw4w9WgXcQ\?/);
   await expect(grande.getByText('Tema de prueba')).toBeVisible();
   await expect(grande.getByText('Artista', { exact: true })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Canciones guardadas' }).getByText('Tema de prueba')).toBeVisible();
@@ -129,7 +129,7 @@ test('pegar un enlace de YouTube Music: título por oEmbed, reproductor oficial 
     await page.setViewportSize({ width: ancho, height: 800 });
     // medir sin la animación de entrada (escala 0.96 → 1)
     await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
-    const caja = await grande.locator('iframe').boundingBox();
+    const caja = await page.locator('iframe[title="Reproductor de YouTube"]').boundingBox();
     expect(caja?.width, `ancho a ${ancho}px`).toBeGreaterThanOrEqual(200);
     expect(caja?.height, `alto a ${ancho}px`).toBeGreaterThanOrEqual(200);
   }

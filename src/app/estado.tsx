@@ -28,6 +28,11 @@ interface EstadoApp extends Ajustes {
   info: InfoVideo;
   alCambiarVideo: (info: Partial<InfoVideo>) => void;
   control: RefObject<ControlVideo | null>;
+  /** El reproductor sigue fuera de Música como ventana flotante (ADR-012) */
+  flotando: boolean;
+  setFlotando: (v: boolean) => void;
+  /** Cierra la ventana flotante (la música para) */
+  cerrarFlotante: () => void;
   /** Paleta de comandos abierta. */
   comandosAbiertos: boolean;
   abrirComandos: (abierta: boolean) => void;
@@ -47,6 +52,7 @@ export function ProveedorEstado({ children }: { children: ComponentChildren }) {
   const [info, setInfo] = useState<InfoVideo>({ sonando: false, posicion: 0, duracion: 0 });
   const control = useRef<ControlVideo | null>(null);
   const [eleccion, setEleccion] = useState({ vez: 0, inicio: 0 });
+  const [flotando, setFlotando] = useState(false);
   const [comandosAbiertos, abrirComandos] = useState(false);
   const [comandosLocales, setComandosLocales] = useState<Comando[]>([]);
   const [aviso, avisar] = useState('');
@@ -157,6 +163,12 @@ export function ProveedorEstado({ children }: { children: ComponentChildren }) {
         info,
         alCambiarVideo: (parcial) => setInfo((i) => ({ ...i, ...parcial })),
         control,
+        flotando,
+        setFlotando,
+        cerrarFlotante: () => {
+          setFlotando(false);
+          setInfo((i) => ({ ...i, sonando: false }));
+        },
         comandosAbiertos,
         abrirComandos,
         comandosLocales,

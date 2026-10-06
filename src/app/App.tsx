@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { PantallaAjustes } from '../features/ajustes/PantallaAjustes';
 import { PantallaCalendario } from '../features/calendario/PantallaCalendario';
 import { Paleta } from '../features/comandos/Paleta';
 import { miniatura } from '../core/musica/canciones';
+import { CapaVideo, type ModoCapa } from '../features/musica/CapaVideo';
 import { MiniReproductor } from '../features/musica/MiniReproductor';
 import { PantallaMusica } from '../features/musica/PantallaMusica';
 import { PantallaNota } from '../features/notas/PantallaNota';
@@ -38,10 +39,25 @@ interface PropsSecciones {
 }
 
 function Secciones({ ruta, idNota, dia, etiqueta, cancion: pedida }: PropsSecciones) {
-  const { flotante, sonando, miniEscondido, cambiarAjustes, comandosAbiertos, cancion, aviso, avisar } = useEstado();
+  const { flotante, sonando, miniEscondido, cambiarAjustes, comandosAbiertos, cancion, aviso, avisar, flotando, setFlotando } =
+    useEstado();
   const Pantalla = PANTALLAS[ruta];
-  // En Música ya está el reproductor grande.
-  const conMini = ruta !== 'musica';
+  const enMusica = ruta === 'musica' && !idNota;
+
+  // Al salir de Música con la canción sonando, el reproductor sigue como ventana flotante (opción B).
+  const antes = useRef(enMusica);
+  useEffect(() => {
+    if (antes.current && !enMusica) setFlotando(sonando);
+    if (enMusica) setFlotando(false);
+    antes.current = enMusica;
+  }, [enMusica]);
+
+  // `antes.current` aún es la ruta anterior en este render: así el reproductor pasa a flotar en el
+  // mismo cuadro, sin desmontarse ni un instante (desmontar el iframe cortaría la canción).
+  const saliendoSonando = antes.current && !enMusica && sonando;
+  const modoCapa: ModoCapa | null = !cancion ? null : enMusica ? 'musica' : flotando || saliendoSonando ? 'flotante' : null;
+  // En Música ya está el reproductor grande; fuera, si flota el video, el globo dibujado sobra.
+  const conMini = !enMusica && modoCapa !== 'flotante';
   const anclado = conMini && !flotante && !miniEscondido;
   return (
     <div class={anclado ? 'con-mini-anclado' : undefined}>
@@ -63,7 +79,7 @@ function Secciones({ ruta, idNota, dia, etiqueta, cancion: pedida }: PropsSeccio
           artista={cancion ? cancion.artista : 'Toca para elegir música'}
           portada={cancion ? miniatura(cancion.enlace) : null}
           sonando={sonando}
-          // El reproductor oficial vive en Música (visible, LEGAL §1): reproducir lleva allí.
+          // Sin ventana flotante, el reproductor oficial está en Música: reproducir lleva allí.
           alAlternar={() => (location.hash = '#/musica')}
           modo={flotante ? 'flotante' : 'anclado'}
           escondido={miniEscondido}
@@ -71,6 +87,8 @@ function Secciones({ ruta, idNota, dia, etiqueta, cancion: pedida }: PropsSeccio
         />
       )}
       <BarraInferior actual={ruta} />
+      {/* Siempre en el mismo sitio del árbol: cambiar de modo no recarga el iframe */}
+      {modoCapa && <CapaVideo modo={modoCapa} />}
       {comandosAbiertos && <Paleta />}
       <div class="aviso-global" aria-live="polite">
         {aviso && (
