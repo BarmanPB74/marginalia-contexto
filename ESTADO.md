@@ -4,9 +4,9 @@
 > Lo actualiza `/cierre`. Si algo aquí contradice el código, arréglalo aquí.
 
 ## Ahora
-- **Fase actual:** F4 — Música. PR #2 fusionado en main. Añadido Spotify en segundo plano (ADR-013, pedido del autor) en `ccr-4bb4aef6-3n6fty`.
+- **Fase actual:** F5 — Seguridad (empieza 2026-10-06). F4 cerrada: PR #2 fusionado; Spotify en segundo plano (ADR-013) **probado por el autor en el teléfono**.
 - **Última sesión:** 2026-10-06 — Spotify App Remote: plugin nativo, fuente YouTube | Spotify en Música, ♪ con segundo de Spotify, `sp=`, compartir desde Spotify, Client ID en Ajustes, firma estable en CI.
-- **Siguiente paso concreto:** el autor hace la puesta en marcha de Spotify (`docs/LEGAL.md` §1 bis: keystore como secreto, SHA-1, Dashboard, Client ID) y prueba la lista de abajo; luego PR a main y `/inicio` de F5.
+- **Siguiente paso concreto:** PR de Spotify a main; F5: auditoría estática del APK, fuzzing del parser/importador, licencias; decidir con el autor Keystore + bloqueo biométrico.
 
 ## Decisiones tomadas (ADR en `docs/ARQUITECTURA.md`)
 - 001 Web + Capacitor + Preact · 002 `.md` fuente de verdad · 003 solo IFrame oficial · 004 MIT (Pablo, 2026) · 005 nombre "Marginalia", appId `io.github.barmanpb74.appnoti`
@@ -40,7 +40,6 @@
 - Pedidos aún sin fase: plantillas con gráficos/cálculos y plantillas propias; exportar a PDF/carta/documento legal; backlinks, nota diaria, grafo.
 
 ## Probar en el teléfono (lo que el entorno de Claude no puede verificar)
-- **Spotify:** Música → «Spotify» → Conectar (pide autorización la app de Spotify) → pegar enlace → suena; salir de la app y apagar pantalla → sigue; ♪ en el editor y «♪ Nueva nota» guardan el segundo; tocar ♪ → suena desde ahí; compartir desde Spotify → Marginalia; el globo pausa/reanuda. Errores: sin app, sin sesión, cuenta no añadida en el Dashboard.
 - **Ventana flotante:** en Música poner una canción, ir a Notas → el video sigue sonando en la ventana, sin cortes; arrastrarla por la barra; ⇥ la esconde y pausa; la pestaña ♪ la trae; × la cierra. Que el teclado no la deje tapada.
 - **F4 — historias 4 y 5:** «♪ Nueva nota con esta canción» → la nota guarda canción y segundo (píldora bajo el título); botón ♪ del editor → inserta `[♪ m:ss]`; en lectura, tocar ♪ (o la píldora) → Música suena desde ese segundo.
 - **Compartir:** en YouTube Music, Compartir → Marginalia (con la app cerrada y abierta) → se abre Música y suena. Compartir texto que no es de YouTube → aviso. Un video que no se deja incrustar → aviso + «Abrir en YouTube Music». Modo avión → aviso de sin conexión.
