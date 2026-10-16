@@ -11,6 +11,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+        android:resizeableActivity="true"
         android:theme="@style/AppTheme">
 
         <activity
@@ -19,18 +20,12 @@
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBarLaunch"
             android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize"
             android:exported="true">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-
-            <!-- Compartir un enlace desde YouTube Music: solo texto plano (docs/SEGURIDAD.md) -->
-            <intent-filter>
-                <action android:name="android.intent.action.SEND" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="text/plain" />
             </intent-filter>
 
         </activity>
@@ -46,7 +41,20 @@
         </provider>
     </application>
 
-    <!-- Permissions -->
+    <!--
+      Pantallas (ADR-016): la app se adapta a teléfonos, plegables y tabletas, en vertical y
+      horizontal y en ventanas divididas. No hace falta ningún permiso para eso: basta declararlo.
+    -->
+    <supports-screens
+        android:smallScreens="true"
+        android:normalScreens="true"
+        android:largeScreens="true"
+        android:xlargeScreens="true"
+        android:anyDensity="true" />
 
-    <uses-permission android:name="android.permission.INTERNET" />
+    <!--
+      Sin INTERNET (ADR-015): Bar Box no se conecta a nada. La interfaz la sirve Capacitor desde
+      dentro del APK (https://localhost interceptado, sin red real). Los únicos permisos que quedan
+      son USE_BIOMETRIC/USE_FINGERPRINT, que añade androidx.biometric para el bloqueo opcional.
+    -->
 </manifest>

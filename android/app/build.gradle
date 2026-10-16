@@ -7,8 +7,9 @@ android {
         applicationId "io.github.barmanpb74.appnoti"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        // Play exige un versionCode mayor en cada subida: CI lo pasa (número de ejecución).
+        versionCode((System.getenv('BARBOX_VERSION_CODE') ?: '1') as int)
+        versionName System.getenv('BARBOX_VERSION_NAME') ?: '1.0.0'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -17,23 +18,36 @@ android {
         }
     }
     signingConfigs {
-        // ADR-013: Spotify reconoce la app por la huella SHA-1 de su firma. La firma debug de CI
-        // cambia en cada ejecución; si el secreto MARGINALIA_KEYSTORE_B64 existe, CI lo deja en
-        // un archivo temporal y la firma es siempre la misma. El keystore nunca entra al repo.
+        // ADR-015: una sola llave propia («llave de subida» de Play). Vive SOLO como secreto de
+        // GitHub (BARBOX_KEYSTORE_B64 + BARBOX_KEYSTORE_PASS); CI la deja en un archivo temporal.
+        // Nunca entra al repositorio (.gitignore: *.keystore, *.jks).
+        def llave = System.getenv('BARBOX_KEYSTORE')
+        def hayLlave = llave && file(llave).exists()
         debug {
-            def estable = System.getenv('MARGINALIA_KEYSTORE')
-            if (estable && file(estable).exists()) {
-                storeFile file(estable)
-                storePassword System.getenv('MARGINALIA_KEYSTORE_PASS')
-                keyAlias System.getenv('MARGINALIA_KEY_ALIAS') ?: 'marginalia'
-                keyPassword System.getenv('MARGINALIA_KEYSTORE_PASS')
+            if (hayLlave) {
+                storeFile file(llave)
+                storePassword System.getenv('BARBOX_KEYSTORE_PASS')
+                keyAlias System.getenv('BARBOX_KEY_ALIAS') ?: 'barbox'
+                keyPassword System.getenv('BARBOX_KEYSTORE_PASS')
+            }
+        }
+        release {
+            if (hayLlave) {
+                storeFile file(llave)
+                storePassword System.getenv('BARBOX_KEYSTORE_PASS')
+                keyAlias System.getenv('BARBOX_KEY_ALIAS') ?: 'barbox'
+                keyPassword System.getenv('BARBOX_KEYSTORE_PASS')
             }
         }
     }
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            // Código Java/Kotlin reducido y ofuscado (R8) y recursos sin usar fuera.
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+            debuggable false
         }
     }
 }
@@ -54,10 +68,6 @@ dependencies {
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')
-    // Spotify App Remote (ADR-013): el .aar oficial lo descarga y verifica scripts/spotify-sdk.sh
-    // (Apache-2.0, github.com/spotify/android-sdk). Gson lo necesita el SDK para sus mensajes.
-    implementation(name: 'spotify-app-remote-release-0.8.0', ext: 'aar')
-    implementation "com.google.code.gson:gson:2.14.0"
     // Bloqueo con huella/PIN (ADR-014): diálogo oficial BiometricPrompt. Apache-2.0.
     implementation "androidx.biometric:biometric:1.1.0"
 }

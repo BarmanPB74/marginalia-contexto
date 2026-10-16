@@ -13,9 +13,6 @@ import { Icono, NOMBRES_ICONO } from '../ui/Icono';
 import { Interruptor } from '../ui/Interruptor';
 import { Pagina } from '../ui/Pagina';
 import { Tarjeta } from '../ui/Tarjeta';
-import { CANCION_DEMO } from '../features/musica/demo';
-import { MiniReproductor } from '../features/musica/MiniReproductor';
-import { Reproductor } from '../features/musica/Reproductor';
 import './Galeria.css';
 
 function Muestra({ nombre, children }: { nombre: string; children: ComponentChildren }) {
@@ -44,7 +41,6 @@ export function Galeria() {
   const [titulo, setTitulo] = useState('');
   const [lectura, setLectura] = useState(true);
   const [sinConexion, setSinConexion] = useState(false);
-  const [sonando, setSonando] = useState(true);
 
   return (
     <Pagina>
@@ -110,13 +106,6 @@ export function Galeria() {
         </div>
       </Muestra>
 
-      <Muestra nombre="Reproductor">
-        <Reproductor {...CANCION_DEMO} sonando={sonando} alAlternar={() => setSonando(!sonando)} />
-      </Muestra>
-
-      <Muestra nombre="MiniReproductor">
-        <MiniReproductor {...CANCION_DEMO} modo="en-linea" sonando={sonando} alAlternar={() => setSonando(!sonando)} />
-      </Muestra>
     </Pagina>
   );
 }

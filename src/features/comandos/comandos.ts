@@ -22,8 +22,6 @@ interface Contexto {
   repo: RepositorioNotas;
   ajustes: Ajustes;
   cambiarAjustes: (parcial: Partial<Ajustes>) => void;
-  sonando: boolean;
-  alternar: () => void;
   hoy?: Date;
   /** Mensaje para la persona tras una herramienta (exportar, importar…) */
   avisar?: (mensaje: string) => void;
@@ -34,8 +32,6 @@ export function comandosGlobales({
   repo,
   ajustes,
   cambiarAjustes,
-  sonando,
-  alternar,
   hoy = new Date(),
   avisar = () => undefined,
 }: Contexto): Comando[] {
@@ -134,30 +130,6 @@ export function comandosGlobales({
       palabras: 'vista recientes multitarea',
       icono: ajustes.vistaNotas === 'tarjetas' ? 'lista' : 'tarjetas',
       ejecutar: () => cambiarAjustes({ vistaNotas: ajustes.vistaNotas === 'tarjetas' ? 'lista' : 'tarjetas' }),
-    },
-    {
-      id: 'flotante',
-      nombre: ajustes.flotante ? 'Anclar el reproductor sobre la barra' : 'Reproductor flotante',
-      grupo: 'Ajustes',
-      palabras: 'globo burbuja mini',
-      icono: 'mover',
-      ejecutar: () => cambiarAjustes({ flotante: !ajustes.flotante }),
-    },
-    {
-      id: 'globo',
-      nombre: ajustes.miniEscondido ? 'Mostrar el globo de música' : 'Esconder el globo de música a un lado',
-      grupo: 'Música',
-      palabras: 'reproductor mini burbuja ocultar',
-      icono: 'esconder',
-      ejecutar: () => cambiarAjustes({ miniEscondido: ajustes.miniEscondido ? null : 'derecha' }),
-    },
-    {
-      id: 'reproducir',
-      nombre: sonando ? 'Pausar música' : 'Reproducir música',
-      grupo: 'Música',
-      palabras: 'play pausa cancion',
-      icono: sonando ? 'pausa' : 'reproducir',
-      ejecutar: alternar,
     },
   ];
 }

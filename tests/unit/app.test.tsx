@@ -19,8 +19,8 @@ afterEach(() => {
 });
 
 describe('App', () => {
-  it('abre Notas por defecto, con la barra de secciones', () => {
-    montar();
+  it('la Bitácora (notas) tiene la barra de secciones', () => {
+    montar('#/notas');
     expect(contenedor.querySelector('h1')?.textContent).toBe('Notas');
     expect(contenedor.querySelector('nav[aria-label="Secciones"]')).not.toBeNull();
   });
@@ -34,11 +34,5 @@ describe('App', () => {
     montar('#/galeria');
     expect(contenedor.querySelector('h1')?.textContent).toBe('Galería');
     expect(contenedor.querySelector('nav')).toBeNull();
-  });
-
-  it('Música no carga ningún iframe hasta que se elige una canción', () => {
-    montar('#/musica');
-    expect(contenedor.querySelector('h1')?.textContent).toBe('Música');
-    expect(contenedor.querySelector('iframe')).toBeNull();
   });
 });

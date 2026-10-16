@@ -2,7 +2,6 @@ import { useState } from 'preact/hooks';
 import { useEstado } from '../../app/estado';
 import type { Tema, VistaNotas } from '../../app/ajustes';
 import { Boton } from '../../ui/Boton';
-import { CampoTexto } from '../../ui/CampoTexto';
 import { Encabezado } from '../../ui/Encabezado';
 import { Interruptor } from '../../ui/Interruptor';
 import { Pagina } from '../../ui/Pagina';
@@ -25,8 +24,7 @@ const VISTAS: { valor: VistaNotas; etiqueta: string }[] = [
 
 /** Lista plana, sin tarjetas (DISENO.md). */
 export function PantallaAjustes() {
-  const { flotante, setFlotante, tema, vistaNotas, miniEscondido, cambiarAjustes, abrirComandos, spotifyClientId, bloqueo } =
-    useEstado();
+  const { tema, vistaNotas, cambiarAjustes, abrirComandos, bloqueo } = useEstado();
   const [avisoBloqueo, setAvisoBloqueo] = useState('');
 
   /** Activar o quitar el bloqueo pide primero huella/PIN: así nadie se queda fuera ni lo quita a escondidas. */
@@ -47,8 +45,6 @@ export function PantallaAjustes() {
     }
   }
   // Se guarda solo cuando es válido (o vacío, para quitarlo)
-  const [clientId, setClientId] = useState(spotifyClientId);
-  const clientIdValido = /^[0-9a-f]{32}$/.test(clientId.trim().toLowerCase());
   const repo = useRepositorio();
   const [aviso, setAviso] = useState('');
   const [ocupado, setOcupado] = useState(false);
@@ -87,43 +83,6 @@ export function PantallaAjustes() {
             alCambiar={(v) => cambiarAjustes({ vistaNotas: v })}
           />
           <p class="ajustes__pista">Tarjetas: tus notas como las apps recientes de Android.</p>
-        </li>
-        <li>
-          <Interruptor etiqueta="Reproductor flotante" activo={flotante} alCambiar={setFlotante} />
-          <p class="ajustes__pista">
-            Arrástralo por el asa a cualquier lugar; lánzalo contra un borde para esconderlo a un lado.
-          </p>
-        </li>
-        {miniEscondido && (
-          <li>
-            <Interruptor
-              etiqueta="Globo de música escondido"
-              activo
-              alCambiar={() => cambiarAjustes({ miniEscondido: null })}
-            />
-          </li>
-        )}
-        <li>
-          <p class="ajustes__titulo">Spotify</p>
-          <CampoTexto
-            etiqueta="Client ID de tu app de Spotify"
-            marcador="32 letras y números"
-            valor={clientId}
-            alCambiar={(v) => {
-              setClientId(v);
-              const limpio = v.trim().toLowerCase();
-              if (!limpio || /^[0-9a-f]{32}$/.test(limpio)) cambiarAjustes({ spotifyClientId: limpio });
-            }}
-          />
-          {clientId.trim() && !clientIdValido && (
-            <p class="ajustes__aviso" role="alert">
-              Ese Client ID no es válido: cópialo tal cual del Dashboard de Spotify.
-            </p>
-          )}
-          <p class="ajustes__pista">
-            Spotify suena en su propia app, también en segundo plano. Necesitas Premium y registrar tu app en el
-            Dashboard de Spotify (pasos en docs/LEGAL.md). El Client ID no es secreto y se queda en este teléfono.
-          </p>
         </li>
         <li>
           <p class="ajustes__titulo">Copia de seguridad</p>
