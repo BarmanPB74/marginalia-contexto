@@ -171,7 +171,7 @@ function PuntoDeVenta() {
     <div class={`vender${vista.lineas.length > 0 ? ' vender--con-pedido' : ''}`}>
       <div class="vender__catalogo">
         {hecho && (
-          <p class="vender__hecho" role="status">
+          <p class="mensaje-hecho" role="status">
             {hecho}
           </p>
         )}

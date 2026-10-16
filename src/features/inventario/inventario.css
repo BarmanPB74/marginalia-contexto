@@ -1,0 +1,398 @@
+/* Inventario, Compras y Gastos: piezas propias de estas pantallas (el resto son componentes de src/ui) */
+
+.inv-suave {
+  margin: 0;
+  font-size: var(--texto-s);
+  color: var(--texto-2);
+}
+
+.inv-error {
+  margin: 0;
+  padding: var(--esp-3) var(--esp-4);
+  font-size: var(--texto-s);
+  font-weight: var(--peso-medio);
+  color: var(--peligro-tinta);
+  background: var(--peligro-suave);
+  border-radius: var(--radio);
+  overflow-wrap: anywhere;
+}
+
+/* Barra superior: buscador que ocupa lo que quede */
+.inv-buscador {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+/* Alertas de existencias */
+.inv-alertas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-3);
+  margin-bottom: var(--esp-5);
+  padding: var(--esp-3) var(--esp-4);
+  color: var(--aviso-tinta);
+  background: var(--aviso-suave);
+  border-radius: var(--radio);
+}
+
+.inv-alertas__texto {
+  display: flex;
+  flex: 1 1 14rem;
+  flex-direction: column;
+  gap: var(--esp-1);
+  min-width: 0;
+  margin: 0;
+  font-size: var(--texto-s);
+}
+
+/* Filtros activos (chips con ×) */
+.inv-activos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+}
+
+.inv-activos__titulo {
+  margin: 0;
+  font-size: var(--texto-s);
+  font-weight: var(--peso-fuerte);
+  color: var(--texto-2);
+}
+
+/* Bloques del panel de filtros */
+.inv-filtro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.inv-filtro__titulo {
+  padding: 0;
+  margin-bottom: var(--esp-2);
+  font-size: var(--texto-m);
+  font-weight: var(--peso-fuerte);
+}
+
+.inv-filtro__lista {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Formularios en hojas */
+.inv-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+.inv-form__grupo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+  min-width: 0;
+}
+
+.inv-form__etiqueta {
+  margin: 0;
+  font-size: var(--texto-s);
+  font-weight: var(--peso-medio);
+}
+
+.inv-form__par {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: var(--esp-4);
+}
+
+.inv-form__dato {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.inv-pie {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--esp-2);
+}
+
+/* Ficha de producto y de factura */
+.inv-ficha {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-5);
+  min-width: 0;
+}
+
+.inv-ficha__estado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+  margin: 0;
+  color: var(--texto-2);
+}
+
+.inv-datos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 11rem), 1fr));
+  gap: var(--esp-3) var(--esp-4);
+  margin: 0;
+}
+
+.inv-datos div {
+  min-width: 0;
+}
+
+.inv-datos dt {
+  font-size: var(--texto-xs);
+  color: var(--texto-2);
+}
+
+.inv-datos dd {
+  margin: 0;
+  font-weight: var(--peso-medio);
+  overflow-wrap: anywhere;
+}
+
+.inv-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+}
+
+.inv-seccion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+  min-width: 0;
+}
+
+.inv-seccion__titulo {
+  margin: 0;
+  font-size: var(--texto-l);
+  font-weight: var(--peso-fuerte);
+  line-height: var(--interlineado-justo);
+}
+
+/* Importar */
+.inv-importar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-6);
+  min-width: 0;
+}
+
+.inv-importar__intro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--esp-4);
+}
+
+.inv-importar__intro p {
+  margin: 0;
+  max-width: 60ch;
+}
+
+.inv-importar__archivo {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  margin: 0;
+  padding: var(--esp-3) var(--esp-4);
+  background: var(--hundido);
+  border-radius: var(--radio);
+  overflow-wrap: anywhere;
+}
+
+.inv-importar__columnas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  gap: var(--esp-4);
+}
+
+.inv-importar__convencion {
+  margin: 0;
+}
+
+.inv-importar__errores summary {
+  min-height: var(--toque);
+  padding: var(--esp-3) 0;
+  font-weight: var(--peso-medio);
+  color: var(--primario-tinta);
+  cursor: pointer;
+}
+
+.inv-importar__errores ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-1);
+  margin: 0;
+  padding-inline-start: var(--esp-5);
+  font-size: var(--texto-s);
+  overflow-wrap: anywhere;
+}
+
+/* Renglones de una factura nueva */
+.inv-renglones {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.inv-renglon {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--esp-3);
+  padding: var(--esp-4);
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra-s);
+}
+
+.inv-renglon__cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-2);
+}
+
+.inv-renglon__producto {
+  min-width: 0;
+  margin: 0;
+  font-weight: var(--peso-fuerte);
+  overflow-wrap: anywhere;
+}
+
+.inv-renglon__importe {
+  margin: 0;
+  text-align: end;
+}
+
+.inv-buscados {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.inv-buscados button {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--esp-2);
+  width: 100%;
+  min-height: var(--toque);
+  padding: var(--esp-2) var(--esp-3);
+  font: inherit;
+  color: var(--texto);
+  text-align: start;
+  background: var(--hundido);
+  border: 0;
+  border-radius: var(--radio-s);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.inv-total {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--esp-2);
+  margin: 0;
+  font-size: var(--texto-l);
+  font-weight: var(--peso-fuerte);
+}
+
+.inv-fecha {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* Lista de gastos y facturas (tarjetas de una línea) */
+.inv-lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.inv-dia {
+  margin: var(--esp-3) 0 0;
+  font-size: var(--texto-s);
+  font-weight: var(--peso-fuerte);
+  color: var(--texto-2);
+}
+
+.inv-fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2) var(--esp-3);
+  min-height: var(--toque);
+  padding: var(--esp-3) var(--esp-4);
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra-s);
+}
+
+.inv-fila--anulada {
+  opacity: 0.75;
+}
+
+.inv-fila--anulada .inv-fila__monto {
+  text-decoration: line-through;
+}
+
+.inv-fila__texto {
+  display: flex;
+  flex: 1 1 12rem;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.inv-fila__titulo {
+  font-weight: var(--peso-medio);
+}
+
+.inv-fila__detalle {
+  font-size: var(--texto-xs);
+  color: var(--texto-2);
+}
+
+.inv-fila__monto {
+  font-weight: var(--peso-fuerte);
+}
+
+.inv-fila__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-1);
+}
+
+.inv-insignias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-1);
+}

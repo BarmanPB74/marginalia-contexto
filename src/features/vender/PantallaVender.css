@@ -27,15 +27,6 @@
   min-width: 0;
 }
 
-.vender__hecho {
-  margin: 0;
-  padding: var(--esp-3) var(--esp-4);
-  font-weight: var(--peso-medio);
-  color: var(--exito-tinta);
-  background: var(--exito-suave);
-  border-radius: var(--radio);
-}
-
 .vender__grupo {
   display: flex;
   flex-direction: column;
@@ -499,15 +490,6 @@
   flex-direction: column;
   gap: var(--esp-4);
   margin-top: var(--esp-4);
-}
-
-.ventas-hoy__hecho {
-  margin: 0;
-  padding: var(--esp-3) var(--esp-4);
-  font-weight: var(--peso-medio);
-  color: var(--exito-tinta);
-  background: var(--exito-suave);
-  border-radius: var(--radio);
 }
 
 .ventas-hoy__anular {

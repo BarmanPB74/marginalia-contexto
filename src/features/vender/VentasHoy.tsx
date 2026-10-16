@@ -80,7 +80,7 @@ export function VentasHoy() {
   return (
     <div class="ventas-hoy">
       {hecho && (
-        <p class="ventas-hoy__hecho" role="status">
+        <p class="mensaje-hecho" role="status">
           {hecho}
         </p>
       )}
