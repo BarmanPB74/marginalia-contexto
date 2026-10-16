@@ -8,7 +8,7 @@ test('la app abre en Inicio y la navegación lleva a cada sección', async ({ pa
   for (const [enlace, titulo] of [
     ['Vender', 'Vender'],
     ['Inventario', 'Inventario'],
-    ['Bitácora', 'Notas'],
+    ['Mesas', 'Mesas'],
     ['Más', 'Más'],
   ] as const) {
     await barra.getByRole('link', { name: enlace }).click();

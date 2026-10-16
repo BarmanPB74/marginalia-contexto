@@ -9,6 +9,7 @@ import type { NombreIcono } from '../ui/Icono';
  */
 export type IdSeccion =
   | 'inicio'
+  | 'mesas'
   | 'vender'
   | 'inventario'
   | 'notas'
@@ -31,14 +32,15 @@ interface Seccion {
 /** Las 5 secciones de la navegación principal, en orden. */
 export const SECCIONES: readonly Seccion[] = [
   { id: 'inicio', etiqueta: 'Inicio', icono: 'inicio' },
+  { id: 'mesas', etiqueta: 'Mesas', icono: 'mesa' },
   { id: 'vender', etiqueta: 'Vender', icono: 'vender' },
   { id: 'inventario', etiqueta: 'Inventario', icono: 'inventario' },
-  { id: 'notas', etiqueta: 'Bitácora', icono: 'notas' },
   { id: 'mas', etiqueta: 'Más', icono: 'mas' },
 ];
 
 /** Lo que se abre desde «Más», agrupado. */
 export const OTRAS: readonly Seccion[] = [
+  { id: 'notas', etiqueta: 'Bitácora', icono: 'notas' },
   { id: 'caja', etiqueta: 'Caja', icono: 'caja' },
   { id: 'compras', etiqueta: 'Compras y facturas', icono: 'factura' },
   { id: 'gastos', etiqueta: 'Gastos', icono: 'gasto' },
@@ -56,6 +58,14 @@ export function rutaActual(hash: string): Ruta {
   const nombre = hash.replace(/^#\//, '').split(/[/?]/)[0];
   if (nombre === 'galeria') return 'galeria';
   return [...SECCIONES, ...OTRAS].find((s) => s.id === nombre)?.id ?? 'inicio';
+}
+
+/** `#/mesas?mesa=<id>` → la mesa abierta (su cuenta); cualquier otra cosa → null. */
+export function mesaEnRuta(hash: string): string | null {
+  const [ruta, consulta = ''] = hash.replace(/^#\//, '').split('?');
+  if (ruta !== 'mesas') return null;
+  const id = new URLSearchParams(consulta).get('mesa');
+  return id !== null && esUlid(id) ? id : null;
 }
 
 /** `#/notas/<id>` → id de la nota abierta; cualquier otra cosa → null. */

@@ -1,0 +1,274 @@
+/*
+ * Mesas: mapa por zonas y cuenta de la mesa. El color dice el estado (libre, con pedido, pidió
+ * la cuenta), siempre con texto: el color nunca es la única señal. Solo tokens (DISENO.md).
+ * La cuenta reutiliza la disposición de Vender (.vender: catálogo + columna o barra con hoja).
+ */
+.mesas__aviso {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-3);
+  margin: var(--esp-4) 0;
+  padding: var(--esp-3) var(--esp-4);
+  color: var(--aviso-tinta);
+  background: var(--aviso-suave);
+  border-radius: var(--radio-l);
+}
+
+.mesas__aviso p {
+  margin: 0;
+}
+
+.mesas__resumen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+  margin: var(--esp-2) 0 var(--esp-4);
+  color: var(--texto-2);
+}
+
+.mesas__resumen strong {
+  color: var(--tinta);
+}
+
+.mesas__zona {
+  margin-bottom: var(--esp-6);
+}
+
+.mesas__titulo-zona {
+  margin: 0 0 var(--esp-3);
+  font-size: var(--texto-l);
+  font-weight: var(--peso-fuerte);
+}
+
+.mesas__rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 9.5rem), 1fr));
+  gap: var(--esp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mesa {
+  --mesa-fondo: var(--superficie);
+  --mesa-tinta: var(--tinta);
+  --mesa-marca: var(--exito);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-1);
+  width: 100%;
+  min-height: 6.5rem;
+  padding: var(--esp-3) var(--esp-4);
+  font: inherit;
+  color: var(--mesa-tinta);
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+  background: var(--mesa-fondo);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-l);
+  /* Franja de estado a la izquierda (dentro de la tarjeta, sigue su curva) */
+  box-shadow: inset 6px 0 0 var(--mesa-marca), var(--sombra);
+  transition: box-shadow var(--dur-corta) var(--curva);
+}
+
+.mesa:active {
+  box-shadow: inset 6px 0 0 var(--mesa-marca), var(--sombra-s);
+}
+
+.mesa:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.mesa--servida,
+.mesa--abierta {
+  --mesa-fondo: var(--primario-suave);
+  --mesa-tinta: var(--primario-tinta);
+  --mesa-marca: var(--primario);
+}
+
+.mesa--cuenta {
+  --mesa-fondo: var(--aviso-suave);
+  --mesa-tinta: var(--aviso-tinta);
+  --mesa-marca: var(--aviso);
+}
+
+.mesa__nombre {
+  font-size: var(--texto-l);
+  font-weight: var(--peso-fuerte);
+  line-height: 1.2;
+}
+
+.mesa__estado {
+  font-size: var(--texto-s);
+  font-weight: var(--peso-medio);
+}
+
+.mesa__detalle {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--esp-1) var(--esp-2);
+  margin-top: auto;
+  font-size: var(--texto-s);
+}
+
+.mesas__formulario {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+}
+
+.mesas__formulario p {
+  margin: 0;
+  color: var(--texto-2);
+}
+
+.mesas__rango {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--esp-3);
+}
+
+.mesas__pie {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+}
+
+.mesas__error {
+  margin: var(--esp-2) 0 0;
+  font-weight: var(--peso-medio);
+  color: var(--peligro-tinta);
+}
+
+/* --- Cuenta de la mesa --- */
+/* En Vender el buscador va en una fila (flex 14rem); aquí va solo en la columna */
+.cuenta-mesa .vender__catalogo .buscador {
+  flex: none;
+}
+
+.cuenta__cabeza {
+  margin-bottom: calc(-1 * var(--esp-2));
+}
+
+.cuenta__estado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2) var(--esp-3);
+  margin: 0 0 var(--esp-2);
+  color: var(--texto-2);
+}
+
+.cuenta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+}
+
+.cuenta__ronda {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+  padding: var(--esp-3);
+  background: var(--primario-suave);
+  border-radius: var(--radio-l);
+}
+
+.cuenta__subtitulo {
+  margin: 0;
+  font-size: var(--texto-m);
+  font-weight: var(--peso-fuerte);
+}
+
+.cuenta__lineas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cuenta__linea {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-height: var(--toque-min);
+}
+
+.cuenta__nombre {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.cuenta__subtotal {
+  font-weight: var(--peso-medio);
+}
+
+.cuenta__paso {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.cuenta__paso button,
+.cuenta__quitar {
+  display: grid;
+  place-items: center;
+  width: var(--toque);
+  height: var(--toque);
+  padding: 0;
+  color: var(--tinta);
+  cursor: pointer;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-pildora);
+}
+
+.cuenta__quitar {
+  color: var(--peligro-tinta);
+  background: transparent;
+  border-color: transparent;
+}
+
+.cuenta__vacia {
+  margin: 0;
+  color: var(--texto-2);
+}
+
+.cuenta__descuento {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+}
+
+.cuenta__totales {
+  margin: 0;
+}
+
+.cuenta__fila {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--esp-2);
+}
+
+.cuenta__fila dd {
+  margin: 0;
+}
+
+.cuenta__fila--total {
+  font-size: var(--texto-l);
+  font-weight: var(--peso-fuerte);
+}
+
+.cuenta__acciones {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+}

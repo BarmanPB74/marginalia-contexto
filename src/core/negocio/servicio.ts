@@ -474,45 +474,113 @@ export class Negocio {
     recibido?: Centavos | null;
   }): Promise<Evento> {
     if (v.descuento && v.descuento.valor > 0) this.exigir('venta.descuento');
+    return this.ejecutar((estado) => armarVenta(estado, v));
+  }
+
+  /**
+   * Cobra la cuenta de una mesa: una venta con lo pedido (precios vigentes) que descuenta el
+   * inventario y deja la mesa libre. Mismo cobro que `vender` (descuento, pago mixto, cambio).
+   */
+  async cobrarCuenta(v: {
+    cuentaId: string;
+    descuento?: Descuento | null;
+    pagos: readonly PagoPedido[];
+    recibido?: Centavos | null;
+  }): Promise<Evento> {
+    if (v.descuento && v.descuento.valor > 0) this.exigir('venta.descuento');
     return this.ejecutar((estado) => {
-      const caja = estado.caja;
-      if (!caja) throw new ReglaRota('No hay caja abierta. Abre la caja antes de vender.');
-      if (v.lineas.length === 0) throw new ReglaRota('La venta está vacía.');
-      const cantidades = new Map<string, number>();
-      for (const l of v.lineas) cantidades.set(l.productoId, (cantidades.get(l.productoId) ?? 0) + l.cantidad);
-      const lineas: LineaVenta[] = [...cantidades].map(([productoId, cantidad]) => {
-        const p = estado.productos[productoId];
-        if (!p || !p.activo) throw new ReglaRota('Un producto de la venta ya no está disponible.');
-        if (cantidad <= 0) throw new ReglaRota(`La cantidad de «${p.nombre}» debe ser mayor que cero.`);
-        const q = milesimas(cantidad);
-        return { productoId, nombre: p.nombre, cantidad: q, precioUnit: p.precio, subtotal: importe(q, p.precio) };
-      });
-      const bruto = centavos(lineas.reduce((s, l) => s + l.subtotal, 0));
-      const d = v.descuento ? aplicarDescuento(bruto, v.descuento) : null;
-      const total = d ? d.total : bruto;
-      const pagos = total === 0 ? [] : repartirPagos(v.pagos, total);
-      const efectivo = pagos.find((p) => p.forma === 'efectivo')?.monto;
-      const recibido = v.recibido ?? undefined;
-      if (recibido !== undefined && efectivo !== undefined && recibido < efectivo) {
-        throw new ReglaRota(`Recibiste ${pesos(recibido)}, menos que el efectivo a pagar (${pesos(efectivo)}).`);
+      const c = estado.cuentas[v.cuentaId];
+      if (!c) throw new ReglaRota('Esa cuenta ya se cobró o no existe.');
+      if (c.lineas.length === 0) throw new ReglaRota('La cuenta está vacía: no hay nada que cobrar. Libera la mesa.');
+      for (const l of c.lineas) {
+        const p = estado.productos[l.productoId];
+        if (!p?.activo) throw new ReglaRota(`«${p?.nombre ?? 'Un producto'}» se archivó: quítalo de la cuenta (con su motivo) y cobra el resto.`);
       }
-      return {
-        tipo: 'venta.registrada',
-        datos: sinIndefinidos({
-          cajaId: caja.id,
-          lineas,
-          descuento: d && v.descuento && d.monto > 0 ? { tipo: v.descuento.tipo, valor: v.descuento.valor, monto: d.monto } : undefined,
-          total,
-          pagos,
-          recibido,
-          cambio: recibido !== undefined && efectivo !== undefined ? centavos(recibido - efectivo) : undefined,
-        }),
-      };
+      return armarVenta(estado, { ...v, lineas: c.lineas }, c.id);
     });
   }
 
   anularVenta(ventaId: string, motivo: string): Promise<Evento> {
     return this.ejecutar({ tipo: 'venta.anulada', datos: { ventaId, motivo: motivo.trim() } });
+  }
+
+  // --- Mesas y cuentas ----------------------------------------------------------
+
+  crearMesa(m: { nombre: string; zona: string }): Promise<Evento> {
+    return this.ejecutar({ tipo: 'mesa.creada', datos: { nombre: m.nombre.trim(), zona: m.zona.trim() || 'Salón' } });
+  }
+
+  /** Crea varias mesas numeradas de una vez («Mesa 1» … «Mesa 10»), saltando los nombres que ya existen. */
+  async crearMesas(m: { prefijo: string; desde: number; hasta: number; zona: string }): Promise<Evento[]> {
+    const prefijo = m.prefijo.trim() || 'Mesa';
+    if (!Number.isSafeInteger(m.desde) || !Number.isSafeInteger(m.hasta) || m.desde < 1 || m.hasta < m.desde) {
+      throw new ReglaRota('Escribe del número menor al mayor (por ejemplo, de 1 a 10).');
+    }
+    if (m.hasta - m.desde >= 50) throw new ReglaRota('Crea hasta 50 mesas a la vez.');
+    return this.ejecutarVarios((estado) => {
+      const usados = new Set(Object.values(estado.mesas).filter((x) => x.activa).map((x) => x.nombre.toLocaleLowerCase('es')));
+      const cmds: Comando[] = [];
+      for (let n = m.desde; n <= m.hasta; n++) {
+        const nombre = `${prefijo} ${n}`;
+        if (!usados.has(nombre.toLocaleLowerCase('es'))) cmds.push({ tipo: 'mesa.creada', datos: { nombre, zona: m.zona.trim() || 'Salón' } });
+      }
+      if (cmds.length === 0) throw new ReglaRota('Esas mesas ya existen.');
+      return cmds;
+    });
+  }
+
+  retirarMesa(mesaId: string): Promise<Evento> {
+    return this.ejecutar({ tipo: 'mesa.retirada', datos: { mesaId } });
+  }
+
+  abrirCuenta(mesaId: string, personas?: number | null): Promise<Evento> {
+    return this.ejecutar({ tipo: 'cuenta.abierta', datos: sinIndefinidos({ mesaId, personas: personas ?? undefined }) });
+  }
+
+  /**
+   * Pide una ronda en la mesa. Si la mesa está libre, abre la cuenta y pide en UNA sola
+   * escritura (todo o nada). Líneas repetidas se suman.
+   */
+  async pedirEnMesa(mesaId: string, lineas: readonly LineaPedida[], opciones: { nota?: string | null; personas?: number | null } = {}): Promise<Evento[]> {
+    const cantidades = new Map<string, number>();
+    for (const l of lineas) cantidades.set(l.productoId, (cantidades.get(l.productoId) ?? 0) + l.cantidad);
+    const ronda = [...cantidades].map(([productoId, cantidad]) => {
+      if (cantidad <= 0) throw new ReglaRota('Cada producto de la ronda lleva una cantidad mayor que cero.');
+      return { productoId, cantidad: milesimas(cantidad) };
+    });
+    if (ronda.length === 0) throw new ReglaRota('La ronda está vacía: toca los productos que pidieron.');
+    const nota = opcional(opciones.nota);
+    return this.ejecutarVarios((estado, nuevoId) => {
+      const abierta = Object.values(estado.cuentas).find((c) => c.mesaId === mesaId);
+      const cmds: Comando[] = [];
+      let cuentaId = abierta?.id;
+      if (!cuentaId) {
+        cuentaId = nuevoId(0);
+        cmds.push({ tipo: 'cuenta.abierta', datos: sinIndefinidos({ mesaId, personas: opciones.personas ?? undefined }) });
+      }
+      cmds.push({ tipo: 'cuenta.pedido', datos: sinIndefinidos({ cuentaId, lineas: ronda, nota }) });
+      return cmds;
+    });
+  }
+
+  quitarDeCuenta(q: { cuentaId: string; productoId: string; cantidad: Milesimas; motivo: string }): Promise<Evento> {
+    return this.ejecutar({ tipo: 'cuenta.quitado', datos: { ...q, motivo: q.motivo.trim() } });
+  }
+
+  marcarPrecuenta(cuentaId: string, pedida: boolean): Promise<Evento> {
+    return this.ejecutar({ tipo: 'cuenta.precuenta', datos: { cuentaId, pedida } });
+  }
+
+  trasladarCuenta(cuentaId: string, mesaId: string): Promise<Evento> {
+    return this.ejecutar({ tipo: 'cuenta.trasladada', datos: { cuentaId, mesaId } });
+  }
+
+  liberarMesa(cuentaId: string): Promise<Evento> {
+    return this.ejecutar({ tipo: 'cuenta.liberada', datos: { cuentaId } });
+  }
+
+  anularCuenta(cuentaId: string, motivo: string): Promise<Evento> {
+    return this.ejecutar({ tipo: 'cuenta.anulada', datos: { cuentaId, motivo: motivo.trim() } });
   }
 
   // --- Productos e inventario ---------------------------------------------------
@@ -772,4 +840,49 @@ function repartirPagos(pagos: readonly PagoPedido[], total: Centavos): PagoVenta
     if (monto <= 0) throw new ReglaRota('Cada forma de pago debe tener un valor mayor que cero.');
     return { forma: p.forma, monto: centavos(monto) };
   });
+}
+
+/**
+ * Arma la venta con los precios vigentes: líneas, descuento, total, pagos y cambio. La regla
+ * (`estado.validar`) vuelve a comprobarlo todo al escribir.
+ */
+function armarVenta(
+  estado: EstadoNegocio,
+  v: { lineas: readonly LineaPedida[]; descuento?: Descuento | null; pagos: readonly PagoPedido[]; recibido?: Centavos | null },
+  cuentaId?: string,
+): Comando {
+  const caja = estado.caja;
+  if (!caja) throw new ReglaRota('No hay caja abierta. Abre la caja antes de vender.');
+  if (v.lineas.length === 0) throw new ReglaRota('La venta está vacía.');
+  const cantidades = new Map<string, number>();
+  for (const l of v.lineas) cantidades.set(l.productoId, (cantidades.get(l.productoId) ?? 0) + l.cantidad);
+  const lineas: LineaVenta[] = [...cantidades].map(([productoId, cantidad]) => {
+    const p = estado.productos[productoId];
+    if (!p || !p.activo) throw new ReglaRota('Un producto de la venta ya no está disponible.');
+    if (cantidad <= 0) throw new ReglaRota(`La cantidad de «${p.nombre}» debe ser mayor que cero.`);
+    const q = milesimas(cantidad);
+    return { productoId, nombre: p.nombre, cantidad: q, precioUnit: p.precio, subtotal: importe(q, p.precio) };
+  });
+  const bruto = centavos(lineas.reduce((s, l) => s + l.subtotal, 0));
+  const d = v.descuento ? aplicarDescuento(bruto, v.descuento) : null;
+  const total = d ? d.total : bruto;
+  const pagos = total === 0 ? [] : repartirPagos(v.pagos, total);
+  const efectivo = pagos.find((p) => p.forma === 'efectivo')?.monto;
+  const recibido = v.recibido ?? undefined;
+  if (recibido !== undefined && efectivo !== undefined && recibido < efectivo) {
+    throw new ReglaRota(`Recibiste ${pesos(recibido)}, menos que el efectivo a pagar (${pesos(efectivo)}).`);
+  }
+  return {
+    tipo: 'venta.registrada',
+    datos: sinIndefinidos({
+      cajaId: caja.id,
+      lineas,
+      descuento: d && v.descuento && d.monto > 0 ? { tipo: v.descuento.tipo, valor: v.descuento.valor, monto: d.monto } : undefined,
+      total,
+      pagos,
+      recibido,
+      cambio: recibido !== undefined && efectivo !== undefined ? centavos(recibido - efectivo) : undefined,
+      cuentaId,
+    }),
+  };
 }

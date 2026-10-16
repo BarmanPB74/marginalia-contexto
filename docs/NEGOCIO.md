@@ -17,6 +17,7 @@
 | **Dueño** | Todo: precios y costos, usuarios, anular ventas, contabilidad, pagos de facturas | — |
 | **Cajero** | Abrir y cerrar caja, vender, entradas/retiros de caja, gastos pagados desde la caja, ver inventario (sin costos) | Ver costos y contabilidad, anular, cambiar precios, usuarios |
 | **Bodega** | Inventario: conteos, mermas, importar, registrar y aplicar compras | Vender, caja, contabilidad, pagos |
+| **Mesero** | Abrir cuentas en las mesas, pedir rondas, marcar «pidió la cuenta», cambiar de mesa | Cobrar, caja, quitar lo pedido, ver inventario, contabilidad |
 
 - Cada persona entra con **su PIN** (4 a 8 dígitos). Tras 5 errores la app espera cada vez más.
 - **Todo queda firmado**: cada movimiento guarda quién, cuándo y qué. Nada se borra: se corrige con otro
@@ -51,7 +52,22 @@
 - **Gasto pagado desde la caja** (hielo, domicilio, aseo): Gastos → nuevo → «pagado desde la caja».
 - **Pago a proveedor desde la caja**: Compras → factura → Pagar → «desde la caja».
 
-### 4.4 Cerrar caja
+### 4.4 Mesas (pedidos por mesa)
+1. **Una vez (dueño):** Mesas → «Crear mesas»: varias numeradas (Mesa 1 a Mesa 10) o una con nombre
+   (Barra 1), cada una en su **zona** (Salón, Terraza, Barra). El mapa las agrupa por zona.
+2. **Llega gente:** Mesas → tocar la mesa → tocar los productos que piden → (nota opcional para la
+   barra o la cocina) → «Abrir cuenta y enviar». Cada nuevo pedido es otra **ronda**: se suma a la cuenta.
+3. **El mapa dice el estado** con color y texto: *Libre* (verde), *Con pedido* (índigo, con el total y
+   hace cuánto fue el último pedido) y *Pidió la cuenta* (ámbar).
+4. **Pedir no descuenta inventario.** Lo descuenta el **cobro**, igual que en Vender (efectivo con
+   cambio, tarjeta, transferencia, cortesía, mixto; descuento solo el dueño). Al cobrar la mesa queda libre.
+5. **Errores:** quitar algo de la cuenta lo hace caja o el dueño, **con motivo** (queda firmado). Una
+   cuenta vacía se libera; una con pedidos que no se cobra la **anula el dueño** con motivo (si se
+   consumió, mejor cobrarla como *cortesía*: sale del inventario y queda en las ventas).
+6. «Cambiar de mesa» mueve la cuenta a una mesa libre.
+7. **No se cierra la caja con mesas abiertas:** todo lo servido se cobra (o se anula) en su turno.
+
+### 4.5 Cerrar caja
 1. Caja → Cerrar → la app muestra el resumen: ventas por forma de pago, entradas, retiros, gastos y
    pagos desde la caja, y el **efectivo esperado** = base + ventas en efectivo + entradas − retiros −
    gastos y pagos desde la caja.

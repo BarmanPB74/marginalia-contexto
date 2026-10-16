@@ -10,7 +10,10 @@
  *   la caja y ve el inventario SIN costos.
  * - Bodega: inventario (ajustes, conteos, facturas de compra, importar), sin ventas ni
  *   contabilidad.
- * - Sólo dueño: anular ventas, precios y costos, usuarios, contabilidad y pagos.
+ * - Mesero: abre cuentas en las mesas y pide rondas (no cobra, no quita lo pedido, no ve
+ *   caja ni inventario). Quitar algo de una cuenta es de caja (con motivo): así lo servido
+ *   no desaparece sin que nadie responda.
+ * - Sólo dueño: anular ventas y cuentas, mesas, precios y costos, usuarios, contabilidad y pagos.
  */
 import type { Rol } from './modelo';
 import type { Evento } from './eventos';
@@ -46,11 +49,17 @@ export const ACCIONES = [
   'usuario.cambiarPinPropio',
   'usuario.cambiarPinOtro',
   'diario.verificar',
+  'mesa.administrar',
+  'cuenta.atender',
+  'cuenta.quitar',
+  'cuenta.anular',
 ] as const;
 
 export type Accion = (typeof ACCIONES)[number];
 
-const TODOS: readonly Rol[] = ['dueno', 'cajero', 'bodega'];
+const TODOS: readonly Rol[] = ['dueno', 'cajero', 'bodega', 'mesero'];
+const PERSONAL: readonly Rol[] = ['dueno', 'cajero', 'bodega'];
+const ATIENDE: readonly Rol[] = ['dueno', 'cajero', 'mesero'];
 const DUENO: readonly Rol[] = ['dueno'];
 const SALA: readonly Rol[] = ['dueno', 'cajero'];
 const BODEGA: readonly Rol[] = ['dueno', 'bodega'];
@@ -64,7 +73,7 @@ export const PERMISOS: Readonly<Record<Accion, readonly Rol[]>> = {
   'venta.anular': DUENO,
   // NEGOCIO §4.2: los descuentos los decide el dueño (el cajero vende al precio de la carta).
   'venta.descuento': DUENO,
-  'inventario.ver': TODOS,
+  'inventario.ver': PERSONAL,
   'inventario.verCostos': BODEGA,
   'inventario.ajustar': BODEGA,
   'inventario.contar': BODEGA,
@@ -92,6 +101,10 @@ export const PERMISOS: Readonly<Record<Accion, readonly Rol[]>> = {
   'usuario.cambiarPinPropio': TODOS,
   'usuario.cambiarPinOtro': DUENO,
   'diario.verificar': DUENO,
+  'mesa.administrar': DUENO,
+  'cuenta.atender': ATIENDE,
+  'cuenta.quitar': SALA,
+  'cuenta.anular': DUENO,
 };
 
 /** Cómo se dice cada acción en un mensaje («Tu cargo no permite …»). */
@@ -126,6 +139,10 @@ export const NOMBRE_ACCION: Readonly<Record<Accion, string>> = {
   'usuario.cambiarPinPropio': 'cambiar tu PIN',
   'usuario.cambiarPinOtro': 'cambiar el PIN de otra persona',
   'diario.verificar': 'verificar el diario',
+  'mesa.administrar': 'crear o retirar mesas',
+  'cuenta.atender': 'atender mesas',
+  'cuenta.quitar': 'quitar productos de una cuenta',
+  'cuenta.anular': 'anular cuentas',
 };
 
 /** ¿Este cargo puede hacer esta acción? Un cargo o acción desconocidos: no. */
@@ -181,5 +198,18 @@ export function accionDe(evento: Evento): Accion {
       return evento.datos.deCaja ? 'gasto.registrarDeCaja' : 'gasto.registrar';
     case 'gasto.anulado':
       return 'gasto.anular';
+    case 'mesa.creada':
+    case 'mesa.retirada':
+      return 'mesa.administrar';
+    case 'cuenta.abierta':
+    case 'cuenta.pedido':
+    case 'cuenta.precuenta':
+    case 'cuenta.trasladada':
+    case 'cuenta.liberada':
+      return 'cuenta.atender';
+    case 'cuenta.quitado':
+      return 'cuenta.quitar';
+    case 'cuenta.anulada':
+      return 'cuenta.anular';
   }
 }

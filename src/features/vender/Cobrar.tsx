@@ -15,6 +15,9 @@ interface Props {
   alCerrar: () => void;
   /** La venta quedó registrada: total y cambio guardados por el núcleo */
   alVender: (resultado: { total: Centavos; cambio: Centavos | null }) => void;
+  /** Cobro de la cuenta de una mesa: las líneas las pone el núcleo (lo pedido en la cuenta) */
+  cuentaId?: string | undefined;
+  titulo?: string | undefined;
 }
 
 interface Pago {
@@ -29,7 +32,7 @@ const BILLETES = [10_000, 20_000, 50_000, 100_000].map((p) => centavos(p * 100))
  * Cobrar: forma de pago con botones grandes, efectivo con «recibido» y cambio en grande, y pago
  * mixto (añadir otra forma: la última paga el resto). Confirmar → `negocio.vender`.
  */
-export function Cobrar({ pedido, total, alCerrar, alVender }: Props) {
+export function Cobrar({ pedido, total, alCerrar, alVender, cuentaId, titulo = 'Cobrar' }: Props) {
   const { negocio } = useNegocio();
   const [pagos, setPagos] = useState<Pago[]>([{ forma: 'efectivo', monto: '' }]);
   const [recibido, setRecibido] = useState('');
@@ -67,12 +70,14 @@ export function Cobrar({ pedido, total, alCerrar, alVender }: Props) {
     }
     let guardado: { total: Centavos; cambio: Centavos | null } | null = null;
     const ok = await correr(async () => {
-      const ev = await negocio.vender({
-        lineas: pedido.lineas.map((l) => ({ productoId: l.productoId, cantidad: l.cantidad })),
-        descuento,
-        pagos: datos.pagos,
-        recibido: datos.recibido,
-      });
+      const ev = cuentaId
+        ? await negocio.cobrarCuenta({ cuentaId, descuento, pagos: datos.pagos, recibido: datos.recibido })
+        : await negocio.vender({
+            lineas: pedido.lineas.map((l) => ({ productoId: l.productoId, cantidad: l.cantidad })),
+            descuento,
+            pagos: datos.pagos,
+            recibido: datos.recibido,
+          });
       if (ev.tipo === 'venta.registrada') guardado = { total: ev.datos.total, cambio: ev.datos.cambio ?? null };
     });
     if (ok) alVender(guardado ?? { total, cambio: null });
@@ -92,7 +97,7 @@ export function Cobrar({ pedido, total, alCerrar, alVender }: Props) {
   );
 
   return (
-    <Hoja titulo="Cobrar" alCerrar={alCerrar} pie={pie}>
+    <Hoja titulo={titulo} alCerrar={alCerrar} pie={pie}>
       <div class="cobrar">
         <p class="cobrar__total">
           <span class="cobrar__etiqueta">Total a cobrar</span>

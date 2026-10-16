@@ -17,6 +17,10 @@
  *   venta de una caja cerrada cambiaría un cuadre ya firmado). La historia completa de
  *   ventas se lee del diario (`contabilidad.ts`), no del estado: así el estado y la
  *   instantánea no crecen sin fin.
+ * - Mesas (como Bar_box): una mesa tiene como máximo UNA cuenta abierta; las rondas no tocan
+ *   el inventario: lo descuenta la venta que cobra la cuenta (con los precios vigentes al
+ *   cobrar). `cuentas` guarda sólo las abiertas; la historia está en el diario. La caja no
+ *   se cierra con cuentas abiertas: lo servido se cobra (o se anula) en su turno.
  * - Cuadre: esperado = base + ventas en efectivo + ingresos − retiros − gastos y pagos
  *   pagados de caja. Sólo el efectivo; lo demás no está en el cajón.
  */
@@ -31,7 +35,7 @@ import {
   type Centavos,
   type Milesimas,
 } from './numeros';
-import { FORMAS_PAGO, type FormaEgreso, type FormaPago, type Producto, type Usuario } from './modelo';
+import { FORMAS_PAGO, LIMITES, type FormaEgreso, type FormaPago, type Mesa, type Producto, type Usuario } from './modelo';
 import {
   ReglaRota,
   type DatosProducto,
@@ -39,12 +43,14 @@ import {
   type Evento,
   type EventoDe,
   type LineaCompra,
+  type LineaCuenta,
   type LineaVenta,
   type PagoVenta,
 } from './eventos';
 
 export const HASH_INICIAL = '0'.repeat(64);
-export const VERSION_ESTADO = 1;
+/** 2: mesas y cuentas. Una instantánea de otra versión se ignora y se repite el diario. */
+export const VERSION_ESTADO = 2;
 
 export type PorForma = Readonly<Record<FormaPago, Centavos>>;
 
@@ -129,6 +135,22 @@ export interface Gasto {
   readonly anulado: boolean;
 }
 
+/** Cuenta abierta de una mesa. */
+export interface Cuenta {
+  readonly id: string;
+  readonly mesaId: string;
+  readonly abiertaEn: string;
+  readonly abiertaPor: string;
+  readonly personas: number | null;
+  /** Lo pedido menos lo quitado, sumado por producto, en el orden en que se pidió. */
+  readonly lineas: readonly LineaCuenta[];
+  readonly rondas: number;
+  /** Hora del último pedido (para ver qué mesa lleva rato esperando). */
+  readonly ultimoPedidoEn: string | null;
+  /** La mesa pidió la cuenta. */
+  readonly precuenta: boolean;
+}
+
 export interface EstadoNegocio {
   readonly version: number;
   readonly usuarios: Readonly<Record<string, Usuario>>;
@@ -141,6 +163,9 @@ export interface EstadoNegocio {
   readonly ventas: Readonly<Record<string, Venta>>;
   readonly compras: Readonly<Record<string, Compra>>;
   readonly gastos: Readonly<Record<string, Gasto>>;
+  readonly mesas: Readonly<Record<string, Mesa>>;
+  /** Cuentas abiertas (las cobradas o anuladas salen de aquí; quedan en el diario). */
+  readonly cuentas: Readonly<Record<string, Cuenta>>;
   /** Cuántos eventos se han aplicado. */
   readonly eventos: number;
   readonly ultimoId: string | null;
@@ -158,6 +183,8 @@ export function estadoVacio(): EstadoNegocio {
     ventas: {},
     compras: {},
     gastos: {},
+    mesas: {},
+    cuentas: {},
     eventos: 0,
     ultimoId: null,
     ultimoHash: HASH_INICIAL,
@@ -182,6 +209,16 @@ export function vendidoCaja(c: CifrasCaja): Centavos {
 
 export function hayUsuarios(estado: EstadoNegocio): boolean {
   return Object.keys(estado.usuarios).length > 0;
+}
+
+/** Cuenta abierta de la mesa, si la tiene. */
+export function cuentaDeMesa(estado: EstadoNegocio, mesaId: string): Cuenta | null {
+  return Object.values(estado.cuentas).find((c) => c.mesaId === mesaId) ?? null;
+}
+
+/** Cantidad pedida de un producto en una cuenta. */
+export function pedidoEnCuenta(c: Cuenta, productoId: string): Milesimas {
+  return c.lineas.find((l) => l.productoId === productoId)?.cantidad ?? milesimas(0);
 }
 
 export function stockDe(estado: EstadoNegocio, productoId: string): Milesimas {
@@ -232,11 +269,33 @@ function sinRepetidos(ids: readonly string[], que: string) {
   if (new Set(ids).size !== ids.length) falla(`Hay un producto repetido en ${que}: súmalo en una sola línea.`);
 }
 
+function mesa(estado: EstadoNegocio, id: string): Mesa {
+  const m = estado.mesas[id] ?? falla('Esa mesa no existe.');
+  if (!m.activa) falla(`«${m.nombre}» ya no está en el mapa.`);
+  return m;
+}
+
+function cuenta(estado: EstadoNegocio, id: string): Cuenta {
+  return estado.cuentas[id] ?? falla('Esa cuenta ya se cerró (cobrada o anulada).');
+}
+
+function mesaLibre(estado: EstadoNegocio, mesaId: string) {
+  const m = mesa(estado, mesaId);
+  if (cuentaDeMesa(estado, mesaId)) falla(`«${m.nombre}» ya tiene una cuenta abierta.`);
+}
+
 function validarVenta(estado: EstadoNegocio, e: EventoDe<'venta.registrada'>) {
   const d = e.datos;
   const caja = cajaAbierta(estado, 'vender');
   if (d.cajaId !== caja.id) falla('La venta no es de la caja abierta. Vuelve a armarla.');
   sinRepetidos(d.lineas.map((l) => l.productoId), 'la venta');
+  if (d.cuentaId !== undefined) {
+    const cuenta = estado.cuentas[d.cuentaId] ?? falla('Esa cuenta ya se cobró o no existe.');
+    const iguales =
+      cuenta.lineas.length === d.lineas.length &&
+      d.lineas.every((l) => pedidoEnCuenta(cuenta, l.productoId) === l.cantidad);
+    if (!iguales) falla('La cuenta de la mesa cambió mientras cobrabas. Vuelve a abrir el cobro.');
+  }
   let bruto = 0;
   for (const l of d.lineas) {
     const p = producto(estado, l.productoId);
@@ -291,11 +350,15 @@ export function validar(estado: EstadoNegocio, evento: Evento): void {
     if (!autor) falla('Usuario desconocido. Inicia sesión otra vez.');
     if (!autor.activo) falla('Tu usuario está desactivado.');
   }
-  const creaAlgo = new Set(['usuario.creado', 'producto.creado', 'caja.abierta', 'venta.registrada', 'compra.registrada', 'gasto.registrado']);
+  const creaAlgo = new Set([
+    'usuario.creado', 'producto.creado', 'caja.abierta', 'venta.registrada', 'compra.registrada', 'gasto.registrado',
+    'mesa.creada', 'cuenta.abierta',
+  ]);
   if (creaAlgo.has(evento.tipo)) {
     const usado =
       evento.id in estado.usuarios || evento.id in estado.productos || evento.id in estado.ventas ||
-      evento.id in estado.compras || evento.id in estado.gastos || estado.caja?.id === evento.id;
+      evento.id in estado.compras || evento.id in estado.gastos || evento.id in estado.mesas ||
+      evento.id in estado.cuentas || estado.caja?.id === evento.id;
     if (usado) falla('Ese registro ya existe (identificador repetido).');
   }
 
@@ -360,6 +423,12 @@ export function validar(estado: EstadoNegocio, evento: Evento): void {
       if (!d.confirmado) falla('Revisa el resumen del cierre y confírmalo para cerrar la caja.');
       if (d.esperado !== esperadoCaja(caja)) falla('La caja cambió desde que viste el resumen. Vuelve a mirarlo y a contar.');
       if (d.diferencia !== d.contado - d.esperado) falla('La diferencia no cuadra con lo contado.');
+      const abiertas = Object.keys(estado.cuentas).length;
+      if (abiertas > 0) {
+        falla(abiertas === 1
+          ? 'Hay una mesa con la cuenta abierta. Cóbrala (o anúlala) antes de cerrar la caja.'
+          : `Hay ${abiertas} mesas con la cuenta abierta. Cóbralas (o anúlalas) antes de cerrar la caja.`);
+      }
       if (caja.actividad === 0 && !d.nota) falla('Esta caja no tuvo movimientos. Escribe el motivo del cierre (por ejemplo: «la abrí por error»).');
       return;
     }
@@ -416,6 +485,64 @@ export function validar(estado: EstadoNegocio, evento: Evento): void {
       if (g.deCaja && g.cajaId !== estado.caja?.id) falla('Ese gasto salió de una caja ya cerrada: no se puede anular.');
       return;
     }
+    case 'mesa.creada': {
+      const d = evento.datos;
+      const activas = Object.values(estado.mesas).filter((m) => m.activa);
+      if (activas.length >= LIMITES.mesas) falla(`El mapa admite hasta ${LIMITES.mesas} mesas.`);
+      if (activas.some((m) => norma(m.nombre) === norma(d.nombre))) falla(`Ya hay una mesa llamada «${d.nombre}».`);
+      return;
+    }
+    case 'mesa.retirada': {
+      const m = mesa(estado, evento.datos.mesaId);
+      if (cuentaDeMesa(estado, m.id)) falla(`«${m.nombre}» tiene la cuenta abierta: cóbrala o anúlala antes de retirarla.`);
+      return;
+    }
+    case 'cuenta.abierta':
+      cajaAbierta(estado, 'atender mesas');
+      mesaLibre(estado, evento.datos.mesaId);
+      return;
+    case 'cuenta.pedido': {
+      const d = evento.datos;
+      const c = cuenta(estado, d.cuentaId);
+      sinRepetidos(d.lineas.map((l) => l.productoId), 'la ronda');
+      for (const l of d.lineas) {
+        const p = producto(estado, l.productoId);
+        if (p.unidad === 'unidad' && l.cantidad % 1000 !== 0) falla(`«${p.nombre}» se pide por unidades enteras.`);
+      }
+      const productos = new Set([...c.lineas.map((l) => l.productoId), ...d.lineas.map((l) => l.productoId)]);
+      if (productos.size > LIMITES.lineas) falla(`Una cuenta admite hasta ${LIMITES.lineas} productos distintos.`);
+      return;
+    }
+    case 'cuenta.quitado': {
+      const d = evento.datos;
+      const c = cuenta(estado, d.cuentaId);
+      const hay = pedidoEnCuenta(c, d.productoId);
+      const nombre = estado.productos[d.productoId]?.nombre ?? 'ese producto';
+      if (hay === 0) falla(`La cuenta no tiene «${nombre}».`);
+      if (d.cantidad > hay) falla(`La cuenta sólo tiene ${mostrarCantidad(hay)} de «${nombre}».`);
+      return;
+    }
+    case 'cuenta.precuenta': {
+      const c = cuenta(estado, evento.datos.cuentaId);
+      if (c.precuenta === evento.datos.pedida) falla(evento.datos.pedida ? 'Esa mesa ya pidió la cuenta.' : 'Esa mesa no había pedido la cuenta.');
+      return;
+    }
+    case 'cuenta.trasladada': {
+      const c = cuenta(estado, evento.datos.cuentaId);
+      if (c.mesaId === evento.datos.mesaId) falla('La cuenta ya está en esa mesa.');
+      mesaLibre(estado, evento.datos.mesaId);
+      return;
+    }
+    case 'cuenta.liberada': {
+      const c = cuenta(estado, evento.datos.cuentaId);
+      if (c.lineas.length > 0) falla('La cuenta tiene pedidos: cóbrala, o quita lo pedido con su motivo.');
+      return;
+    }
+    case 'cuenta.anulada': {
+      const c = cuenta(estado, evento.datos.cuentaId);
+      if (c.lineas.length === 0) falla('La cuenta está vacía: libera la mesa (no hace falta anularla).');
+      return;
+    }
   }
 }
 
@@ -450,6 +577,26 @@ function datosAProducto(id: string, d: DatosProducto, activo: boolean): Producto
     activo,
   };
   return d.codigo ? { ...p, codigo: d.codigo } : p;
+}
+
+/** Suma (o resta) cantidades a las líneas de una cuenta; las que llegan a cero salen. */
+function conLineas(lineas: readonly LineaCuenta[], cambios: readonly LineaCuenta[], signo: 1 | -1): LineaCuenta[] {
+  const r = lineas.map((l) => ({ ...l }));
+  for (const c of cambios) {
+    const l = r.find((x) => x.productoId === c.productoId);
+    if (l) l.cantidad = milesimas(l.cantidad + signo * c.cantidad);
+    else if (signo === 1) r.push({ ...c });
+  }
+  return r.filter((l) => l.cantidad > 0);
+}
+
+function sinCuenta(estado: EstadoNegocio, id: string): EstadoNegocio['cuentas'] {
+  return Object.fromEntries(Object.entries(estado.cuentas).filter(([k]) => k !== id));
+}
+
+function conCuenta(estado: EstadoNegocio, id: string, cambio: (c: Cuenta) => Partial<Cuenta>): EstadoNegocio['cuentas'] {
+  const c = estado.cuentas[id];
+  return c ? { ...estado.cuentas, [id]: { ...c, ...cambio(c) } } : estado.cuentas;
 }
 
 function siguiente(estado: EstadoNegocio, evento: Evento): EstadoNegocio {
@@ -549,6 +696,7 @@ function siguiente(estado: EstadoNegocio, evento: Evento): EstadoNegocio {
         stock: conStock(estado, d.lineas.map((l) => [l.productoId, -l.cantidad] as const)),
         ventas: { ...estado.ventas, [venta.id]: venta },
         caja: conCaja(estado, (c) => ({ ventasPorForma: sumarForma(c.ventasPorForma, d.pagos, 1), ventas: c.ventas + 1 })),
+        cuentas: d.cuentaId === undefined ? estado.cuentas : sinCuenta(estado, d.cuentaId),
       };
     }
     case 'venta.anulada': {
@@ -649,6 +797,56 @@ function siguiente(estado: EstadoNegocio, evento: Evento): EstadoNegocio {
         caja: devuelve ? conCaja(estado, (k) => ({ gastos: centavos(k.gastos - g.monto) })) : estado.caja,
       };
     }
+    case 'mesa.creada': {
+      const m: Mesa = { id: evento.id, nombre: evento.datos.nombre, zona: evento.datos.zona, activa: true };
+      return { ...estado, mesas: { ...estado.mesas, [m.id]: m } };
+    }
+    case 'mesa.retirada': {
+      const m = estado.mesas[evento.datos.mesaId];
+      if (!m) return estado;
+      return { ...estado, mesas: { ...estado.mesas, [m.id]: { ...m, activa: false } } };
+    }
+    case 'cuenta.abierta': {
+      const c: Cuenta = {
+        id: evento.id,
+        mesaId: evento.datos.mesaId,
+        abiertaEn: evento.en,
+        abiertaPor: evento.por,
+        personas: evento.datos.personas ?? null,
+        lineas: [],
+        rondas: 0,
+        ultimoPedidoEn: null,
+        precuenta: false,
+      };
+      return { ...estado, cuentas: { ...estado.cuentas, [c.id]: c } };
+    }
+    case 'cuenta.pedido':
+      return {
+        ...estado,
+        cuentas: conCuenta(estado, evento.datos.cuentaId, (c) => ({
+          lineas: conLineas(c.lineas, evento.datos.lineas, 1),
+          rondas: c.rondas + 1,
+          ultimoPedidoEn: evento.en,
+          // Pidieron algo más: ya no está esperando la cuenta.
+          precuenta: false,
+        })),
+      };
+    case 'cuenta.quitado': {
+      const d = evento.datos;
+      return {
+        ...estado,
+        cuentas: conCuenta(estado, d.cuentaId, (c) => ({
+          lineas: conLineas(c.lineas, [{ productoId: d.productoId, cantidad: d.cantidad }], -1),
+        })),
+      };
+    }
+    case 'cuenta.precuenta':
+      return { ...estado, cuentas: conCuenta(estado, evento.datos.cuentaId, () => ({ precuenta: evento.datos.pedida })) };
+    case 'cuenta.trasladada':
+      return { ...estado, cuentas: conCuenta(estado, evento.datos.cuentaId, () => ({ mesaId: evento.datos.mesaId })) };
+    case 'cuenta.liberada':
+    case 'cuenta.anulada':
+      return { ...estado, cuentas: sinCuenta(estado, evento.datos.cuentaId) };
   }
 }
 
