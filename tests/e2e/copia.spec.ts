@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
+import { entrar } from './sesion';
 
 test('copia ZIP: exportar, borrar la nota, importar y vuelve igual (historia 7)', async ({ page }) => {
-  await page.goto('/#/notas');
+  await entrar(page, '/#/notas');
   await page.getByRole('button', { name: 'Nueva' }).click();
   await page.getByRole('button', { name: 'En blanco' }).click();
   await page.getByLabel('Título', { exact: true }).fill('Apuntes de francés');

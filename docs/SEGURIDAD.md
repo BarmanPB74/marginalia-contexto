@@ -4,7 +4,7 @@ Objetivo: cumplir **OWASP MASVS nivel 1** en toda la app y nivel 2 en almacenami
 
 ## 1. Reglas éticas y legales del trabajo de seguridad
 - Solo se prueba **código propio, builds propios y dispositivos propios**. Nunca sistemas, cuentas o servidores de terceros.
-- Prohibido atacar, escanear o hacer ingeniería inversa de YouTube/Google u otros servicios.
+- Prohibido atacar, escanear o hacer ingeniería inversa de servicios o sistemas de terceros (incluidos otros sistemas POS).
 - Herramientas ofensivas (Frida, apktool, jadx, MobSF) únicamente sobre el APK **debug de este proyecto** en un dispositivo/emulador del autor.
 - Los hallazgos se documentan, se corrigen y se registran en `docs/seguridad/AUDITORIA-F5.md`. No se publican exploits.
 - Divulgación responsable: `SECURITY.md` explica cómo reportar (GitHub *Private vulnerability reporting*).
@@ -15,25 +15,28 @@ Objetivo: cumplir **OWASP MASVS nivel 1** en toda la app y nivel 2 en almacenami
 |---|---|---|
 | Notas del usuario | Teléfono perdido o prestado, copia de archivos | Almacenamiento privado de la app; **cifrado AES-256-GCM siempre activo** (ADR-008); bloqueo biométrico opcional (F5); `FLAG_SECURE` opcional |
 | Notas del usuario | Archivo cifrado alterado o cambiado por otro | GCM autentica el contenido y la ruta (AAD): no se descifra y sale como "dañado", sin tocar las demás |
+| Contabilidad (ventas, caja, compras, gastos) | Alterar o borrar movimientos para ocultar faltantes | Diario **append-only** con cadena SHA-256 por evento; la carga se niega a escribir sobre una cadena rota (`DiarioDanado`); «Verificar registro» recorre todo; nada se edita, se anula con motivo y queda a la vista (ADR-015) |
+| Contabilidad | Persona sin permiso (cajero) anula ventas, cambia precios o ve costos | Roles con PIN propio y tabla única de permisos en el núcleo (`permisos.ts`), comprobada en cada comando, no solo en la pantalla; cada evento guarda quién lo hizo |
+| PIN | Adivinar el PIN de otro | PBKDF2-SHA256 (210 000 iteraciones, sal por usuario), comparación en tiempo constante, espera creciente tras 5 fallos; sesión que se cierra tras 10 min fuera de la app |
+| Adjuntos (fotos/PDF de facturas) | Archivo hostil o enorme | Tipo validado por firma de bytes (JPEG/PNG/WebP/PDF), máx. 10 MB, imágenes reducidas a 1600 px; guardados cifrados; vistos como `blob:` (CSP `img-src blob: data:`) |
+| Importar inventario | Archivo hostil (HTML con scripts, XLSX bomba, BIFF) | Lectura solo de `textContent` vía DOMParser sin ejecutar, rechazo de DOCTYPE en XML, límites de tamaño/filas/columnas, vista previa y confirmación humana; fuzzing |
+| CSV exportado | Inyección de fórmulas al abrir en Excel | Celdas que empiezan por = + - @ se prefijan con `'` |
 | Notas del usuario | Copias de seguridad automáticas de Android | `allowBackup=false` por defecto + reglas explícitas; exportación solo manual |
 | WebView | XSS por Markdown/HTML malicioso en una nota importada | Sanitizar con DOMPurify (lista blanca), CSP estricta, sin `eval`, sin HTML crudo sin sanitizar |
-| WebView | Puente JS expuesto a páginas ajenas | Sin `addJavascriptInterface` propio; navegación limitada a un *allowlist*; iframes solo de `youtube-nocookie.com`; mensajes del reproductor aceptados solo de ese origen y de su ventana |
-| Enlaces pegados | URL hostil en "Pega un enlace de YouTube Music" | Solo hosts de YouTube en lista blanca, IDs validados (`^[A-Za-z0-9_-]{11}$`, listas 10–64); nada más del enlace llega al iframe |
+| WebView | Puente JS expuesto a páginas ajenas | Sin `addJavascriptInterface` propio; sin navegación externa; CSP `frame-src 'none'`, `connect-src 'self'` |
 | Importación ZIP/MD | *Zip-slip*, archivos gigantes, YAML hostil | Validar rutas, límites de tamaño/cantidad, parser YAML seguro (sin tipos ejecutables), esquema |
-| Share Intent | Texto malicioso entrante | Tratar como no confiable: extraer solo ID de 11 caracteres válido (o URI de Spotify de 22), ignorar el resto |
-| Spotify (ADR-013) | Órdenes o datos hostiles por el puente | El plugin solo acepta Client ID `^[0-9a-f]{32}$` y URIs `spotify:(track\|episode\|album\|playlist):[A-Za-z0-9]{22}`; lo que devuelve se valida (`estadoSeguro`). Sin tokens guardados; SDK descargado con SHA256 fijo; keystore de firma solo como secreto de GitHub |
 | Cadena de suministro | Dependencia comprometida | Pocas dependencias, `package-lock.json` fijo, `npm audit`, Dependabot, `dependency-review`, revisar permisos de plugins de Capacitor |
 | Repositorio público | Secretos filtrados, keystore expuesta | `.gitignore` estricto, `gitleaks`, secretos solo en GitHub Secrets, push protection activado |
-| Red | Tráfico en claro / MITM | `cleartextTrafficPermitted=false`; solo HTTPS |
-| Privacidad | Fuga a terceros | Sin analíticas ni trackers; `youtube-nocookie.com` para el embed cuando sea posible |
+| Red | Tráfico en claro / MITM | La app no pide INTERNET (ADR-015); igualmente `cleartextTrafficPermitted=false` |
+| Privacidad | Fuga a terceros | Sin red (no hay permiso INTERNET), sin analíticas ni trackers |
 
 ## 3. Configuración Android obligatoria
-- Permisos: `INTERNET`; `USE_BIOMETRIC` y `USE_FINGERPRINT` (normales, sin diálogo; los declara `androidx.biometric` para el bloqueo opcional, ADR-014).
+- Permisos: ninguno propio (sin `INTERNET`, ADR-015); `USE_BIOMETRIC` y `USE_FINGERPRINT` (normales, sin diálogo; los declara `androidx.biometric` para el bloqueo opcional, ADR-014).
 - `android:allowBackup="false"`, `android:usesCleartextTraffic="false"`, `network_security_config.xml` solo HTTPS.
-- `android:exported` explícito en cada componente; el único *intent-filter* de entrada es `ACTION_SEND` con `text/plain`.
+- `android:exported` explícito en cada componente; el único *intent-filter* de entrada es el lanzador (`MAIN`).
 - `WebView`: `allowFileAccess=false`, `allowContentAccess=false`, `setJavaScriptEnabled` solo lo necesario, sin depuración remota en *release*.
 - Build *release*: ofuscación/minificación activada, `debuggable=false`.
-- CSP en `index.html`, por ejemplo: `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://i.ytimg.com; frame-src https://www.youtube-nocookie.com; connect-src 'self' https://www.youtube.com; object-src 'none'; base-uri 'none'`. Ajustar con evidencia, nunca relajar "por si acaso".
+- CSP en `index.html`, por ejemplo: `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; frame-src 'none'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'` (la vigente). Ajustar con evidencia, nunca relajar "por si acaso".
 
 ## 4. Puerta de seguridad por fase (checklist para `/auditar`)
 
@@ -76,4 +79,4 @@ Entregable: `docs/seguridad/AUDITORIA-F5.md` con tabla *hallazgo → severidad �
 - Exportación cifrada opcional con contraseña (derivación Argon2id/PBKDF2 con parámetros documentados).
 
 ## 7. Privacidad
-Documentar en `PRIVACIDAD.md`: no hay cuentas, no hay servidor, no hay analíticas; los datos viven en el dispositivo; la única conexión es la del reproductor de YouTube, que está sujeta a las políticas de Google. Con Spotify (ADR-013) la app no se conecta a nada: habla con la app de Spotify del teléfono, que tiene su propia política. Decir qué guarda la app y cómo borrarlo todo.
+Documentar en `PRIVACIDAD.md`: no hay cuentas, no hay servidor, no hay analíticas; los datos viven en el dispositivo; la app no se conecta a nada (sin permiso INTERNET). Decir qué guarda la app y cómo borrarlo todo.

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { entrar } from './sesion';
 
 // En el APK, Capacitor 8 dibuja la app bajo la barra de estado y la de gestos, e inyecta sus medidas
 // como --safe-area-inset-*. Aquí se simula lo mismo: 32 px arriba (estado) y 24 px abajo (gestos).
@@ -18,16 +19,16 @@ test.beforeEach(async ({ page }) => {
   );
 });
 
-for (const ruta of ['#/notas', '#/calendario', '#/musica', '#/ajustes']) {
+for (const ruta of ['#/inicio', '#/vender', '#/inventario', '#/notas', '#/calendario', '#/ajustes']) {
   test(`${ruta}: el título no queda bajo la barra de estado`, async ({ page }) => {
-    await page.goto(`/${ruta}`);
+    await entrar(page, `/${ruta}`);
     const titulo = await page.getByRole('heading', { level: 1 }).boundingBox();
     expect(titulo?.y).toBeGreaterThanOrEqual(ARRIBA);
   });
 }
 
 test('una nota abierta: la ruta, volver y el título quedan bajo la barra de estado', async ({ page }) => {
-  await page.goto('/#/notas');
+  await entrar(page, '/#/notas');
   await page.getByRole('button', { name: 'Nueva' }).click();
   await page.getByRole('button', { name: 'En blanco' }).click();
   for (const caja of [
@@ -39,7 +40,7 @@ test('una nota abierta: la ruta, volver y el título quedan bajo la barra de est
 });
 
 test('la barra inferior deja libre la zona de gestos', async ({ page }) => {
-  await page.goto('/#/notas');
+  await entrar(page, '/#/notas');
   const enlace = await page.getByRole('navigation', { name: 'Secciones' }).getByRole('link').first().boundingBox();
   const alto = page.viewportSize()?.height ?? 0;
   expect((enlace?.y ?? 0) + (enlace?.height ?? 0)).toBeLessThanOrEqual(alto - ABAJO);
