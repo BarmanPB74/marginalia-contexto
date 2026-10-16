@@ -3,7 +3,7 @@ import tseslint from 'typescript-eslint';
 import globals from 'globals';
 
 export default tseslint.config(
-  { ignores: ['dist/', 'android/', 'node_modules/', 'playwright-report/', 'test-results/'] },
+  { ignores: ['dist/', 'android/', 'node_modules/', 'playwright-report/', 'test-results/', 'escritorio/web/', 'escritorio/salida/'] },
   js.configs.recommended,
   ...tseslint.configs.strict,
   {
@@ -15,4 +15,10 @@ export default tseslint.config(
   },
   // Scripts de mantenimiento: corren en Node, no en la app
   { files: ['scripts/**'], languageOptions: { globals: { ...globals.node } } },
+  // Versión de Windows (Electron): CommonJS en Node
+  {
+    files: ['escritorio/**/*.cjs'],
+    languageOptions: { sourceType: 'commonjs', globals: { ...globals.node } },
+    rules: { '@typescript-eslint/no-require-imports': 'off' },
+  },
 );

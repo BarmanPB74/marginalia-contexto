@@ -192,7 +192,7 @@ export function Cobrar({ pedido, total, alCerrar, alVender }: Props) {
             )}
           </section>
         )}
-        <p class="cobrar__nota">Comprobante interno: Bar Box no emite factura electrónica.</p>
+        <p class="cobrar__nota">Comprobante interno: Stark no emite factura electrónica.</p>
       </div>
     </Hoja>
   );

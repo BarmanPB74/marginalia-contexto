@@ -1,5 +1,5 @@
 /*
- * Galería interna del sistema de diseño de Bar Box: todos los componentes en una pantalla, para
+ * Galería interna del sistema de diseño de Stark: todos los componentes en una pantalla, para
  * revisarlos de un vistazo en cada tamaño (tests/e2e/pantallas.spec.ts la recorre). No se enlaza
  * desde la app; se abre con #/galeria. Los datos son de ejemplo.
  */

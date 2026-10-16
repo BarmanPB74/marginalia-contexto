@@ -157,7 +157,7 @@ describe('CeldaDia', () => {
   });
 });
 
-// ── Bar Box ─────────────────────────────────────────────────────────────────
+// ── Stark ─────────────────────────────────────────────────────────────────
 
 function escribirEn(input: HTMLInputElement, texto: string) {
   input.value = texto;

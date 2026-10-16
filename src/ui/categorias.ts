@@ -1,7 +1,7 @@
 import './categorias.css';
 
 /**
- * Paleta categórica de Bar Box (tokens --cat-*). Cada color tiene tres tonos en tokens.css:
+ * Paleta categórica de Stark (tokens --cat-*). Cada color tiene tres tonos en tokens.css:
  * base vívida (rellenos, puntos), «suave» (fondos) y «tinta» (texto legible sobre suave o superficie).
  */
 export const CATEGORIAS = ['indigo', 'coral', 'cielo', 'ambar', 'esmeralda', 'fucsia', 'turquesa'] as const;

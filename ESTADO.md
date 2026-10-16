@@ -4,13 +4,13 @@
 > Lo actualiza `/cierre`. Si algo aquí contradice el código, arréglalo aquí.
 
 ## Ahora
-- **Fase actual:** Bar Box 1.0 (ADR-015/016, pedido del autor 2026-10-16): inventario, ventas con caja, compras, gastos, contabilidad, usuarios con PIN; Bitácora (notas + calendario); preparada para Play Console. F5 (seguridad) cerrada en código; falta su prueba en el teléfono.
-- **Última sesión:** 2026-10-16 — conversión a Bar Box con agentes (núcleo, importador, diseño, 3 de pantallas); sin música ni INTERNET; release.yml.
-- **Siguiente paso concreto:** el autor prueba el APK (lista de abajo, **antes copia ZIP de notas**); crea su llave de subida y los secretos (`docs/PLAY_CONSOLE.md` §1); luego F6: prueba interna en Play.
+- **Fase actual:** Stark 1.0 (ADR-015/016, pedido del autor 2026-10-16): inventario, ventas con caja, compras, gastos, contabilidad, usuarios con PIN; Bitácora (notas + calendario); preparada para Play Console. F5 (seguridad) cerrada en código; falta su prueba en el teléfono.
+- **Última sesión:** 2026-10-16 — nombre **Stark** (ADR-017; BAR BOX es otro producto del autor); versión de **Windows** con Electron (`escritorio/`, `escritorio.yml`, `docs/ESCRITORIO.md`).
+- **Siguiente paso concreto:** prueba de varios días en el bar con el instalador de Windows (copia ZIP cada noche); renombrar el repositorio a `stark` en GitHub; luego llave de subida y prueba interna en Play.
 
 ## Decisiones tomadas (ADR en `docs/ARQUITECTURA.md`)
-- 001 Web + Capacitor + Preact · 002 `.md` fuente de verdad de las notas · 004 MIT · 005 appId `io.github.barmanpb74.appnoti` (nombre: Bar Box, 015) · 006 TypeScript 6.0 · 007 índice de notas en memoria · 008/014 cifrado AES-256-GCM con clave envuelta por Android Keystore + bloqueo opcional con huella · 009 preferencias en `localStorage`.
-- **015 Bar Box:** núcleo `src/core/negocio` = diario de eventos inmutable por día con cadena SHA-256, estado proyectado, reglas (`ReglaRota`), permisos por rol en UNA tabla (dueño, cajero, bodega; descuentos y anular solo dueño), PIN de 4 dígitos PBKDF2 + limitador, contabilidad + CSV. Dinero en centavos y cantidades en milésimas enteras. Se quitaron YouTube, Spotify, Compartir e INTERNET (003/010/012/013 reemplazadas).
+- 001 Web + Capacitor + Preact · 002 `.md` fuente de verdad de las notas · 004 MIT · 005 appId `io.github.barmanpb74.appnoti` (nombre: Stark, 015) · 006 TypeScript 6.0 · 007 índice de notas en memoria · 008/014 cifrado AES-256-GCM con clave envuelta por Android Keystore + bloqueo opcional con huella · 009 preferencias en `localStorage`.
+- **015 Stark:** núcleo `src/core/negocio` = diario de eventos inmutable por día con cadena SHA-256, estado proyectado, reglas (`ReglaRota`), permisos por rol en UNA tabla (dueño, cajero, bodega; descuentos y anular solo dueño), PIN de 4 dígitos PBKDF2 + limitador, contabilidad + CSV. Dinero en centavos y cantidades en milésimas enteras. Se quitaron YouTube, Spotify, Compartir e INTERNET (003/010/012/013 reemplazadas).
 - **016 Diseño:** soft UI vívido (Inter local), barra inferior < 600 px / riel ≥ 600 px, filtros laterales ≥ 840 px u hoja; textZoom = letra del sistema; sin permisos para adaptarse a la pantalla.
 - Importar inventario: tabla HTML con extensión .xls (lo que exportan otros POS), CSV y XLSX; vista previa y confirmación; no guarda nombre ni marca del sistema de origen. El archivo real del autor NO va al repo (público).
 - Puerta de la app: huella del teléfono (opcional) → negocio abierto → persona + PIN (sesión se cierra tras 10 min fuera).
@@ -18,11 +18,12 @@
 - Sin factura electrónica: comprobante interno (LEGAL §1 bis).
 - Pantallas por área registradas en `src/features/registro/{ventas,inventario,gestion}.ts`. Agentes del repo en `.claude/agents/`.
 - Node 24 LTS; el APK solo se compila en GitHub Actions. Acciones fijadas por SHA. Sin `@testing-library`. Vitest con `css: true`.
-- Publicación: `release.yml` (AAB + APK firmados con la llave de subida desde secretos `BARBOX_KEYSTORE_B64/PASS`, versionCode = 100 + ejecución, R8). Guía: `docs/PLAY_CONSOLE.md`.
+- **017 Stark + Windows:** Electron 44 sirve `dist/` en `app://stark/`, sin red ni permisos, clave envuelta con safeStorage (DPAPI); NSIS + portable desde `escritorio.yml` (sin firma de código: SmartScreen avisa).
+- Publicación: `release.yml` (AAB + APK firmados con la llave de subida desde secretos `STARK_KEYSTORE_B64/PASS`, versionCode = 100 + ejecución, R8). Guía: `docs/PLAY_CONSOLE.md`.
 - Bitácora: CodeMirror 6 + markdown-it/DOMPurify (22 XSS bloqueados); rutas por hash; almacén atómico con temporal; plantillas; calendario con agenda.
 
 ## Pendiente de decidir con el autor
-- ¿Subir `minSdk` 24 → 26/29? (H5 de la auditoría, F6) · Icono de Bar Box (hoy sigue la marca EK).
+- ¿Subir `minSdk` 24 → 26/29? (H5 de la auditoría, F6) · Icono de Stark (hoy sigue la marca EK).
 - ¿Cajero con descuentos? (hoy solo el dueño) · Ventas por día en contabilidad (gráfico; falta en el núcleo).
 - Pedidos aún sin fase: plantillas con gráficos/cálculos; exportar a PDF/documento legal; backlinks, nota diaria.
 
@@ -34,6 +35,8 @@
 - **Usuarios:** crear cajero → cambiar de usuario → el cajero no ve costos, contabilidad ni anular.
 - **Pantallas:** girar el teléfono; en tableta o plegable, riel lateral y filtros al lado; letra del sistema al máximo → todo legible.
 - **ADR-014:** las notas de antes se leen (migración a v2); bloqueo con huella al volver tras > 1 min.
+
+- **Windows (bar):** instalar → primer uso → importar → vender varios días → copia ZIP cada noche → restaurar la copia en otro PC de prueba. Verificar que tras reiniciar el PC los datos abren (DPAPI).
 
 ## Permisos Android autorizados
 - Ninguno propio (sin INTERNET desde ADR-015). `USE_BIOMETRIC` + `USE_FINGERPRINT` los añade `androidx.biometric` (normales) para el bloqueo opcional.
@@ -54,13 +57,14 @@
 - Copia completa del negocio (ZIP legible, sin cifrar) y restauración solo en un negocio vacío (primer uso) con verificación de la cadena: probar en el teléfono con fotos grandes.
 - `overrides` fuerza `uuid` 11.1.1 bajo `xcode`: quitarlo cuando `@capacitor/cli` lo traiga.
 - Build release sin probar en teléfono; R8 con reglas para Capacitor añadidas a mano.
+- Windows: instalador sin firma de código (SmartScreen avisa); al arrancar, Chromium intenta una conexión TLS interna (la página no tiene red). Probado en Linux con Xvfb, no en un Windows real.
 
 ## Banco de ideas (NO construir sin decisión del autor)
 - Copia del negocio cifrada con contraseña (hoy sale legible, como la de notas).
 - Recetas (un producto de carta gasta varios ingredientes), como en Bar_box (Python).
 
 ## Historial de sesiones
-- 2026-10-16 · Bar Box · pivote a inventario/ventas: núcleo con diario encadenado (66 pruebas), importador (76), diseño soft UI adaptable, pantallas de ventas/caja, inventario/compras/gastos/adjuntos, contabilidad/usuarios/Más; sin música ni INTERNET; release AAB; 503 unit + e2e.
+- 2026-10-16 · Stark · pivote a inventario/ventas: núcleo con diario encadenado (66 pruebas), importador (76), diseño soft UI adaptable, pantallas de ventas/caja, inventario/compras/gastos/adjuntos, contabilidad/usuarios/Más; sin música ni INTERNET; release AAB; 503 unit + e2e.
 - 2026-10-06 · F5 · auditoría (MobSF, apktool, Semgrep, osv, fuzzing); ADR-014 Keystore + bloqueo; PR #3.
 - 2026-10-05/06 · F4 · música (YouTube, ventana flotante, Spotify) — retirada en ADR-015.
 - 2026-10-04/05 · F0–F3 · repo, CI, diseño, notas Markdown cifradas, parser, calendario, ZIP.

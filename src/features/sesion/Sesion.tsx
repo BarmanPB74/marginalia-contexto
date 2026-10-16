@@ -10,7 +10,7 @@ import { restaurarDesdeArchivo } from '../negocio/copia';
 import { elegirZip } from '../notas/copia';
 import './Sesion.css';
 
-/** En Bar Box el PIN de cada persona tiene 4 dígitos: rápido en la caja y con teclado grande. */
+/** En Stark el PIN de cada persona tiene 4 dígitos: rápido en la caja y con teclado grande. */
 export const LARGO_PIN = 4;
 
 /**
@@ -28,7 +28,7 @@ function Marco({ titulo, pista, children }: { titulo: string; pista?: string; ch
   return (
     <main class="sesion">
       <div class="sesion__tarjeta">
-        <p class="sesion__marca">Bar Box</p>
+        <p class="sesion__marca">Stark</p>
         <h1 class="sesion__titulo">{titulo}</h1>
         {pista && <p class="sesion__pista">{pista}</p>}
         {children}

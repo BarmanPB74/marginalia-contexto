@@ -1,5 +1,5 @@
 /**
- * Números exactos de Bar Box (regla 1 de Bar_box): nunca un float toca una cuenta.
+ * Números exactos de Stark (regla 1 de Bar_box): nunca un float toca una cuenta.
  *
  * - Cantidades en **milésimas enteras**: 1,250 kg se guarda como 1250.
  * - Dinero en **centavos enteros**: $ 8.500 se guarda como 850000.

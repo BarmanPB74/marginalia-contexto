@@ -1,5 +1,5 @@
 /**
- * Núcleo de negocio de Bar Box (puro: sin UI ni Capacitor). API pública.
+ * Núcleo de negocio de Stark (puro: sin UI ni Capacitor). API pública.
  *
  * Las pantallas usan casi siempre `Negocio` (servicio.ts) y los formateadores de
  * `numeros.ts`. El resto se exporta para pruebas, reportes y herramientas.

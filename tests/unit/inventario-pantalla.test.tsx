@@ -131,14 +131,16 @@ describe('Pantalla de Inventario', () => {
     await escribir(campo(c, '¿Cuántas hay?'), '7');
     expect(c.textContent).toMatch(/Diferencia: \+2 und/);
     await tocar(boton(c, 'Guardar conteo'));
+    await hastaQue(() => stockDe(negocio.estado, ids.cafe) === 7000);
     expect(stockDe(negocio.estado, ids.cafe)).toBe(7000);
 
     await tocar(boton(c, 'Merma o corrección'));
     await escribir(campo(c, 'Cantidad que sale'), '2');
     await escribir(campo(c, 'Nota (opcional)'), 'se rompieron');
     await tocar(boton(c, 'Guardar ajuste'));
+    await hastaQue(() => stockDe(negocio.estado, ids.cafe) === 5000);
     expect(stockDe(negocio.estado, ids.cafe)).toBe(5000);
-    await esperar();
+    await hastaQue(() => /Merma: se rompieron/.test(c.querySelector('tbody tr')?.textContent ?? ''));
     const filas = [...c.querySelectorAll('tbody tr')].map((t) => t.textContent ?? '');
     expect(filas[0]).toMatch(/Merma: se rompieron.*-2 und.*Dueña/);
     expect(filas[1]).toMatch(/Conteo.*\+2 und/);
@@ -148,6 +150,7 @@ describe('Pantalla de Inventario', () => {
     await tocar(boton(c, 'Corrección'));
     await escribir(campo(c, 'Cantidad que sale'), '1');
     await tocar(boton(c, 'Guardar ajuste'));
+    await hastaQue(() => c.querySelector('[role=alert]') !== null);
     expect(c.querySelector('[role=alert]')?.textContent).toMatch(/lleva nota/);
   });
 
@@ -171,7 +174,7 @@ describe('Pantalla de Inventario', () => {
     const { negocio, ids } = await conProductos();
     const cajero = await negocio.crearUsuario({ nombre: 'Caja', rol: 'cajero', pin: '5678' });
     expect((await negocio.iniciarSesion(cajero.id, '5678')).ok).toBe(true);
-    localStorage.setItem('barbox.inventario.vista', 'lista');
+    localStorage.setItem('stark.inventario.vista', 'lista');
     location.hash = '#/inventario';
     const c = await montar(<Pantalla />, repoNuevo(), negocio);
     expect([...c.querySelectorAll('th')].map((t) => t.textContent)).not.toContain('Costo');

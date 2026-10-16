@@ -4,17 +4,17 @@
 
 ## 1. Música (retirada, ADR-015, 2026-10-16)
 La app ya no reproduce música: el reproductor de YouTube (ADR-003/010/012) y Spotify App Remote
-(ADR-013) se quitaron al convertir la app en **Bar Box** (inventario y ventas). Motivos: publicación
+(ADR-013) se quitaron al convertir la app en **Stark** (inventario y ventas). Motivos: publicación
 en Play más simple, sin red ni SDK de terceros (Spotify en modo desarrollo solo admite 5 cuentas).
 El historial de git conserva esa implementación.
 
 ## 1 bis. Facturación electrónica
-Bar Box **no emite factura electrónica** (DIAN, Colombia) ni la presenta como tal. Sus comprobantes son
+Stark **no emite factura electrónica** (DIAN, Colombia) ni la presenta como tal. Sus comprobantes son
 internos. Para facturar electrónicamente hace falta un proveedor tecnológico autorizado; si algún día se
 integra, será con un ADR y revisión legal.
 
 ## 1 ter. Datos de terceros importados
-Al importar un inventario desde otro sistema, Bar Box solo lee la tabla y no guarda el nombre ni la marca
+Al importar un inventario desde otro sistema, Stark solo lee la tabla y no guarda el nombre ni la marca
 del sistema de origen. Ningún dato real del negocio se sube al repositorio (es público): las pruebas usan
 datos inventados.
 

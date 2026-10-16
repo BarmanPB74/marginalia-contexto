@@ -3,7 +3,7 @@ import { esUlid } from '../core/notas/ulid';
 import type { NombreIcono } from '../ui/Icono';
 
 /**
- * Bar Box (ADR-015): inventario y ventas primero; notas y calendario quedan como bitácora.
+ * Stark (ADR-015): inventario y ventas primero; notas y calendario quedan como bitácora.
  * `SECCIONES` son las 5 de la barra (o del riel lateral en pantallas anchas); el resto se abre
  * desde «Más». Todas son rutas por hash (#/vender…).
  */

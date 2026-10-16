@@ -1,0 +1,78 @@
+name: Escritorio (Windows)
+
+# Instalador y versión portátil de Stark para Windows (ADR-017, docs/ESCRITORIO.md).
+# Se compila en un Windows de GitHub con la misma app web (dist/) dentro de Electron.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versión visible (p. ej. 1.0.0)'
+        required: true
+        default: '1.0.0'
+  push:
+    branches: ['**']
+    paths:
+      - 'src/**'
+      - 'escritorio/**'
+      - 'index.html'
+      - 'package-lock.json'
+      - '.github/workflows/escritorio.yml'
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: escritorio-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    name: Instalador de Windows
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            escritorio/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - name: Versión
+        env:
+          ENTRADA: ${{ inputs.version }}
+          ETIQUETA: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+        run: |
+          NOMBRE="${ENTRADA:-${ETIQUETA#v}}"
+          NOMBRE="${NOMBRE:-$(node -p "require('./escritorio/package.json').version")}"
+          if ! printf '%s' "$NOMBRE" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Versión no válida: $NOMBRE (usa 1.2.3)"
+            exit 1
+          fi
+          echo "STARK_VERSION_NAME=$NOMBRE" >> "$GITHUB_ENV"
+      - name: Compilar instalador y portable
+        working-directory: escritorio
+        run: |
+          rm -rf web && cp -r ../dist web
+          npm ci
+          npm version "$STARK_VERSION_NAME" --no-git-tag-version --allow-same-version
+          npx electron-builder --win --publish never
+      - name: Huellas
+        working-directory: escritorio/salida
+        run: sha256sum Stark-*.exe | tee SHA256SUMS.txt
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: stark-windows-${{ env.STARK_VERSION_NAME }}
+          path: |
+            escritorio/salida/Stark-*.exe
+            escritorio/salida/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 30

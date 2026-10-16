@@ -34,7 +34,7 @@ import { FormularioProducto } from './formularios';
 import { ImportarInventario } from './ImportarInventario';
 import './inventario.css';
 
-const VISTA_GUARDADA = 'barbox.inventario.vista';
+const VISTA_GUARDADA = 'stark.inventario.vista';
 
 function leerVista(): 'rejilla' | 'lista' {
   try {

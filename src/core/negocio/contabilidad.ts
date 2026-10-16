@@ -1,5 +1,5 @@
 /**
- * Contabilidad de Bar Box: sólo lectura, junta lo que ya está en el diario.
+ * Contabilidad de Stark: sólo lectura, junta lo que ya está en el diario.
  *
  * `resumen(eventos, estado, periodo)` responde: cuánto se vendió (bruto, descuentos, neto,
  * por forma de pago y por producto), cuánto costó lo vendido, cuánto se gastó, cuánto se

@@ -1,5 +1,5 @@
 /**
- * Modelo de Bar Box: las cosas del negocio tal como las ve el estado proyectado.
+ * Modelo de Stark: las cosas del negocio tal como las ve el estado proyectado.
  *
  * Todo es dato plano (sin clases ni fechas `Date`): el estado completo se guarda tal cual
  * en `negocio/instantanea.json` y se vuelve a leer con `JSON.parse`.

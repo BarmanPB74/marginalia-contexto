@@ -1,12 +1,12 @@
 import { Capacitor } from '@capacitor/core';
 import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
 
-/** Carpeta pública donde quedan los archivos exportados: Documentos/Bar Box. */
-export const CARPETA_EXPORTAR = 'Bar Box';
+/** Carpeta pública donde quedan los archivos exportados: Documentos/Stark. */
+export const CARPETA_EXPORTAR = 'Stark';
 
 /**
  * Guarda un archivo exportado fuera de la app, ya legible.
- * - Teléfono: Documentos/Bar Box/<nombre> (Android 11+ no pide permisos para archivos propios).
+ * - Teléfono: Documentos/Stark/<nombre> (Android 11+ no pide permisos para archivos propios).
  * - Navegador: lo descarga.
  * Devuelve dónde quedó, para decírselo a la persona.
  */

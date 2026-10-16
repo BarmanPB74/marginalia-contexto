@@ -2,7 +2,7 @@ name: Publicación (AAB para Play Console)
 
 # Se lanza a mano (Actions → «Publicación» → Run workflow) o al crear una etiqueta v1.2.3.
 # Compila el paquete firmado (.aab) que se sube a Play Console y un .apk firmado para probar.
-# Necesita los secretos BARBOX_KEYSTORE_B64 y BARBOX_KEYSTORE_PASS (docs/PLAY_CONSOLE.md).
+# Necesita los secretos STARK_KEYSTORE_B64 y STARK_KEYSTORE_PASS (docs/PLAY_CONSOLE.md).
 on:
   workflow_dispatch:
     inputs:
@@ -42,14 +42,14 @@ jobs:
       - run: npx cap sync android
       - name: Llave de subida
         env:
-          KEYSTORE_B64: ${{ secrets.BARBOX_KEYSTORE_B64 }}
+          KEYSTORE_B64: ${{ secrets.STARK_KEYSTORE_B64 }}
         run: |
           if [ -z "$KEYSTORE_B64" ]; then
-            echo "::error::Falta el secreto BARBOX_KEYSTORE_B64 (ver docs/PLAY_CONSOLE.md, paso 1)."
+            echo "::error::Falta el secreto STARK_KEYSTORE_B64 (ver docs/PLAY_CONSOLE.md, paso 1)."
             exit 1
           fi
-          printf '%s' "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/barbox.keystore"
-          echo "BARBOX_KEYSTORE=$RUNNER_TEMP/barbox.keystore" >> "$GITHUB_ENV"
+          printf '%s' "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/stark.keystore"
+          echo "STARK_KEYSTORE=$RUNNER_TEMP/stark.keystore" >> "$GITHUB_ENV"
       - name: Versión
         env:
           ENTRADA: ${{ inputs.version }}
@@ -60,13 +60,13 @@ jobs:
             echo "::error::Versión no válida: $NOMBRE (usa 1.2.3)"
             exit 1
           fi
-          echo "BARBOX_VERSION_NAME=$NOMBRE" >> "$GITHUB_ENV"
+          echo "STARK_VERSION_NAME=$NOMBRE" >> "$GITHUB_ENV"
           # Siempre crece: Play rechaza un versionCode repetido o menor.
-          echo "BARBOX_VERSION_CODE=$((100 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
+          echo "STARK_VERSION_CODE=$((100 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
       - name: Compilar AAB y APK firmados
         working-directory: android
         env:
-          BARBOX_KEYSTORE_PASS: ${{ secrets.BARBOX_KEYSTORE_PASS }}
+          STARK_KEYSTORE_PASS: ${{ secrets.STARK_KEYSTORE_PASS }}
         run: ./gradlew bundleRelease assembleRelease --no-daemon
       - name: Comprobar firma y huellas
         run: |
@@ -76,7 +76,7 @@ jobs:
           sha256sum bundle/release/app-release.aab apk/release/app-release.apk | tee SHA256SUMS.txt
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: barbox-release-${{ env.BARBOX_VERSION_NAME }}
+          name: stark-release-${{ env.STARK_VERSION_NAME }}
           path: |
             android/app/build/outputs/bundle/release/app-release.aab
             android/app/build/outputs/apk/release/app-release.apk

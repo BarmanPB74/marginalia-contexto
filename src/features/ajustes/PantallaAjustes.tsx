@@ -42,7 +42,7 @@ export function PantallaAjustes() {
         return;
       }
       await Bloqueo.autenticar({
-        titulo: 'Bar Box',
+        titulo: 'Stark',
         subtitulo: activar ? 'Confirma para activar el bloqueo' : 'Confirma para quitar el bloqueo',
       });
       cambiarAjustes({ bloqueo: activar });
@@ -122,7 +122,7 @@ export function PantallaAjustes() {
           {enTelefono() && (
             <>
               <Interruptor etiqueta="Bloqueo con huella o PIN" activo={bloqueo} alCambiar={(v) => void cambiarBloqueo(v)} />
-              <p class="ajustes__pista">Al abrir Bar Box y al volver tras un minuto fuera. Usa el bloqueo del propio teléfono.</p>
+              <p class="ajustes__pista">Al abrir Stark y al volver tras un minuto fuera. Usa el bloqueo del propio teléfono.</p>
               {avisoBloqueo && (
                 <p class="ajustes__aviso" role="alert">
                   {avisoBloqueo}
@@ -208,7 +208,7 @@ function DatosNegocio() {
       )}
       {negocio.puede('diario.verificar') && <VerificarRegistro negocio={negocio} />}
       <p class="ajustes__pista">
-        <strong>Sin internet:</strong> Bar Box no envía nada a nadie; todo vive en este teléfono.{' '}
+        <strong>Sin internet:</strong> Stark no envía nada a nadie; todo vive en este teléfono.{' '}
         <strong>Cifrado:</strong> ventas, inventario, caja, usuarios y fotos de facturas se guardan cifrados (AES-256), con
         la clave protegida por el chip de seguridad de Android (Keystore). <strong>Firmado:</strong> cada movimiento guarda
         quién lo hizo y la huella del anterior; si alguien alterara el archivo, «Verificar registro» lo detecta.{' '}

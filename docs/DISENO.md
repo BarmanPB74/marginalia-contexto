@@ -1,6 +1,6 @@
-# DISEÑO — Bar Box
+# DISEÑO — Stark
 
-> **2026-10-16, pedido del dueño:** la app pasa de «Marginalia» (notas en papel dibujado) a **Bar Box**,
+> **2026-10-16, pedido del dueño:** la app pasa de «Marginalia» (notas en papel dibujado) a **Stark**,
 > inventario y ventas de un café/bar. Estilo **soft UI** claro y ordenado, **colores vívidos**, que funcione
 > en **todos los tamaños de pantalla** y que **todo se lea**, también con la letra del sistema al 200 %.
 > Las notas y el calendario siguen como **Bitácora** con el mismo sistema (los tokens viejos son alias).

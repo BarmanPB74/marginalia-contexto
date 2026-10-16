@@ -6,7 +6,7 @@ const archivos = Object.keys(import.meta.glob('../../src/assets/fonts/**/*'));
 const urls = [...fuentesCss.matchAll(/url\(['"]?([^'")]+)['"]?\)/g)].map((m) => m[1] ?? '');
 const fuentesCodigo = import.meta.glob<string>('../../src/**/*.{css,ts,tsx}', { query: '?raw', import: 'default', eager: true });
 
-describe('fuentes locales (Bar Box: Inter + JetBrains Mono)', () => {
+describe('fuentes locales (Stark: Inter + JetBrains Mono)', () => {
   it('declara al menos una fuente y todas son archivos locales .woff2', () => {
     expect(urls.length).toBeGreaterThan(0);
     for (const url of urls) {

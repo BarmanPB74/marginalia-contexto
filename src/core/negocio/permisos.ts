@@ -1,5 +1,5 @@
 /**
- * Permisos de Bar Box: UNA tabla, como `usuarios.puede` de Bar_box.
+ * Permisos de Stark: UNA tabla, como `usuarios.puede` de Bar_box.
  *
  * Cada acción dice qué cargos la pueden hacer. El dueño puede todo (la tabla lo repite
  * para que se lea sola). Acción nueva = decidir de quién es: el compilador obliga a

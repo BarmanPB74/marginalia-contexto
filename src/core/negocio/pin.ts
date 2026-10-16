@@ -1,5 +1,5 @@
 /**
- * PIN de los usuarios de Bar Box (varias personas en el mismo teléfono).
+ * PIN de los usuarios de Stark (varias personas en el mismo teléfono).
  *
  * - El PIN tiene de 4 a 8 dígitos. Nunca se guarda: se guarda PBKDF2-SHA256 con una sal
  *   aleatoria de 16 bytes y 210 000 iteraciones (recomendación OWASP 2023 para SHA-256),

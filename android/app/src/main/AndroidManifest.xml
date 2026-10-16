@@ -53,7 +53,7 @@
         android:anyDensity="true" />
 
     <!--
-      Sin INTERNET (ADR-015): Bar Box no se conecta a nada. La interfaz la sirve Capacitor desde
+      Sin INTERNET (ADR-015): Stark no se conecta a nada. La interfaz la sirve Capacitor desde
       dentro del APK (https://localhost interceptado, sin red real). Los únicos permisos que quedan
       son USE_BIOMETRIC/USE_FINGERPRINT, que añade androidx.biometric para el bloqueo opcional.
     -->

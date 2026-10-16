@@ -54,18 +54,18 @@ jobs:
       # Firma estable opcional (misma huella en cada APK de prueba). Sin el secreto, firma debug normal.
       - name: Firma estable
         env:
-          KEYSTORE_B64: ${{ secrets.BARBOX_KEYSTORE_B64 }}
+          KEYSTORE_B64: ${{ secrets.STARK_KEYSTORE_B64 }}
         run: |
           if [ -n "$KEYSTORE_B64" ]; then
-            printf '%s' "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/barbox.keystore"
-            echo "BARBOX_KEYSTORE=$RUNNER_TEMP/barbox.keystore" >> "$GITHUB_ENV"
+            printf '%s' "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/stark.keystore"
+            echo "STARK_KEYSTORE=$RUNNER_TEMP/stark.keystore" >> "$GITHUB_ENV"
           else
-            echo "Sin BARBOX_KEYSTORE_B64: la huella cambiará en cada ejecución."
+            echo "Sin STARK_KEYSTORE_B64: la huella cambiará en cada ejecución."
           fi
       - name: Compilar APK debug
         working-directory: android
         env:
-          BARBOX_KEYSTORE_PASS: ${{ secrets.BARBOX_KEYSTORE_PASS }}
+          STARK_KEYSTORE_PASS: ${{ secrets.STARK_KEYSTORE_PASS }}
         run: ./gradlew assembleDebug --no-daemon
       - name: Huella SHA-1 de la firma
         run: |
@@ -73,7 +73,7 @@ jobs:
           "$APKSIGNER" verify --print-certs android/app/build/outputs/apk/debug/app-debug.apk | grep -E "SHA-1|DN"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: barbox-debug-apk
+          name: stark-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14

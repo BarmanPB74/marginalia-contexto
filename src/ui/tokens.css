@@ -1,5 +1,5 @@
 /*
- * Tokens de diseño de Bar Box — ÚNICA fuente de colores y medidas (docs/DISENO.md).
+ * Tokens de diseño de Stark — ÚNICA fuente de colores y medidas (docs/DISENO.md).
  * Ningún otro archivo de src/ puede escribir un color literal (lo vigila tests/unit/tokens.test.ts,
  * que además mide los contrastes de este archivo).
  *

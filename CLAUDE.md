@@ -1,6 +1,6 @@
-# Bar Box — contexto maestro
+# Stark — contexto maestro
 
-> Antes «Marginalia». Nombre de la app: **Bar Box** (ADR-015). Identificador Android: `io.github.barmanpb74.appnoti` (no cambia: Play lo fija al publicar).
+> Antes «Marginalia». Nombre de la app: **Stark** (ADR-017; «BAR BOX» es otro producto del autor y no se usa aquí). Identificador Android: `io.github.barmanpb74.appnoti` (no cambia: Play lo fija al publicar).
 > Este archivo se carga en CADA sesión. Mantenlo corto (< 150 líneas). El detalle vive en `docs/`.
 
 ## 1. Qué es
@@ -36,6 +36,7 @@ Atajos: `/inicio`, `/fase`, `/auditar`, `/cierre` (ver `.claude/commands/`).
 | `ESTADO.md` | Siempre (importado). Memoria viva entre sesiones. |
 | `docs/NEGOCIO.md` | Toques ventas, caja, inventario, compras, gastos, contabilidad o permisos. |
 | `docs/PLAY_CONSOLE.md` | Prepares una versión para Play Store. |
+| `docs/ESCRITORIO.md` | Toques la versión de Windows (`escritorio/`, Electron). |
 | `docs/PRODUCTO.md` | Dudes qué construir o qué NO construir. |
 | `docs/DISENO.md` | Toques cualquier pantalla, color, tipografía o componente. |
 | `docs/FORMATO_NOTAS.md` | Toques el parser, las etiquetas, el calendario o la canción. |

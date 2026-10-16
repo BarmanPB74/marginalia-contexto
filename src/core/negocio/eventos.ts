@@ -1,5 +1,5 @@
 /**
- * Eventos del diario de Bar Box.
+ * Eventos del diario de Stark.
  *
  * El negocio NO guarda «el inventario» ni «la caja»: guarda lo que pasó, en orden, en un
  * diario que sólo crece (append-only). El estado se calcula repitiendo los eventos

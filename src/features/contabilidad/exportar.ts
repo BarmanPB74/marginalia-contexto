@@ -5,13 +5,13 @@ import { resumenACsv, ventasACsv, type Negocio, type Periodo } from '../../core/
 /**
  * Exportar la contabilidad a CSV (`;`, con BOM para que Excel lea las tildes). El texto del CSV lo
  * arma el núcleo (`resumenACsv`, `ventasACsv`), que ya protege contra la inyección de fórmulas.
- * Teléfono: Documentos/Bar Box. Navegador: descarga (Blob + enlace con `download`).
+ * Teléfono: Documentos/Stark. Navegador: descarga (Blob + enlace con `download`).
  * Devuelve el mensaje para la persona.
  */
 const TIPO_CSV = 'text/csv';
 
 export function nombreArchivo(tipo: 'resumen' | 'ventas', hoy: Date): string {
-  return tipo === 'resumen' ? `barbox-contabilidad-${diaDe(hoy)}.csv` : `barbox-contabilidad-ventas-${diaDe(hoy)}.csv`;
+  return tipo === 'resumen' ? `stark-contabilidad-${diaDe(hoy)}.csv` : `stark-contabilidad-ventas-${diaDe(hoy)}.csv`;
 }
 
 export async function exportarResumen(negocio: Negocio, periodo: Periodo, hoy = new Date()): Promise<string> {

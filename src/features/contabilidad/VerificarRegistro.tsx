@@ -17,7 +17,7 @@ export async function verificarRegistro(negocio: Negocio): Promise<Resultado> {
       texto: `El registro no cuadra en el movimiento ${v.indice + 1} de ${v.archivo}: ${v.motivo}`,
       explicacion:
         'Cada movimiento guarda la huella del anterior. Si no cuadra, un archivo se dañó o alguien lo cambió por ' +
-        'fuera de la app. No borres nada: saca una copia y revisa con quien te ayuda con Bar Box.',
+        'fuera de la app. No borres nada: saca una copia y revisa con quien te ayuda con Stark.',
     };
   } catch (e) {
     return {

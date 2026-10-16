@@ -1,15 +1,15 @@
-# NEGOCIO — cómo funciona Bar Box, paso a paso
+# NEGOCIO — cómo funciona Stark, paso a paso
 
 > Documento de contexto del sistema (para el dueño, para el equipo y para cualquier agente de IA).
 > Si algo de la app contradice este documento, se corrige la app o se corrige aquí con una decisión
-> escrita (ADR en `docs/ARQUITECTURA.md`). Reglas heredadas del Bar Box de Python (`BarmanPB74/Bar_box`).
+> escrita (ADR en `docs/ARQUITECTURA.md`). Reglas heredadas de BAR BOX, el sistema en Python (`BarmanPB74/Bar_box`).
 
 ## 1. Qué es y qué no es
 - **Es** el cuaderno del negocio en el teléfono: inventario, ventas con caja, compras a proveedores,
   gastos, pagos de facturas, contabilidad interna y una bitácora (notas + calendario).
 - **Funciona sin internet.** Todo vive cifrado en el teléfono. Las copias se sacan a mano (ZIP / CSV).
 - **No emite factura electrónica (DIAN).** Lo que imprime o muestra es un comprobante interno. La
-  contabilidad oficial la lleva el contador con lo que Bar Box exporta.
+  contabilidad oficial la lleva el contador con lo que Stark exporta.
 
 ## 2. Personas y permisos
 | Rol | Puede | No puede |
@@ -23,7 +23,7 @@
   movimiento (anulación o ajuste) y ambos quedan a la vista.
 
 ## 3. Primer uso (una vez)
-1. Abrir Bar Box → «Crear dueño»: nombre y PIN. (Opcional: Ajustes → bloqueo con huella del teléfono.)
+1. Abrir Stark → «Crear dueño»: nombre y PIN. (Opcional: Ajustes → bloqueo con huella del teléfono.)
 2. **Importar inventario**: Inventario → Importar (Excel o CSV). Sirve el archivo «.xls» que exporta tu
    sistema anterior (es una tabla), un .xlsx o un .csv. La app muestra una vista previa, reconoce las
    columnas (Nombre, Final/Existencia, Precio, Costo, Categoría) y tú confirmas. Los productos que no

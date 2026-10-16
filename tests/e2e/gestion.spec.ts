@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 /**
- * Gestión de Bar Box de punta a punta: primer uso → Más → Contabilidad (verificar) → crear cajero →
+ * Gestión de Stark de punta a punta: primer uso → Más → Contabilidad (verificar) → crear cajero →
  * cambiar de usuario → entrar como cajero → Más sin Contabilidad. En teléfono y en tableta.
  * Capturas en capturas/gestion/.
  */

@@ -105,7 +105,7 @@ describe('Contabilidad', () => {
     await esperar();
 
     const hoy = diaDe(new Date());
-    expect(nombres).toEqual([`barbox-contabilidad-${hoy}.csv`, `barbox-contabilidad-ventas-${hoy}.csv`]);
+    expect(nombres).toEqual([`stark-contabilidad-${hoy}.csv`, `stark-contabilidad-ventas-${hoy}.csv`]);
     const [resumen = '', ventas = ''] = await Promise.all(blobs.map((b) => b.text()));
     expect(resumen).toContain('Ventas;Netas;;');
     expect(ventas).toContain('Cerveza');
@@ -113,7 +113,7 @@ describe('Contabilidad', () => {
       expect(texto).toContain(`'=HYPERLINK`);
       expect(texto).not.toMatch(/(^|;)=HYPERLINK/m);
     }
-    expect(c.textContent).toContain('Descargas/barbox-contabilidad-ventas-');
+    expect(c.textContent).toContain('Descargas/stark-contabilidad-ventas-');
   });
 
   it('«Verificar registro» recorre el diario', async () => {

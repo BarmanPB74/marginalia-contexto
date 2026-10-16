@@ -4,10 +4,10 @@ import { CopiaInvalida, crearCopiaNegocio, restaurarCopiaNegocio } from '../../c
 import type { Almacen } from '../../core/almacen/almacen';
 import { almacenDeLaApp } from '../notas/contexto';
 
-/** Exporta la copia completa del negocio (ZIP legible) a Documentos/Bar Box o como descarga. */
+/** Exporta la copia completa del negocio (ZIP legible) a Documentos/Stark o como descarga. */
 export async function exportarCopiaNegocio(almacen: Almacen = almacenDeLaApp(), hoy = new Date()): Promise<string> {
   const zip = await crearCopiaNegocio(almacen);
-  const donde = await guardarExportado(`barbox-copia-${diaDe(hoy)}.zip`, zip as Uint8Array<ArrayBuffer>, 'application/zip');
+  const donde = await guardarExportado(`stark-copia-${diaDe(hoy)}.zip`, zip as Uint8Array<ArrayBuffer>, 'application/zip');
   return `Copia del negocio guardada en ${donde}. No está cifrada: guárdala fuera del teléfono, en un lugar seguro.`;
 }
 

@@ -20,7 +20,7 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
-# Bar Box (ADR-015): los plugins de Capacitor se encuentran por anotaciones y reflexión.
+# Stark (ADR-015): los plugins de Capacitor se encuentran por anotaciones y reflexión.
 -keep @com.getcapacitor.annotation.CapacitorPlugin public class * {
     @com.getcapacitor.PluginMethod public <methods>;
     public <init>(...);

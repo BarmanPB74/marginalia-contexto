@@ -28,7 +28,7 @@ describe('Ajustes → Datos del negocio', () => {
     });
     await act(() => boton(c, 'Exportar contabilidad completa (CSV)').click());
     await esperar();
-    expect(nombres).toEqual([`barbox-contabilidad-${diaDe(new Date())}.csv`]);
+    expect(nombres).toEqual([`stark-contabilidad-${diaDe(new Date())}.csv`]);
     await act(() => boton(c, 'Verificar registro').click());
     await esperar();
     expect(c.textContent).toContain('Registro íntegro: 1 movimiento.');

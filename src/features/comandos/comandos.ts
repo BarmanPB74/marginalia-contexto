@@ -94,7 +94,7 @@ export function comandosGlobales({
       icono: 'calendario',
       ejecutar: () => void (location.hash = '#/calendario'),
     },
-    // Secciones del negocio (Bar Box): vender, inventario, caja, compras, gastos, contabilidad…
+    // Secciones del negocio (Stark): vender, inventario, caja, compras, gastos, contabilidad…
     ...[...SECCIONES, ...OTRAS]
       .filter((s) => !['notas', 'calendario', 'ajustes'].includes(s.id))
       .map((s): Comando => ({

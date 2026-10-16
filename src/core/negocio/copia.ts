@@ -15,7 +15,7 @@ export const CARPETA_ADJUNTOS = 'negocio/adjuntos';
 const MAX_COPIA = 300 * 1024 * 1024;
 const MAX_ARCHIVOS = 20_000;
 
-const LEEME = `Copia del negocio de Bar Box
+const LEEME = `Copia del negocio de Stark
 ============================
 
 negocio/diario/AAAA-MM-DD.json  movimientos de cada día (ventas, caja, inventario,
@@ -75,7 +75,7 @@ export async function restaurarCopiaNegocio(almacen: Almacen, bytes: Uint8Array)
     });
   } catch (e) {
     if (e instanceof CopiaInvalida) throw e;
-    throw new CopiaInvalida('no se pudo leer (¿está dañada o no es una copia de Bar Box?)');
+    throw new CopiaInvalida('no se pudo leer (¿está dañada o no es una copia de Stark?)');
   }
   const rutas = Object.keys(contenido);
   if (!rutas.some((r) => r.startsWith(`${CARPETA_DIARIO}/`))) throw new CopiaInvalida('no trae movimientos');
