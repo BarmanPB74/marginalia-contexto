@@ -11,7 +11,7 @@ interface AccionIcono {
   icono: NombreIcono;
   etiqueta: string;
   alTocar: () => void;
-  activo?: boolean;
+  activo?: boolean | undefined;
 }
 
 /** Título manuscrito de la pantalla + una acción de texto y, si hace falta, pocos iconos (DISENO.md). */

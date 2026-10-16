@@ -1,0 +1,40 @@
+.campo-numero__caja {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  padding-block: 0;
+  cursor: text;
+}
+
+.campo-numero__afijo {
+  flex: none;
+  font-weight: var(--peso-medio);
+  color: var(--texto-2);
+}
+
+.campo-numero__entrada {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: calc(var(--toque) - 3px);
+  padding: 0;
+  color: var(--texto);
+  background: none;
+  border: 0;
+  outline: none;
+}
+
+.campo-numero__entrada::placeholder {
+  color: var(--texto-2);
+  opacity: 1;
+}
+
+.campo-numero--grande .campo-numero__caja {
+  min-height: 64px;
+  font-size: var(--texto-xl);
+  font-weight: var(--peso-fuerte);
+}
+
+.campo-numero--grande .campo-numero__entrada {
+  min-height: 60px;
+}

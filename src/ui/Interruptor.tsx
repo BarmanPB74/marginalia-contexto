@@ -6,8 +6,8 @@ interface Props {
   activo: boolean;
   alCambiar: (activo: boolean) => void;
   /** Línea secundaria bajo la etiqueta */
-  descripcion?: string;
-  desactivado?: boolean;
+  descripcion?: string | undefined;
+  desactivado?: boolean | undefined;
 }
 
 /** Interruptor (switch): toda la fila es tocable; la pista se pinta de primario al encenderse. */

@@ -5,15 +5,15 @@ interface Props {
   etiqueta: string;
   valor: string;
   alCambiar: (valor: string) => void;
-  marcador?: string;
+  marcador?: string | undefined;
   /** Texto de ayuda bajo el campo */
-  ayuda?: string;
+  ayuda?: string | undefined;
   /** Mensaje de error: marca el campo como inválido y se anuncia */
-  error?: string;
+  error?: string | undefined;
   /** Tipo de teclado: text (por defecto), email, tel, search */
-  tipo?: 'text' | 'email' | 'tel' | 'search';
+  tipo?: 'text' | 'email' | 'tel' | 'search' | undefined;
   /** Etiqueta solo para lectores de pantalla (cuando el contexto ya la muestra) */
-  ocultarEtiqueta?: boolean;
+  ocultarEtiqueta?: boolean | undefined;
 }
 
 /** Campo de una línea: etiqueta arriba y caja hundida en el panel. */
@@ -29,7 +29,7 @@ export function CampoTexto({ etiqueta, valor, alCambiar, marcador, ayuda, error,
       <input
         id={id}
         class="campo__entrada"
-        type={tipo}
+        type={tipo as 'text'}
         value={valor}
         placeholder={marcador}
         aria-invalid={error ? true : undefined}

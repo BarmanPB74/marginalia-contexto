@@ -6,9 +6,9 @@ import './Etiqueta.css';
 interface Props {
   children: ComponentChildren;
   /** cancion: tinta de acento · fecha y normal: neutra */
-  tipo?: 'normal' | 'cancion' | 'fecha';
+  tipo?: 'normal' | 'cancion' | 'fecha' | undefined;
   /** Color de categoría (fondo suave + su tinta) */
-  color?: Categoria;
+  color?: Categoria | undefined;
 }
 
 /** Píldora de solo lectura (etiquetas de nota, categorías). Para filtrar, usa Chip. */

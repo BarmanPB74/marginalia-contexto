@@ -1,0 +1,89 @@
+.disposicion {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--esp-6);
+  align-items: start;
+}
+
+.disposicion__panel {
+  display: none;
+}
+
+.disposicion__titulo {
+  margin: 0 0 var(--esp-4);
+  font-size: var(--texto-l);
+  font-weight: var(--peso-fuerte);
+  line-height: var(--interlineado-justo);
+}
+
+/* Secciones del panel: cada bloque (precio, marca, talla…) separado con aire */
+.disposicion__filtros {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-6);
+}
+
+.disposicion__pie {
+  margin-top: var(--esp-6);
+}
+
+.disposicion__contenido {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+.disposicion__barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2) var(--esp-3);
+}
+
+.disposicion__barra:empty {
+  display: none;
+}
+
+/* Expandido: panel elevado y fijo a la izquierda, como en la referencia */
+@media (min-width: 840px) {
+  .disposicion {
+    grid-template-columns: var(--ancho-panel) minmax(0, 1fr);
+  }
+
+  .disposicion__panel {
+    position: sticky;
+    top: calc(var(--margen-arriba) + var(--esp-4));
+    display: block;
+    max-height: calc(100vh - var(--margen-arriba) - var(--margen-abajo) - var(--esp-8));
+    padding: var(--esp-5);
+    overflow-y: auto;
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio-l);
+    box-shadow: var(--sombra-l);
+    overscroll-behavior: contain;
+  }
+
+  .disposicion__abrir {
+    display: none;
+  }
+}
+
+/* Rejilla de tarjetas: 2 columnas en un teléfono de 320–360 px, 4–6 en tabletas */
+.rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--tarjeta-min)), 1fr));
+  gap: var(--esp-3);
+}
+
+.rejilla--cifra {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  gap: var(--esp-4);
+}
+
+@media (min-width: 600px) {
+  .rejilla {
+    gap: var(--esp-4);
+  }
+}

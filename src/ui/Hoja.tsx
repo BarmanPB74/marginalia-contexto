@@ -8,7 +8,7 @@ interface Props {
   alCerrar: () => void;
   children: ComponentChildren;
   /** Zona fija al pie (p. ej. «Aplicar filtros»): no se desplaza con el contenido */
-  pie?: ComponentChildren;
+  pie?: ComponentChildren | undefined;
 }
 
 /**

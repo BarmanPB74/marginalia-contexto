@@ -1,7 +1,7 @@
 import { render, type ComponentChild } from 'preact';
 import { act } from 'preact/test-utils';
 import { afterEach, describe, expect, it } from 'vitest';
-import { rutaActual, SECCIONES } from '../../src/app/rutas';
+import { OTRAS, rutaActual, SECCIONES } from '../../src/app/rutas';
 import { BarraInferior } from '../../src/ui/BarraInferior';
 import { EstadoVacio } from '../../src/ui/EstadoVacio';
 import { Icono, NOMBRES_ICONO } from '../../src/ui/Icono';
@@ -24,18 +24,23 @@ afterEach(() => {
 });
 
 describe('rutas', () => {
-  it('cada sección tiene su hash y lo vacío o desconocido abre Notas', () => {
+  it('cada sección tiene su hash y lo vacío o desconocido abre Inicio', () => {
+    expect(rutaActual('#/inicio')).toBe('inicio');
+    expect(rutaActual('#/vender')).toBe('vender');
     expect(rutaActual('#/notas')).toBe('notas');
-    expect(rutaActual('#/calendario')).toBe('calendario');
-    expect(rutaActual('#/musica')).toBe('musica');
+    expect(rutaActual('#/caja')).toBe('caja');
     expect(rutaActual('#/ajustes')).toBe('ajustes');
     expect(rutaActual('#/galeria')).toBe('galeria');
-    expect(rutaActual('')).toBe('notas');
-    expect(rutaActual('#/otra')).toBe('notas');
+    expect(rutaActual('')).toBe('inicio');
+    expect(rutaActual('#/otra')).toBe('inicio');
   });
 
-  it('hay exactamente 4 secciones, en el orden de la barra', () => {
-    expect(SECCIONES.map((s) => s.id)).toEqual(['notas', 'calendario', 'musica', 'ajustes']);
+  it('hay exactamente 5 secciones, en el orden de la barra', () => {
+    expect(SECCIONES.map((s) => s.id)).toEqual(['inicio', 'vender', 'inventario', 'notas', 'mas']);
+  });
+
+  it('todas las secciones (también las de «Más») tienen un icono propio', () => {
+    for (const s of [...SECCIONES, ...OTRAS]) expect(NOMBRES_ICONO).toContain(s.icono);
   });
 });
 
@@ -61,21 +66,26 @@ describe('Icono', () => {
 });
 
 describe('BarraInferior', () => {
-  it('es una navegación con 4 enlaces etiquetados y marca la sección actual', () => {
-    const c = montar(<BarraInferior actual="musica" />);
+  it('es una navegación con las 5 secciones etiquetadas y marca la actual', () => {
+    const c = montar(<BarraInferior actual="inventario" />);
     const nav = c.querySelector('nav');
     expect(nav?.getAttribute('aria-label')).toBe('Secciones');
     const enlaces = [...c.querySelectorAll('a')];
-    expect(enlaces.map((a) => a.textContent)).toEqual(['Notas', 'Calendario', 'Música', 'Ajustes']);
-    expect(enlaces.map((a) => a.getAttribute('href'))).toEqual(['#/notas', '#/calendario', '#/musica', '#/ajustes']);
+    expect(enlaces.map((a) => a.textContent)).toEqual(['Inicio', 'Vender', 'Inventario', 'Bitácora', 'Más']);
+    expect(enlaces.map((a) => a.getAttribute('href'))).toEqual(['#/inicio', '#/vender', '#/inventario', '#/notas', '#/mas']);
     expect(enlaces.filter((a) => a.getAttribute('aria-current') === 'page').map((a) => a.textContent)).toEqual([
-      'Música',
+      'Inventario',
     ]);
+  });
+
+  it('sin sección actual (galería, pantallas de «Más») no marca ninguna', () => {
+    const c = montar(<BarraInferior />);
+    expect(c.querySelectorAll('[aria-current]')).toHaveLength(0);
   });
 });
 
 describe('EstadoVacio', () => {
-  it('muestra un mensaje manuscrito y una pista secundaria', () => {
+  it('muestra un mensaje y una pista secundaria', () => {
     const c = montar(<EstadoVacio mensaje="Aún no hay notas." pista="La primera aparecerá aquí." />);
     expect(c.querySelector('.estado-vacio__mensaje')?.textContent).toBe('Aún no hay notas.');
     expect(c.querySelector('.estado-vacio__pista')?.textContent).toBe('La primera aparecerá aquí.');

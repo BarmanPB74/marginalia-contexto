@@ -1,0 +1,103 @@
+.rango {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.rango__leyenda {
+  padding: 0;
+  margin-bottom: var(--esp-2);
+  font-size: var(--texto-m);
+  font-weight: var(--peso-fuerte);
+}
+
+.rango__campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 6.5rem), 1fr));
+  gap: var(--esp-3);
+}
+
+.rango__etiqueta-campo {
+  font-size: var(--texto-xs);
+  color: var(--texto-2);
+}
+
+/* Pista hundida con el tramo elegido en primario; las dos manijas van encima */
+.rango__pista {
+  position: relative;
+  height: var(--toque);
+  margin: var(--esp-2) 12px 0;
+}
+
+.rango__pista::before,
+.rango__pista::after {
+  position: absolute;
+  top: 50%;
+  height: 8px;
+  content: '';
+  border-radius: var(--radio-pildora);
+  translate: 0 -50%;
+}
+
+.rango__pista::before {
+  right: 0;
+  left: 0;
+  background: var(--hundido);
+  box-shadow: var(--sombra-hundida);
+}
+
+.rango__pista::after {
+  right: calc(100% - var(--hasta));
+  left: var(--desde);
+  background: var(--primario);
+}
+
+.rango__manija {
+  position: absolute;
+  inset: 0 -12px;
+  z-index: 1;
+  width: calc(100% + 24px);
+  height: 100%;
+  margin: 0;
+  background: none;
+  pointer-events: none;
+  appearance: none;
+}
+
+.rango__manija::-webkit-slider-runnable-track {
+  height: 100%;
+  background: none;
+}
+
+.rango__manija::-webkit-slider-thumb {
+  width: 28px;
+  height: 28px;
+  margin-top: calc((var(--toque) - 28px) / 2);
+  background: var(--primario);
+  border: 3px solid var(--superficie-alta);
+  border-radius: 9px;
+  box-shadow: var(--sombra-s);
+  cursor: grab;
+  pointer-events: auto;
+  appearance: none;
+}
+
+.rango__manija::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  background: var(--primario);
+  border: 3px solid var(--superficie-alta);
+  border-radius: 9px;
+  box-shadow: var(--sombra-s);
+  pointer-events: auto;
+}
+
+.rango__manija:focus-visible {
+  outline: none;
+}
+
+.rango__manija:focus-visible::-webkit-slider-thumb {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}

@@ -9,17 +9,17 @@ interface Props {
    * primario: píldora índigo, la acción principal de la pantalla (una sola) ·
    * tonal: píldora suave de primario · peligro: borrar, anular
    */
-  variante?: 'contorno' | 'texto' | 'primario' | 'tonal' | 'peligro';
-  alTocar?: () => void;
-  desactivado?: boolean;
+  variante?: 'contorno' | 'texto' | 'primario' | 'tonal' | 'peligro' | undefined;
+  alTocar?: (() => void) | undefined;
+  desactivado?: boolean | undefined;
   /** Icono a la izquierda del texto */
-  icono?: NombreIcono;
+  icono?: NombreIcono | undefined;
   /** Ocupa todo el ancho disponible */
-  ancho?: boolean;
+  ancho?: boolean | undefined;
   /** «submit» dentro de un <form> */
-  tipo?: 'button' | 'submit';
+  tipo?: 'button' | 'submit' | undefined;
   /** Nombre accesible si el texto visible no basta */
-  etiqueta?: string;
+  etiqueta?: string | undefined;
 }
 
 export function Boton({

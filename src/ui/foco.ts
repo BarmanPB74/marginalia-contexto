@@ -1,4 +1,5 @@
-import { useEffect, useRef, type RefObject } from 'preact/hooks';
+import type { RefObject } from 'preact';
+import { useEffect, useRef } from 'preact/hooks';
 
 const ENFOCABLES =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -13,9 +14,9 @@ export function enfocables(raiz: HTMLElement): HTMLElement[] {
  * Escape llama a `alEscapar` y, al cerrar, el foco vuelve a donde estaba.
  */
 export function useFocoAtrapado(
-  ref: RefObject<HTMLElement>,
+  ref: RefObject<HTMLElement | null>,
   alEscapar: () => void,
-  inicial?: RefObject<HTMLElement>,
+  inicial?: RefObject<HTMLElement | null>,
 ) {
   // Siempre la última función, sin volver a montar el efecto (que robaría el foco)
   const escapar = useRef(alEscapar);
