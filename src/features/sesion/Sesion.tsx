@@ -6,6 +6,8 @@ import { Boton } from '../../ui/Boton';
 import { CampoTexto } from '../../ui/CampoTexto';
 import { TecladoPin } from '../../ui/TecladoPin';
 import { useNegocio } from '../negocio/contexto';
+import { restaurarDesdeArchivo } from '../negocio/copia';
+import { elegirZip } from '../notas/copia';
 import './Sesion.css';
 
 /** En Bar Box el PIN de cada persona tiene 4 dígitos: rápido en la caja y con teclado grande. */
@@ -44,6 +46,16 @@ function PrimerUso() {
   const [primero, setPrimero] = useState('');
   const [error, setError] = useState<string | undefined>();
   const [ocupado, setOcupado] = useState(false);
+  const [aviso, setAviso] = useState('');
+
+  /** Teléfono nuevo: traer la copia ZIP del negocio en vez de empezar de cero. */
+  async function restaurar() {
+    const archivo = await elegirZip();
+    if (!archivo) return;
+    const mensaje = await restaurarDesdeArchivo(archivo);
+    setAviso(mensaje);
+    if (mensaje.startsWith('Copia restaurada')) setTimeout(() => location.reload(), 1500);
+  }
 
   async function crear(repetido: string) {
     if (repetido !== primero) {
@@ -80,6 +92,14 @@ function PrimerUso() {
             Seguir
           </Boton>
         </form>
+        <Boton variante="texto" icono="importar" alTocar={() => void restaurar()}>
+          Restaurar una copia del negocio
+        </Boton>
+        {aviso && (
+          <p class="sesion__pista" role="alert">
+            {aviso}
+          </p>
+        )}
       </Marco>
     );
   }

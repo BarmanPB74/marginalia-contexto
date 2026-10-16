@@ -6,7 +6,7 @@ import { centavos, milesimas, Negocio, stockDe } from '../../src/core/negocio';
 import { ProveedorNegocio } from '../../src/features/negocio/contexto';
 import { PantallaInventario } from '../../src/features/inventario/PantallaInventario';
 import { cuantosActivos, FILTROS_INICIALES, filasInventario, filtrar, limitesExistencias } from '../../src/features/inventario/filtros';
-import { boton, esperar, montar, negocioDePrueba, repoNuevo } from './ayuda';
+import { boton, esperar, montar, negocioDePrueba, repoNuevo, hastaQue } from './ayuda';
 
 /** La pantalla dentro del proveedor del negocio (el de prueba lo inyecta `montar`). */
 const Pantalla = () => (
@@ -231,6 +231,8 @@ describe('Importar inventario', () => {
     expect(cifra('Crear')).toBe('7');
 
     await tocar(boton(c, 'Confirmar importación'));
+    // Importar escribe un movimiento por producto: en una máquina cargada tarda más que unos ticks
+    await hastaQue(() => c.querySelector('h1')?.textContent === 'Inventario importado');
     expect(c.querySelector('h1')?.textContent).toBe('Inventario importado');
     expect(c.textContent).not.toContain('inventario-tabla.xls');
 

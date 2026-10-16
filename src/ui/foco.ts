@@ -52,9 +52,10 @@ export function useFocoAtrapado(
         primero.focus();
       }
     };
-    addEventListener('keydown', alTeclear);
+    const ventana = window;
+    ventana.addEventListener('keydown', alTeclear);
     return () => {
-      removeEventListener('keydown', alTeclear);
+      ventana.removeEventListener('keydown', alTeclear);
       if (previo?.isConnected) previo.focus();
     };
   }, [ref, inicial]);

@@ -59,8 +59,9 @@ export function TecladoPin({
       else return;
       e.preventDefault();
     };
-    addEventListener('keydown', alTeclear);
-    return () => removeEventListener('keydown', alTeclear);
+    const ventana = window;
+    ventana.addEventListener('keydown', alTeclear);
+    return () => ventana.removeEventListener('keydown', alTeclear);
   }, []);
 
   return (

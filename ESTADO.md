@@ -51,12 +51,12 @@
 - La carga con instantánea no revalida la cadena anterior a ella: «Verificar registro» lo hace (correrlo con cada copia).
 - El limitador de intentos de PIN vive en memoria (reiniciar la app lo reinicia).
 - Bundle JS grande (CodeMirror + pantallas nuevas): medir arranque en frío en gama media.
-- La copia de seguridad ZIP cubre las notas; el diario del negocio se exporta en CSV pero aún no hay copia/restauración completa del negocio → F6.
+- Copia completa del negocio (ZIP legible, sin cifrar) y restauración solo en un negocio vacío (primer uso) con verificación de la cadena: probar en el teléfono con fotos grandes.
 - `overrides` fuerza `uuid` 11.1.1 bajo `xcode`: quitarlo cuando `@capacitor/cli` lo traiga.
 - Build release sin probar en teléfono; R8 con reglas para Capacitor añadidas a mano.
 
 ## Banco de ideas (NO construir sin decisión del autor)
-- Copia y restauración completa del negocio (diario + adjuntos) en un archivo cifrado con contraseña.
+- Copia del negocio cifrada con contraseña (hoy sale legible, como la de notas).
 - Recetas (un producto de carta gasta varios ingredientes), como en Bar_box (Python).
 
 ## Historial de sesiones

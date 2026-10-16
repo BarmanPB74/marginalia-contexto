@@ -39,6 +39,14 @@ export async function negocioDePrueba(reloj?: () => Date): Promise<Negocio> {
   return negocio;
 }
 
+/** Espera (hasta `ms`) a que se cumpla una condición, dejando correr promesas y re-renders. */
+export async function hastaQue(condicion: () => boolean, ms = 3000) {
+  const limite = Date.now() + ms;
+  while (!condicion() && Date.now() < limite) {
+    await act(async () => await new Promise((r) => setTimeout(r, 10)));
+  }
+}
+
 export async function montar(vista: ComponentChild, repo: RepositorioNotas, negocio?: Negocio) {
   const n = negocio ?? (await negocioDePrueba());
   const nuevo = document.createElement('div');

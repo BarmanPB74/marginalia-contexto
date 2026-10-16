@@ -33,8 +33,9 @@ function useHash() {
   const [hash, setHash] = useState(() => location.hash);
   useEffect(() => {
     const alCambiar = () => setHash(location.hash);
-    addEventListener('hashchange', alCambiar);
-    return () => removeEventListener('hashchange', alCambiar);
+    const ventana = window;
+    ventana.addEventListener('hashchange', alCambiar);
+    return () => ventana.removeEventListener('hashchange', alCambiar);
   }, []);
   return hash;
 }

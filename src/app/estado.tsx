@@ -39,8 +39,9 @@ export function ProveedorEstado({ children }: { children: ComponentChildren }) {
         abrirComandos(true);
       }
     };
-    addEventListener('keydown', alTeclear);
-    return () => removeEventListener('keydown', alTeclear);
+    const ventana = window;
+    ventana.addEventListener('keydown', alTeclear);
+    return () => ventana.removeEventListener('keydown', alTeclear);
   }, []);
 
   useEffect(() => {

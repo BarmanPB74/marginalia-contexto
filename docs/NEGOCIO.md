@@ -95,7 +95,7 @@ Por día, semana, mes o rango:
 - El registro de movimientos es un **diario encadenado**: cada movimiento lleva la huella del anterior;
   si alguien alterara el archivo, la app lo detecta y deja de escribir encima.
 - La app no tiene permiso de internet: no envía nada a nadie.
-- **Copias**: Ajustes → Exportar (ZIP de notas y CSV de contabilidad). Guárdalas fuera del teléfono: si
+- **Copias**: Ajustes → «Copia completa del negocio (ZIP)» (movimientos, usuarios, inventario y fotos de facturas), ZIP de notas y CSV de contabilidad. En un teléfono nuevo: primer uso → «Restaurar una copia del negocio». Guárdalas fuera del teléfono: si
   el teléfono se pierde o se reinstala la app, solo vuelve lo que esté en una copia.
 
 ## 10. Rutina recomendada

@@ -12,6 +12,7 @@ import { periodoCompleto } from '../contabilidad/periodo';
 import { VerificarRegistro } from '../contabilidad/VerificarRegistro';
 import { useNegocioOpcional } from '../negocio/contexto';
 import { useRepositorio } from '../notas/contexto';
+import { exportarCopiaNegocio } from '../negocio/copia';
 import { elegirZip, exportarCopia, importarCopia } from '../notas/copia';
 import { Bloqueo, enTelefono } from '../seguridad/nativo';
 import './PantallaAjustes.css';
@@ -166,6 +167,18 @@ function DatosNegocio() {
     }
   }
 
+  async function copiaCompleta() {
+    setOcupado(true);
+    setAviso('');
+    try {
+      setAviso(await exportarCopiaNegocio());
+    } catch {
+      setAviso('No se pudo hacer la copia. Prueba otra vez.');
+    } finally {
+      setOcupado(false);
+    }
+  }
+
   return (
     <li>
       <p class="ajustes__titulo">Datos del negocio</p>
@@ -177,6 +190,9 @@ function DatosNegocio() {
             </Boton>
             <Boton icono="exportar" variante="texto" desactivado={ocupado} alTocar={() => void exportar('ventas')}>
               Exportar todas las ventas (CSV)
+            </Boton>
+            <Boton icono="exportar" variante="tonal" desactivado={ocupado} alTocar={() => void copiaCompleta()}>
+              Copia completa del negocio (ZIP)
             </Boton>
           </div>
           <p class="ajustes__pista">
