@@ -12,8 +12,10 @@ import { NegocioDePrueba } from '../../src/features/negocio/contexto';
 let contenedores: HTMLElement[] = [];
 
 afterEach(() => {
+  // Dentro de act: los efectos pendientes se cierran ya, no en un temporizador que correría
+  // cuando jsdom ya desmontó window (error «removeEventListener is not a function»).
   for (const c of contenedores) {
-    render(null, c);
+    act(() => render(null, c));
     c.remove();
   }
   contenedores = [];

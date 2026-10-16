@@ -15,7 +15,7 @@ import { useNegocio } from '../negocio/contexto';
 import { AbrirCaja } from '../caja/AbrirCaja';
 import { cantidadCon } from '../caja/comun';
 import { Cobrar } from './Cobrar';
-import { Pedido } from './Pedido';
+import { Pedido } from './PanelPedido';
 import { enPedido, existencias, guardarPedido, pedidoGuardado, sumar, vistaPrevia, PEDIDO_VACIO, type Pedido as TPedido } from './pedido';
 import { VentasHoy } from './VentasHoy';
 import './PantallaVender.css';
