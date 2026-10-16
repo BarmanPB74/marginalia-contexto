@@ -1,11 +1,16 @@
 import { useState } from 'preact/hooks';
 import { useEstado } from '../../app/estado';
+import { ReglaRota } from '../../core/negocio';
 import type { Tema, VistaNotas } from '../../app/ajustes';
 import { Boton } from '../../ui/Boton';
 import { Encabezado } from '../../ui/Encabezado';
 import { Interruptor } from '../../ui/Interruptor';
 import { Pagina } from '../../ui/Pagina';
 import { Segmentado } from '../../ui/Segmentado';
+import { exportarResumen, exportarVentas } from '../contabilidad/exportar';
+import { periodoCompleto } from '../contabilidad/periodo';
+import { VerificarRegistro } from '../contabilidad/VerificarRegistro';
+import { useNegocioOpcional } from '../negocio/contexto';
 import { useRepositorio } from '../notas/contexto';
 import { elegirZip, exportarCopia, importarCopia } from '../notas/copia';
 import { Bloqueo, enTelefono } from '../seguridad/nativo';
@@ -130,7 +135,70 @@ export function PantallaAjustes() {
             cualquier app pueda leerla: guarda el ZIP en un lugar seguro.
           </p>
         </li>
+        <DatosNegocio />
       </ul>
     </Pagina>
+  );
+}
+
+/**
+ * Datos del negocio: exportar toda la contabilidad (CSV), verificar el diario y qué pasa con los
+ * datos. Los botones solo aparecen si el cargo puede (lo decide la tabla de permisos del núcleo).
+ */
+function DatosNegocio() {
+  const app = useNegocioOpcional();
+  const [aviso, setAviso] = useState('');
+  const [ocupado, setOcupado] = useState(false);
+  if (!app) return null;
+  const { negocio } = app;
+  const puedeExportar = negocio.puede('contabilidad.exportar');
+
+  async function exportar(que: 'resumen' | 'ventas') {
+    setOcupado(true);
+    setAviso('');
+    try {
+      const hoy = new Date();
+      setAviso(await (que === 'resumen' ? exportarResumen(negocio, periodoCompleto(hoy), hoy) : exportarVentas(negocio, periodoCompleto(hoy), hoy)));
+    } catch (e) {
+      setAviso(e instanceof ReglaRota ? e.message : 'No se pudo exportar. Prueba otra vez.');
+    } finally {
+      setOcupado(false);
+    }
+  }
+
+  return (
+    <li>
+      <p class="ajustes__titulo">Datos del negocio</p>
+      {puedeExportar && (
+        <>
+          <div class="ajustes__botones">
+            <Boton icono="exportar" desactivado={ocupado} alTocar={() => void exportar('resumen')}>
+              Exportar contabilidad completa (CSV)
+            </Boton>
+            <Boton icono="exportar" variante="texto" desactivado={ocupado} alTocar={() => void exportar('ventas')}>
+              Exportar todas las ventas (CSV)
+            </Boton>
+          </div>
+          <p class="ajustes__pista">
+            Desde el primer movimiento hasta hoy, separado por «;» para Excel o para tu contador. Registro interno de apoyo:
+            no es factura electrónica ni contabilidad oficial.
+          </p>
+          {aviso && (
+            <p class="ajustes__aviso" aria-live="polite">
+              {aviso}
+            </p>
+          )}
+        </>
+      )}
+      {negocio.puede('diario.verificar') && <VerificarRegistro negocio={negocio} />}
+      <p class="ajustes__pista">
+        <strong>Sin internet:</strong> Bar Box no envía nada a nadie; todo vive en este teléfono.{' '}
+        <strong>Cifrado:</strong> ventas, inventario, caja, usuarios y fotos de facturas se guardan cifrados (AES-256), con
+        la clave protegida por el chip de seguridad de Android (Keystore). <strong>Firmado:</strong> cada movimiento guarda
+        quién lo hizo y la huella del anterior; si alguien alterara el archivo, «Verificar registro» lo detecta.{' '}
+        <strong>Copias:</strong> son manuales (CSV y ZIP). Guárdalas fuera del teléfono: si se pierde o se reinstala la app,
+        solo vuelve lo que esté en una copia.
+      </p>
+    </li>
   );
 }

@@ -1,0 +1,516 @@
+/*
+ * Vender: catálogo + pedido. Compacto (< 840 px): el pedido es una barra fija abajo que abre una
+ * hoja. Ancho (≥ 840 px): columna fija a la derecha. Solo tokens (DISENO.md).
+ */
+.vender {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--esp-6);
+  align-items: start;
+  margin-top: var(--esp-4);
+}
+
+/* Deja sitio a la barra del pedido para que no tape las últimas tarjetas */
+.vender--con-pedido {
+  padding-bottom: calc(var(--toque) + var(--esp-12));
+}
+
+.vender__catalogo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+.vender__catalogo .buscador {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+.vender__hecho {
+  margin: 0;
+  padding: var(--esp-3) var(--esp-4);
+  font-weight: var(--peso-medio);
+  color: var(--exito-tinta);
+  background: var(--exito-suave);
+  border-radius: var(--radio);
+}
+
+.vender__grupo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.vender__grupo legend {
+  margin-bottom: var(--esp-2);
+  padding: 0;
+  font-size: var(--texto-s);
+  font-weight: var(--peso-fuerte);
+  color: var(--texto-2);
+}
+
+.vender__pedido {
+  display: none;
+}
+
+.vender__titulo-pedido {
+  margin: 0 0 var(--esp-3);
+  font-size: var(--texto-l);
+  font-weight: var(--peso-fuerte);
+}
+
+/* Barra del pedido (compacto): total + Cobrar, sobre la barra de secciones */
+.vender__barra {
+  position: fixed;
+  right: calc(var(--margen-lado) + var(--margen-derecha));
+  bottom: calc(var(--reserva-abajo) + var(--esp-2));
+  left: calc(var(--reserva-lado) + var(--margen-lado) + var(--margen-izquierda));
+  z-index: 15;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2) var(--esp-3);
+  padding: var(--esp-2);
+  background: var(--superficie-alta);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-l);
+  box-shadow: var(--sombra-flotante);
+  animation: subir var(--dur-media) var(--curva) backwards;
+}
+
+.vender__barra > .boton {
+  flex: 0 0 auto;
+}
+
+.vender__ver {
+  display: flex;
+  flex: 1 1 8rem;
+  align-items: center;
+  gap: var(--esp-3);
+  min-width: 0;
+  min-height: var(--toque);
+  padding: 0 var(--esp-3);
+  font: inherit;
+  color: var(--texto);
+  background: none;
+  border: 0;
+  border-radius: var(--radio);
+  cursor: pointer;
+}
+
+.vender__cuenta {
+  display: inline-grid;
+  place-items: center;
+  min-width: 2rem;
+  min-height: 2rem;
+  padding: 0 var(--esp-2);
+  font-weight: var(--peso-fuerte);
+  color: var(--primario-tinta);
+  background: var(--primario-suave);
+  border-radius: var(--radio-pildora);
+}
+
+.vender__total {
+  font-size: var(--texto-l);
+  font-weight: var(--peso-fuerte);
+  overflow-wrap: anywhere;
+}
+
+.vender__pie-hoja {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--esp-2);
+}
+
+.vender__pie-hoja > .boton--primario {
+  flex: 1 1 12rem;
+}
+
+.vender-sin-caja {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--esp-4);
+}
+
+/* Ancho: el pedido es una columna fija a la derecha */
+@media (min-width: 840px) {
+  .vender {
+    grid-template-columns: minmax(0, 1fr) clamp(280px, 28vw, 380px);
+  }
+
+  .vender--con-pedido {
+    padding-bottom: 0;
+  }
+
+  .vender__pedido {
+    position: sticky;
+    top: calc(var(--margen-arriba) + var(--esp-4));
+    display: block;
+    max-height: calc(100dvh - var(--margen-arriba) - var(--margen-abajo) - var(--esp-8));
+    padding: var(--esp-5);
+    overflow-y: auto;
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio-l);
+    box-shadow: var(--sombra-l);
+    overscroll-behavior: contain;
+  }
+
+  .vender__barra {
+    display: none;
+  }
+}
+
+/*
+ * Entre 840 y 1199 px no caben filtros + rejilla + pedido: el panel de filtros vuelve a la hoja
+ * (como en compacto) y el pedido conserva su columna.
+ */
+@media (min-width: 840px) and (max-width: 1199px) {
+  .vender .disposicion {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .vender .disposicion__panel {
+    display: none;
+  }
+
+  .vender .disposicion__abrir {
+    display: inline;
+  }
+}
+
+/* ── Pedido ───────────────────────────────────────────────────────────── */
+.pedido {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+  min-width: 0;
+}
+
+.pedido__vacio {
+  margin: 0;
+  font-weight: var(--peso-medio);
+}
+
+.pedido__pista {
+  margin: 0;
+  color: var(--texto-2);
+}
+
+.pedido__lineas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pedido__linea {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-1);
+  padding-bottom: var(--esp-3);
+  border-bottom: 1px solid var(--separador);
+}
+
+.pedido__cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--esp-1) var(--esp-3);
+}
+
+.pedido__nombre {
+  min-width: 0;
+  font-weight: var(--peso-medio);
+  overflow-wrap: anywhere;
+}
+
+.pedido__subtotal {
+  font-weight: var(--peso-fuerte);
+}
+
+.pedido__unitario {
+  margin: 0;
+  font-size: var(--texto-s);
+  color: var(--texto-2);
+}
+
+.pedido__controles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--esp-2);
+}
+
+.pedido__controles .campo {
+  flex: 1 1 8rem;
+  min-width: 0;
+}
+
+.pedido__cantidad {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
+  padding: 2px;
+  background: var(--hundido);
+  border-radius: var(--radio-pildora);
+  box-shadow: var(--sombra-hundida);
+}
+
+.pedido__paso,
+.pedido__quitar {
+  display: inline-grid;
+  place-items: center;
+  width: var(--toque);
+  height: var(--toque);
+  padding: 0;
+  color: var(--texto);
+  background: var(--superficie-alta);
+  border: 0;
+  border-radius: var(--radio-pildora);
+  box-shadow: var(--sombra-s);
+  cursor: pointer;
+}
+
+.pedido__quitar {
+  color: var(--texto-2);
+  background: none;
+  box-shadow: none;
+}
+
+.pedido__numero {
+  min-width: 2.5rem;
+  font-size: var(--texto-l);
+  font-weight: var(--peso-fuerte);
+  text-align: center;
+}
+
+.pedido__descuento {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+}
+
+.pedido__totales {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-1);
+  margin: 0;
+}
+
+.pedido__fila {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--esp-2);
+  color: var(--texto-2);
+}
+
+.pedido__fila dd {
+  margin: 0;
+}
+
+.pedido__fila--total {
+  font-size: var(--texto-xl);
+  font-weight: var(--peso-fuerte);
+  color: var(--texto);
+}
+
+.pedido__acciones {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+}
+
+/* ── Cobrar ───────────────────────────────────────────────────────────── */
+.cobrar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-5);
+}
+
+.cobrar__total,
+.cobrar__cambio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-1);
+  margin: 0;
+  padding: var(--esp-4);
+  text-align: center;
+  background: var(--hundido);
+  border-radius: var(--radio-l);
+  box-shadow: var(--sombra-hundida);
+}
+
+.cobrar__cambio {
+  color: var(--exito-tinta);
+  background: var(--exito-suave);
+  box-shadow: none;
+}
+
+.cobrar__cambio--vacio {
+  color: var(--texto-2);
+  background: var(--hundido);
+}
+
+.cobrar__etiqueta {
+  font-size: var(--texto-s);
+  font-weight: var(--peso-medio);
+}
+
+.cobrar__cifra {
+  font-size: var(--texto-cifra);
+  font-weight: var(--peso-fuerte);
+  line-height: var(--interlineado-justo);
+  overflow-wrap: anywhere;
+}
+
+.cobrar__formas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  gap: var(--esp-3);
+}
+
+.cobrar__forma {
+  min-height: calc(var(--toque) + var(--esp-4));
+  padding: var(--esp-2) var(--esp-3);
+  font: inherit;
+  font-weight: var(--peso-medio);
+  color: var(--texto);
+  background: var(--superficie-alta);
+  border: 2px solid var(--borde);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra-s);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.cobrar__forma[aria-checked='true'] {
+  font-weight: var(--peso-fuerte);
+  color: var(--primario-tinta);
+  background: var(--primario-suave);
+  border-color: var(--primario);
+}
+
+.cobrar__pagos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cobrar__pago {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--esp-2);
+}
+
+.cobrar__pago > .campo,
+.cobrar__resto {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cobrar__resto {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: var(--esp-3) var(--esp-4);
+  font-weight: var(--peso-medio);
+  background: var(--hundido);
+  border-radius: var(--radio);
+}
+
+.cobrar__quitar {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: var(--toque);
+  height: var(--toque);
+  padding: 0;
+  color: var(--texto-2);
+  background: none;
+  border: 0;
+  border-radius: var(--radio-pildora);
+  cursor: pointer;
+}
+
+.cobrar__subtitulo {
+  margin: 0 0 var(--esp-2);
+  font-size: var(--texto-s);
+  font-weight: var(--peso-fuerte);
+  color: var(--texto-2);
+}
+
+.cobrar__libres,
+.cobrar__rapidos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+}
+
+.cobrar__efectivo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+}
+
+.cobrar__falta {
+  margin: 0;
+  font-weight: var(--peso-medio);
+  color: var(--peligro-tinta);
+}
+
+.cobrar__nota {
+  margin: 0;
+  font-size: var(--texto-xs);
+  color: var(--texto-2);
+}
+
+.cobrar__pie {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+}
+
+.cobrar__error {
+  margin: 0;
+  font-weight: var(--peso-medio);
+  color: var(--peligro-tinta);
+}
+
+/* ── Ventas de hoy ────────────────────────────────────────────────────── */
+.ventas-hoy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+  margin-top: var(--esp-4);
+}
+
+.ventas-hoy__hecho {
+  margin: 0;
+  padding: var(--esp-3) var(--esp-4);
+  font-weight: var(--peso-medio);
+  color: var(--exito-tinta);
+  background: var(--exito-suave);
+  border-radius: var(--radio);
+}
+
+.ventas-hoy__anular {
+  min-height: var(--toque);
+  color: var(--peligro-tinta);
+}

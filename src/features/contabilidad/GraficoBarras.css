@@ -1,0 +1,66 @@
+.grafico {
+  display: grid;
+  gap: var(--esp-3);
+  margin: 0 0 var(--esp-4);
+}
+
+/* Estrecho: etiqueta y cifra arriba, barra abajo a todo el ancho */
+.grafico__fila {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'etiqueta cifra'
+    'barra barra';
+  align-items: center;
+  gap: var(--esp-1) var(--esp-3);
+}
+
+.grafico__etiqueta {
+  grid-area: etiqueta;
+  min-width: 0;
+  font-size: var(--texto-s);
+  color: var(--texto-2);
+  overflow-wrap: anywhere;
+}
+
+.grafico__cifra {
+  grid-area: cifra;
+  font-size: var(--texto-s);
+  font-weight: var(--peso-medio);
+  color: var(--texto);
+}
+
+.grafico__barra {
+  grid-area: barra;
+  display: block;
+  width: 100%;
+  height: 14px;
+  overflow: hidden;
+  border-radius: var(--radio-pildora);
+}
+
+.grafico__pista {
+  fill: var(--hundido);
+}
+
+.grafico__valor {
+  fill: var(--cat-base);
+}
+
+/* Ancho: etiqueta | barra | cifra en una sola línea */
+@media (min-width: 600px) {
+  .grafico__fila {
+    grid-template-columns: minmax(8rem, 14rem) minmax(0, 1fr) minmax(6rem, auto);
+    grid-template-areas: 'etiqueta barra cifra';
+  }
+
+  .grafico__cifra {
+    text-align: right;
+  }
+}
+
+@media (forced-colors: active) {
+  .grafico__valor {
+    fill: CanvasText;
+  }
+}
