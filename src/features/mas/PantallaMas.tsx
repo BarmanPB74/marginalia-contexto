@@ -22,7 +22,7 @@ export function PantallaMas() {
           {sesion.nombre} · {NOMBRE_ROL[sesion.rol]}
         </p>
       )}
-      <ul class="mas__rejilla" aria-label="Secciones">
+      <ul class="mas__rejilla" aria-label="Otras secciones">
         {tarjetas.map((t) => (
           <li key={t.id}>
             <a class="mas__tarjeta" href={`#/${t.id}`}>

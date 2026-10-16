@@ -14,7 +14,7 @@ export const MAX_ZIP = 100 * 1024 * 1024;
 /** Suma máxima de lo descomprimido (frena las "bombas zip"). */
 export const MAX_TOTAL = 300 * 1024 * 1024;
 
-const LEEME = `Copia de notas de Marginalia
+const LEEME = `Copia de notas de Bar Box
 ============================
 
 Cada archivo de notas/ es una nota en Markdown, sin cifrar, con su
@@ -22,7 +22,7 @@ encabezado YAML (id, título, fechas, etiquetas, página madre).
 El nombre del archivo es el id de la nota; el título está dentro.
 
 Se abren con cualquier editor de texto, Obsidian, VS Code o Typora.
-Para recuperarlas en Marginalia: Ajustes → Importar notas (ZIP).
+Para recuperarlas en Bar Box: Ajustes → Importar notas (ZIP).
 
 Guarda esta copia en un lugar seguro: no está cifrada.
 `;

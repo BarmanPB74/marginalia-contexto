@@ -5,7 +5,7 @@ import { resumenACsv, ventasACsv, type Negocio, type Periodo } from '../../core/
 /**
  * Exportar la contabilidad a CSV (`;`, con BOM para que Excel lea las tildes). El texto del CSV lo
  * arma el núcleo (`resumenACsv`, `ventasACsv`), que ya protege contra la inyección de fórmulas.
- * Teléfono: Documentos/Marginalia. Navegador: descarga (Blob + enlace con `download`).
+ * Teléfono: Documentos/Bar Box. Navegador: descarga (Blob + enlace con `download`).
  * Devuelve el mensaje para la persona.
  */
 const TIPO_CSV = 'text/csv';

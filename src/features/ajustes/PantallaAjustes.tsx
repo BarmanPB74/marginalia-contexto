@@ -41,7 +41,7 @@ export function PantallaAjustes() {
         return;
       }
       await Bloqueo.autenticar({
-        titulo: 'Marginalia',
+        titulo: 'Bar Box',
         subtitulo: activar ? 'Confirma para activar el bloqueo' : 'Confirma para quitar el bloqueo',
       });
       cambiarAjustes({ bloqueo: activar });
@@ -121,7 +121,7 @@ export function PantallaAjustes() {
           {enTelefono() && (
             <>
               <Interruptor etiqueta="Bloqueo con huella o PIN" activo={bloqueo} alCambiar={(v) => void cambiarBloqueo(v)} />
-              <p class="ajustes__pista">Al abrir Marginalia y al volver tras un minuto fuera. Usa el bloqueo del propio teléfono.</p>
+              <p class="ajustes__pista">Al abrir Bar Box y al volver tras un minuto fuera. Usa el bloqueo del propio teléfono.</p>
               {avisoBloqueo && (
                 <p class="ajustes__aviso" role="alert">
                   {avisoBloqueo}

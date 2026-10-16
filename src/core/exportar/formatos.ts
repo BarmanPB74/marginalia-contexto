@@ -43,7 +43,7 @@ export function exportar(nota: Nota, formato: Formato): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="generator" content="Marginalia">
+<meta name="generator" content="Bar Box">
 <title>${escapar(nota.titulo)}</title>
 <style>
   :root { color-scheme: light dark; }
