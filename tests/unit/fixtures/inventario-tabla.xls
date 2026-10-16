@@ -1,0 +1,14 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><meta http-equiv="content-type" content="application/vnd.ms-excel; charset=UTF-8"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Hoja1</x:Name></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table><tr><td>Ubicación</td><td>&nbsp;&nbsp;&nbsp;Nombre</td><td>&nbsp;&nbsp;&nbsp;Inicial</td><td>&nbsp;&nbsp;&nbsp;Final</td><td>&nbsp;&nbsp;&nbsp;Diferencia</td></tr>
+<tr><td>General</td><td>AGUA CON GAS</td><td>24,00</td><td>23,00</td><td>1,00</td></tr>
+<tr><td>General</td><td>Limonada de Coco&nbsp;&nbsp;Grande</td><td>10,00</td><td>8,50</td><td>1,50</td></tr>
+<tr><td>General</td><td>CAFÉ OSCURO</td><td>5,00</td><td>-2,00</td><td>7,00</td></tr>
+<tr><td>Bodega</td><td>Vasos desechables</td><td>1.000,00</td><td>997,00</td><td>3,00</td></tr>
+<tr><td>General</td><td>Piña Colada Ñapa</td><td>3,00</td><td>3,00</td><td>0,00</td></tr>
+<tr><td>General</td><td>Té Helado Limón</td><td>12,00</td><td>1.234,50</td><td>-1.222,50</td></tr>
+<tr><td>General</td><td>   Cerveza   Artesanal   Rubia </td><td>48,00</td><td>40,00</td><td>8,00</td></tr>
+<tr><td>General</td><td>Hielo en bolsa</td><td>0,00</td><td>0,00</td><td>0,00</td></tr>
+<tr><td>General</td><td>Maní salado</td><td>20,00</td><td>abc</td><td>0,00</td></tr>
+<tr><td>General</td><td>agua con gas</td><td>1,00</td><td>1,00</td><td>0,00</td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td>Total</td><td>1.123,00</td><td>2.307,00</td><td>-1.184,00</td></tr>
+</table></body></html>
