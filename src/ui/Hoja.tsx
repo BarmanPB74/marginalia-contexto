@@ -1,5 +1,5 @@
 import type { ComponentChildren } from 'preact';
-import { useId, useRef } from 'preact/hooks';
+import { useRef } from 'preact/hooks';
 import { useFocoAtrapado } from './foco';
 import './Hoja.css';
 
@@ -17,15 +17,14 @@ interface Props {
  */
 export function Hoja({ titulo, alCerrar, children, pie }: Props) {
   const panel = useRef<HTMLDivElement>(null);
-  const idTitulo = useId();
   useFocoAtrapado(panel, alCerrar);
 
   return (
     <div class="hoja">
       <div class="hoja__velo" onClick={alCerrar} aria-hidden="true" />
-      <div ref={panel} class="hoja__panel" role="dialog" aria-modal="true" aria-labelledby={idTitulo} tabIndex={-1}>
+      <div ref={panel} class="hoja__panel" role="dialog" aria-modal="true" aria-label={titulo} tabIndex={-1}>
         <span class="hoja__asa" aria-hidden="true" />
-        <p class="hoja__titulo" id={idTitulo}>
+        <p class="hoja__titulo" aria-hidden="true">
           {titulo}
         </p>
         <div class="hoja__contenido">{children}</div>

@@ -409,7 +409,7 @@ describe('Dialogo y Hoja', () => {
       </Hoja>,
     );
     const panel = c.querySelector('[role="dialog"]');
-    expect(document.getElementById(panel?.getAttribute('aria-labelledby') ?? '')?.textContent).toBe('Filtros');
+    expect(panel?.getAttribute('aria-label')).toBe('Filtros');
     expect(c.querySelector('.hoja__pie')?.textContent).toBe('Aplicar');
   });
 });

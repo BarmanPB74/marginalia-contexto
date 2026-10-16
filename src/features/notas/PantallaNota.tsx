@@ -155,7 +155,7 @@ export function PantallaNota({ id }: { id: string }) {
             de('fecha-elegir', 'Insertar una fecha…', 'calendario dia @ elegir selector', 'calendario'),
           ]
         : []),
-      de('subpagina', 'Nueva subpágina', 'crear hija pagina', 'mas'),
+      de('subpagina', 'Nueva subpágina', 'crear hija pagina', 'mas-signo'),
       ...FORMATOS.map((f) =>
         de(`exportar-${f.id}`, `Exportar esta nota como ${f.nombre}`, 'guardar compartir descifrar archivo', 'exportar'),
       ),

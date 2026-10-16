@@ -39,7 +39,7 @@ export function ProveedorNegocio({ children, negocio: propio }: { children: Comp
 
   useEffect(() => {
     let vigente = true;
-    let soltar = () => undefined as void;
+    let soltar: () => void = () => undefined;
     (negocio ? Promise.resolve(negocio) : abrir()).then(
       (n) => {
         if (!vigente) return;

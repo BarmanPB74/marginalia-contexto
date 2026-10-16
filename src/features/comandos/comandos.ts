@@ -1,3 +1,4 @@
+import { OTRAS, SECCIONES } from '../../app/rutas';
 import type { Ajustes } from '../../app/ajustes';
 import { diaDe } from '../../core/notas/fechas';
 import { PLANTILLAS } from '../../core/notas/plantillas';
@@ -54,7 +55,7 @@ export function comandosGlobales({
       nombre: `Nueva nota: ${p.nombre}`,
       grupo: 'Herramientas',
       palabras: 'crear escribir plantilla',
-      icono: 'mas',
+      icono: 'mas-signo',
       ejecutar: () => abrir({ plantilla: p.id }),
     })),
     {
@@ -70,7 +71,7 @@ export function comandosGlobales({
       nombre: 'Importar notas (ZIP)',
       grupo: 'Herramientas',
       palabras: 'copia respaldo backup restaurar recuperar',
-      icono: 'mas',
+      icono: 'mas-signo',
       ejecutar: async () => {
         // elegirZip() se llama sin esperar nada antes: sigue dentro del toque o de Intro
         const archivo = await elegirZip();
@@ -93,7 +94,16 @@ export function comandosGlobales({
       icono: 'calendario',
       ejecutar: () => void (location.hash = '#/calendario'),
     },
-    { id: 'ir-musica', nombre: 'Música', grupo: 'Ir a', icono: 'musica', ejecutar: () => void (location.hash = '#/musica') },
+    // Secciones del negocio (Bar Box): vender, inventario, caja, compras, gastos, contabilidad…
+    ...[...SECCIONES, ...OTRAS]
+      .filter((s) => !['notas', 'calendario', 'ajustes'].includes(s.id))
+      .map((s): Comando => ({
+        id: `ir-${s.id}`,
+        nombre: s.etiqueta,
+        grupo: 'Ir a',
+        icono: s.icono,
+        ejecutar: () => void (location.hash = `#/${s.id}`),
+      })),
     {
       id: 'ir-ajustes',
       nombre: 'Ajustes',
