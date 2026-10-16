@@ -252,18 +252,37 @@ export class Diario {
    * Valida y añade un evento. Devuelve el evento escrito (copia limpia) y el estado nuevo.
    * Lanza `ReglaRota` si una regla lo impide (y no escribe nada), o el error del diario.
    */
-  agregar(entrada: EntradaDiario): Promise<{ evento: Evento; estado: EstadoNegocio }> {
+  async agregar(entrada: EntradaDiario): Promise<{ evento: Evento; estado: EstadoNegocio }> {
+    const r = await this.agregarVarios((estado) => [typeof entrada === 'function' ? entrada(estado) : entrada]);
+    return { evento: r.eventos[0] as Evento, estado: r.estado };
+  }
+
+  /**
+   * Añade varios eventos como UNA operación atómica: se validan uno tras otro (cada uno
+   * contra el estado que dejó el anterior) y se escriben en una sola escritura. Si uno
+   * rompe una regla, no se escribe ninguno. Una lista vacía no escribe nada.
+   */
+  agregarVarios(armar: (estado: EstadoNegocio) => readonly Evento[]): Promise<{ eventos: Evento[]; estado: EstadoNegocio }> {
     return this.enFila(async () => {
       if (this.bloqueo) throw this.bloqueo;
       if (!this.cargado) throw new Error('El diario no está cargado.');
-      const crudo = typeof entrada === 'function' ? entrada(this.estadoActual) : entrada;
-      const evento = leerEvento(crudo);
-      validar(this.estadoActual, evento);
+      const crudos = armar(this.estadoActual);
+      if (crudos.length === 0) return { eventos: [], estado: this.estadoActual }; // nada que escribir
+      let estado = this.estadoActual;
+      const eventos: Evento[] = [];
+      const nuevos: Registro[] = [];
+      for (const crudo of crudos) {
+        const evento = leerEvento(crudo);
+        validar(estado, evento);
+        const hash = await hashEvento(estado.ultimoHash, evento);
+        estado = aplicar(estado, evento, hash);
+        eventos.push(evento);
+        nuevos.push({ ...evento, hash } as Registro);
+      }
 
-      const diaEvento = diaDe(evento);
+      const diaEvento = diaDe(eventos[eventos.length - 1] as Evento);
       const dia = this.ultimoDia !== null && this.ultimoDia > diaEvento ? this.ultimoDia : diaEvento;
-      const hash = await hashEvento(this.estadoActual.ultimoHash, evento);
-      const registros = [...(dia === this.ultimoDia ? this.registrosDia : []), { ...evento, hash } as Registro];
+      const registros = [...(dia === this.ultimoDia ? this.registrosDia : []), ...nuevos];
       try {
         await this.almacen.escribir(this.ruta(dia), JSON.stringify(registros));
       } catch (e) {
@@ -276,16 +295,16 @@ export class Diario {
       }
       this.ultimoDia = dia;
       this.registrosDia = registros;
-      this.estadoActual = aplicar(this.estadoActual, evento, hash);
+      this.estadoActual = estado;
 
-      if (evento.tipo === 'caja.cerrada') {
+      if (eventos.some((e) => e.tipo === 'caja.cerrada')) {
         try {
           await this.escribirInstantanea();
         } catch {
           // La instantánea es un atajo: si falla, la próxima carga repite el diario.
         }
       }
-      return { evento, estado: this.estadoActual };
+      return { eventos, estado };
     });
   }
 

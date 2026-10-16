@@ -20,11 +20,12 @@ import {
   centavos,
   importe,
   milesimas,
+  pesos,
   type Centavos,
   type Descuento,
   type Milesimas,
 } from './numeros';
-import { NOMBRE_ROL, type FormaEgreso, type FormaPago, type MotivoAjuste, type Rol, type Unidad, type Usuario } from './modelo';
+import { LIMITES, NOMBRE_ROL, type FormaEgreso, type FormaPago, type MotivoAjuste, type Rol, type Unidad, type Usuario } from './modelo';
 import {
   crearEvento,
   ReglaRota,
@@ -40,6 +41,7 @@ import { esperadoCaja, hayUsuarios, stockDe, vendidoCaja, type EstadoNegocio, ty
 import { accionDe, NOMBRE_ACCION, puede, type Accion } from './permisos';
 import { hashPin, ITERACIONES_PIN, Limitador, validarFormatoPin, verificarPin } from './pin';
 import { Diario, type Verificacion } from './diario';
+import type { AccionImportacion } from './importar';
 import { movimientosStock, resumen, type MovimientoStock, type Periodo, type Resumen } from './contabilidad';
 
 /** El cargo de la sesión no permite la operación. */
@@ -98,6 +100,21 @@ export interface ResumenCierre {
   readonly diferencia: Centavos | null;
   /** Sin ventas ni movimientos: para cerrar hay que escribir el motivo. */
   readonly sinMovimientos: boolean;
+}
+
+export interface ErrorImportacionFila {
+  /** Fila del archivo original (desde 1, como en Excel). */
+  readonly fila: number;
+  readonly nombre: string;
+  readonly motivo: string;
+}
+
+export interface ResultadoImportacion {
+  readonly creados: number;
+  readonly ajustados: number;
+  /** Productos cuya existencia ya era la importada. */
+  readonly sinCambio: number;
+  readonly errores: readonly ErrorImportacionFila[];
 }
 
 export interface LineaPedida {
@@ -260,23 +277,116 @@ export class Negocio {
    * Lanza `SinPermiso` / `ReglaRota` (mensajes para la persona) o `DiarioDanado`.
    */
   async ejecutar(comando: Comando | ((estado: EstadoNegocio) => Comando)): Promise<Evento> {
-    const { evento } = await this.diario.agregar((estado) => {
-      const cmd = typeof comando === 'function' ? comando(estado) : comando;
-      const ahora = this.reloj();
-      const id = ulid(ahora.getTime());
-      if (!hayUsuarios(estado)) {
-        if (cmd.tipo !== 'usuario.creado') throw new ReglaRota('Primero crea el usuario del dueño.');
-        return crearEvento(cmd, id, ahora, id);
-      }
-      const u = this.sesionId ? estado.usuarios[this.sesionId] : undefined;
-      const evento = crearEvento(cmd, u?.id ?? '', ahora, id);
-      const accion = accionDe(evento);
-      if (!u || !u.activo) throw new SinPermiso(accion, null);
-      if (!puede(u.rol, accion)) throw new SinPermiso(accion, u.rol);
-      return evento;
-    });
-    this.avisar(evento);
+    const [evento] = await this.ejecutarVarios((estado) => [typeof comando === 'function' ? comando(estado) : comando]);
+    if (!evento) throw new Error('No se escribió el evento.');
     return evento;
+  }
+
+  /**
+   * Varios comandos como UNA operación atómica (una escritura; si uno falla, ninguno se
+   * guarda). `armar` recibe el estado vigente y `nuevoId()` para enlazar comandos (por
+   * ejemplo, crear un producto y ajustar su stock): el comando i-ésimo usa el id i-ésimo.
+   */
+  async ejecutarVarios(armar: (estado: EstadoNegocio, nuevoId: (indice: number) => string) => readonly Comando[]): Promise<Evento[]> {
+    const ahora = this.reloj();
+    const ids: string[] = [];
+    const nuevoId = (i: number): string => {
+      while (ids.length <= i) ids.push(ulid(ahora.getTime()));
+      return ids[i] as string;
+    };
+    const { eventos } = await this.diario.agregarVarios((estado) =>
+      armar(estado, nuevoId).map((cmd, i) => {
+        const id = nuevoId(i);
+        if (!hayUsuarios(estado)) {
+          if (cmd.tipo !== 'usuario.creado' || i > 0) throw new ReglaRota('Primero crea el usuario del dueño.');
+          return crearEvento(cmd, id, ahora, id);
+        }
+        const u = this.sesionId ? estado.usuarios[this.sesionId] : undefined;
+        const evento = crearEvento(cmd, u?.id ?? '', ahora, id);
+        const accion = accionDe(evento);
+        if (!u || !u.activo) throw new SinPermiso(accion, null);
+        if (!puede(u.rol, accion)) throw new SinPermiso(accion, u.rol);
+        return evento;
+      }),
+    );
+    for (const e of eventos) this.avisar(e);
+    return eventos;
+  }
+
+  // --- Importación ------------------------------------------------------------------
+
+  /**
+   * Aplica un plan de importación (`importar/planImportacion`) ya confirmado por la persona.
+   * Cada producto es UNA operación atómica (crear + stock inicial, o el ajuste); si uno no
+   * se puede, se anota el error y se sigue con los demás. Las cantidades pueden ser
+   * negativas (inventarios reales). Los ajustes quedan con motivo «importacion».
+   * Crear productos fija su precio: exige el permiso de crear productos (dueño); con
+   * `actualizarPrecios` también se copian precio y costo de la fila (permiso de precios).
+   */
+  async importarInventario(
+    acciones: readonly AccionImportacion[],
+    opciones: { actualizarPrecios?: boolean } = {},
+  ): Promise<ResultadoImportacion> {
+    this.exigir('inventario.importar');
+    const r = { creados: 0, ajustados: 0, sinCambio: 0, errores: [] as ErrorImportacionFila[] };
+    for (const a of acciones) {
+      try {
+        let ajusto = false;
+        await this.ejecutarVarios((estado, nuevoId) => {
+          ajusto = false;
+          if (a.tipo === 'crear') {
+            const f = a.fila;
+            const productoId = nuevoId(0);
+            const cmds: Comando[] = [
+              {
+                tipo: 'producto.creado',
+                datos: {
+                  nombre: recortar(f.nombre, LIMITES.nombre),
+                  categoria: recortar(f.categoria ?? '', LIMITES.categoria) || 'Sin categoría',
+                  unidad: unidadDe(f.unidad),
+                  precio: f.precio ?? centavos(0),
+                  costo: f.costo ?? null,
+                  stockMinimo: null,
+                  codigo: recortar(f.codigo ?? '', LIMITES.codigo) || null,
+                },
+              },
+            ];
+            if (f.cantidad !== 0) {
+              cmds.push({
+                tipo: 'inventario.ajuste',
+                datos: { productoId, delta: f.cantidad, motivo: 'importacion', antes: milesimas(0), despues: f.cantidad },
+              });
+            }
+            return cmds;
+          }
+          const antes = stockDe(estado, a.productoId);
+          const delta = milesimas(a.modo === 'fijar' ? a.objetivo - antes : a.delta);
+          const cmds: Comando[] = [];
+          if (delta !== 0) {
+            cmds.push({
+              tipo: 'inventario.ajuste',
+              datos: { productoId: a.productoId, delta, motivo: 'importacion', antes, despues: milesimas(antes + delta) },
+            });
+          }
+          if (opciones.actualizarPrecios) {
+            const cambios: Partial<DatosProducto> = sinIndefinidos({ precio: a.fila.precio, costo: a.fila.costo });
+            if (Object.keys(cambios).length > 0) cmds.push({ tipo: 'producto.editado', datos: { productoId: a.productoId, cambios } });
+          }
+          ajusto = cmds.length > 0;
+          return cmds;
+        });
+        if (a.tipo === 'crear') r.creados++;
+        else if (ajusto) r.ajustados++;
+        else r.sinCambio++;
+      } catch (e) {
+        r.errores.push({
+          fila: a.fila.filaOriginal,
+          nombre: a.tipo === 'crear' ? a.fila.nombre : a.nombre,
+          motivo: e instanceof Error ? e.message : String(e),
+        });
+      }
+    }
+    return r;
   }
 
   // --- Caja -------------------------------------------------------------------------
@@ -370,6 +480,9 @@ export class Negocio {
       const pagos = total === 0 ? [] : repartirPagos(v.pagos, total);
       const efectivo = pagos.find((p) => p.forma === 'efectivo')?.monto;
       const recibido = v.recibido ?? undefined;
+      if (recibido !== undefined && efectivo !== undefined && recibido < efectivo) {
+        throw new ReglaRota(`Recibiste ${pesos(recibido)}, menos que el efectivo a pagar (${pesos(efectivo)}).`);
+      }
       return {
         tipo: 'venta.registrada',
         datos: sinIndefinidos({
@@ -589,6 +702,20 @@ export class Negocio {
     this.exigir('diario.verificar');
     return this.diario.verificar();
   }
+}
+
+function recortar(t: string, max: number): string {
+  return t.trim().slice(0, max).trim();
+}
+
+/** Unidad escrita en el archivo → unidad de la app (lo desconocido cuenta como «unidad»). */
+function unidadDe(texto: string | undefined): Unidad {
+  const t = (texto ?? '').trim().toLowerCase().replace(/\.$/, '');
+  if (['g', 'gr', 'gramo', 'gramos'].includes(t)) return 'g';
+  if (['kg', 'kilo', 'kilos', 'kilogramo', 'kilogramos'].includes(t)) return 'kg';
+  if (['ml', 'mililitro', 'mililitros', 'cc'].includes(t)) return 'ml';
+  if (['l', 'lt', 'lts', 'litro', 'litros'].includes(t)) return 'L';
+  return 'unidad';
 }
 
 function mensajeEspera(ms: number): string {
