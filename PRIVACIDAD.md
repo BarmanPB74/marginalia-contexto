@@ -1,16 +1,39 @@
-# Privacidad (borrador)
+# Política de privacidad de Stark
 
-Marginalia no recoge datos personales.
+*Vigente desde el 16 de octubre de 2026. Responsable: Pablo (BarmanPB74), desarrollador de Stark.*
 
-- **Sin cuentas, sin servidor, sin analíticas ni rastreadores.**
-- Tus notas se guardan solo en el almacenamiento privado de la app en tu teléfono, **cifradas** con una clave que se crea en el teléfono y nunca sale de él. Cuando exportas una nota, la copia exportada va sin cifrar para que puedas abrirla con otras apps.
-- La app solo usa internet para la música de YouTube, y solo cuando tú lo pides: al pegar un enlace pregunta a YouTube el título y el artista (oEmbed), muestra su miniatura y carga el **reproductor oficial** (dominio `youtube-nocookie.com`). Esas conexiones están sujetas a la [política de privacidad de Google](https://policies.google.com/privacy). La app no inicia sesión en tu cuenta de YouTube Music.
-- **Spotify (opcional):** si lo conectas, Marginalia habla con la **app de Spotify de tu teléfono** (no con internet) para ponerle canciones y saber qué suena y en qué segundo. La autorización la da la propia app de Spotify; Marginalia no ve tu contraseña ni guarda tokens. Lo que haga Spotify con tu escucha lo cubre la [política de privacidad de Spotify](https://www.spotify.com/legal/privacy-policy/).
-- Las preferencias (tema, vista, fuente de música, Client ID de Spotify) y la lista de canciones guardadas (enlace, título y artista) se quedan en el teléfono.
-- **Bloqueo (opcional):** si lo activas, Android pide tu huella, rostro o PIN con su propio diálogo. Marginalia nunca ve ni guarda datos biométricos: solo recibe «sí» o «no».
-- No se hacen copias de seguridad automáticas en la nube; exportar es siempre una acción manual tuya.
+**Stark no recoge, no envía y no comparte ningún dato.** La app no tiene permiso de internet:
+todo lo que escribes se queda en tu teléfono.
+
+## Qué guarda la app y dónde
+- **Datos del negocio**: productos, existencias, ventas, cajas, compras, facturas de proveedor (con sus
+  fotos o PDF), pagos, gastos, usuarios del equipo y la bitácora (notas y calendario).
+- Se guardan solo en el **almacenamiento privado de la app** en tu teléfono, **cifrados** (AES-256-GCM)
+  con una clave protegida por el almacén de claves de Android (Keystore). Otras apps no pueden leerlos.
+- **PIN de cada usuario**: no se guarda el PIN, solo una huella derivada (PBKDF2) que no permite
+  recuperarlo.
+- **Versión de Windows**: lo mismo, en la carpeta `%APPDATA%\Stark` del PC, cifrado con una clave
+  protegida por Windows (DPAPI) para la cuenta de quien la usa (`docs/ESCRITORIO.md`).
+- **Preferencias** (tema, vista): en el teléfono.
+- **Bloqueo con huella o rostro (opcional)**: lo hace Android con su propio diálogo. Stark nunca ve ni
+  guarda datos biométricos: solo recibe «sí» o «no».
+
+## Qué sale del teléfono
+Nada, salvo lo que **tú** exportes a mano (copia ZIP de notas, CSV de contabilidad, una nota en .md,
+.txt o .html). Esas copias van **sin cifrar** para que otras apps las puedan abrir: guárdalas en un
+lugar seguro. No hay copias automáticas en la nube (las copias de seguridad de Android están
+desactivadas para esta app).
+
+## Terceros
+Stark no usa servicios de terceros, anuncios, analíticas ni rastreadores.
+
+## Niños
+Stark es una herramienta de trabajo para negocios; no está dirigida a menores de 18 años.
 
 ## Cómo borrarlo todo
-Desinstala la app, o en Android: *Ajustes → Apps → Marginalia → Almacenamiento → Borrar datos*.
+Desinstala la app, o en Android: *Ajustes → Apps → Stark → Almacenamiento → Borrar datos*. Al
+hacerlo, los datos no se pueden recuperar salvo desde una copia que hayas exportado.
 
-*Este documento se completará antes de la primera versión pública.*
+## Cambios y contacto
+Si esta política cambia, se actualizará este documento y la fecha de arriba. Preguntas: abre un
+*issue* en https://github.com/BarmanPB74/stark.

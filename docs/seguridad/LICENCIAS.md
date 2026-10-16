@@ -27,18 +27,16 @@ Todo lo que entra en el APK es compatible con la licencia MIT del proyecto. Gene
 | Componente | Licencia | Nota |
 |---|---|---|
 | AndroidX (appcompat, coordinatorlayout, core-splashscreen, webkit…) | Apache-2.0 | vía Capacitor |
-| Spotify App Remote SDK 0.8.0 (`.aar`) | Apache-2.0 | ADR-013; descargado y verificado por SHA256 en CI |
-| Gson 2.14.0 | Apache-2.0 | lo exige el SDK de Spotify |
 | androidx.biometric 1.1.0 | Apache-2.0 | bloqueo con huella/PIN (ADR-014) |
 
 ## Recursos
 | Recurso | Licencia | Nota |
 |---|---|---|
-| Newsreader, Kalam, JetBrains Mono | OFL-1.1 | `OFL.txt` en cada carpeta de `src/assets/fonts/` |
+| Inter (variable), JetBrains Mono | OFL-1.1 | `OFL.txt` en cada carpeta de `src/assets/fonts/` |
 | Marca EK (icono) | **no MIT** | ver README y LEGAL §4 |
 
 ## Herramientas de desarrollo (no entran al APK)
 vite, @preact/preset-vite, typescript (Apache-2.0), eslint y typescript-eslint, vitest, jsdom, @playwright/test (Apache-2.0), @capacitor/cli: MIT salvo lo indicado. `lightningcss` (MPL-2.0) solo como herramienta de build, sin modificar.
 
 ## Pendiente para F6
-- Pantalla o archivo «Avisos de terceros» en la app con los textos de licencia de entities (BSD-2), Apache-2.0 (AndroidX, Spotify SDK, Gson, DOMPurify) y OFL.
+- Pantalla o archivo «Avisos de terceros» en la app con los textos de licencia de entities (BSD-2), Apache-2.0 (AndroidX, androidx.biometric, DOMPurify) y OFL.

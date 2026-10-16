@@ -1,44 +1,11 @@
-import { createContext, type ComponentChildren, type RefObject } from 'preact';
-import { useContext, useEffect, useRef, useState } from 'preact/hooks';
-import { conCancion, guardarCanciones, leerCanciones, type Cancion } from '../core/musica/canciones';
-import type { EnlaceMusica } from '../core/musica/enlaces';
+import { createContext, type ComponentChildren } from 'preact';
+import { useContext, useEffect, useState } from 'preact/hooks';
 import type { Comando } from '../features/comandos/comandos';
-import { escucharCompartido } from '../features/musica/compartido';
-import { claveDe, metadatos } from '../core/musica/canciones';
-import type { ControlVideo, InfoVideo } from '../features/musica/VideoOficial';
-import { useSpotify, type ControlSpotify } from '../features/musica/useSpotify';
-import type { EnlaceSpotify } from '../core/musica/spotify';
 import { aplicarTema, guardarAjustes, leerAjustes, type Ajustes } from './ajustes';
 
 interface EstadoApp extends Ajustes {
   /** Cambia una o varias preferencias y las guarda en el teléfono. */
   cambiarAjustes: (parcial: Partial<Ajustes>) => void;
-  setFlotante: (valor: boolean) => void;
-  /** Compartido por el reproductor grande y el pequeño. */
-  sonando: boolean;
-  alternar: () => void;
-  /** Canción elegida (la primera de las guardadas) y lo que informa el reproductor oficial. */
-  cancion: Cancion | null;
-  canciones: Cancion[];
-  /** Pone una canción (la sube al principio de las guardadas) desde `inicio` segundos. */
-  elegirCancion: (c: Cancion, inicio?: number) => void;
-  /** Cada elección cuenta: el reproductor se vuelve a cargar en el segundo pedido */
-  eleccion: { vez: number; inicio: number };
-  quitarCancion: (clave: string) => void;
-  /** Cambia título/artista de una guardada sin volver a cargar el reproductor */
-  datosCancion: (clave: string, datos: { titulo: string; artista: string }) => void;
-  info: InfoVideo;
-  alCambiarVideo: (info: Partial<InfoVideo>) => void;
-  control: RefObject<ControlVideo | null>;
-  /** El reproductor sigue fuera de Música como ventana flotante (ADR-012) */
-  flotando: boolean;
-  setFlotando: (v: boolean) => void;
-  /** Cierra la ventana flotante (la música para) */
-  cerrarFlotante: () => void;
-  /** Spotify App Remote (ADR-013): suena en la app de Spotify, también en segundo plano */
-  spotify: ControlSpotify;
-  /** Pasa a Spotify (pausa YouTube) y pone esa URI desde `t` segundos */
-  ponerSpotify: (uri: string, t?: number) => void;
   /** Paleta de comandos abierta. */
   comandosAbiertos: boolean;
   abrirComandos: (abierta: boolean) => void;
@@ -54,15 +21,9 @@ const Contexto = createContext<EstadoApp | null>(null);
 
 export function ProveedorEstado({ children }: { children: ComponentChildren }) {
   const [ajustes, setAjustes] = useState<Ajustes>(leerAjustes);
-  const [canciones, setCanciones] = useState<Cancion[]>(leerCanciones);
-  const [info, setInfo] = useState<InfoVideo>({ sonando: false, posicion: 0, duracion: 0 });
-  const control = useRef<ControlVideo | null>(null);
-  const [eleccion, setEleccion] = useState({ vez: 0, inicio: 0 });
-  const [flotando, setFlotando] = useState(false);
   const [comandosAbiertos, abrirComandos] = useState(false);
   const [comandosLocales, setComandosLocales] = useState<Comando[]>([]);
   const [aviso, avisar] = useState('');
-  const spotify = useSpotify();
 
   useEffect(() => {
     if (!aviso) return;
@@ -78,72 +39,10 @@ export function ProveedorEstado({ children }: { children: ComponentChildren }) {
         abrirComandos(true);
       }
     };
-    addEventListener('keydown', alTeclear);
-    return () => removeEventListener('keydown', alTeclear);
+    const ventana = window;
+    ventana.addEventListener('keydown', alTeclear);
+    return () => ventana.removeEventListener('keydown', alTeclear);
   }, []);
-
-  // Solo usan los "set" (estables): sirven igual desde efectos que se montan una vez.
-  function elegirCancion(c: Cancion, inicio = c.enlace.inicio ?? 0) {
-    // En la lista guardada no se queda el segundo: eso es de cada etiqueta ♪
-    const enlace = { ...c.enlace };
-    delete enlace.inicio;
-    setCanciones((actuales) => {
-      const lista = conCancion(actuales, { ...c, enlace });
-      guardarCanciones(lista);
-      return lista;
-    });
-    // Una sola música a la vez: YouTube empieza, Spotify se pausa
-    spotify.pausar();
-    // Canción nueva: sin el error de la anterior
-    setInfo({ sonando: true, posicion: inicio, duracion: 0 });
-    setEleccion((e) => ({ vez: e.vez + 1, inicio }));
-  }
-
-  function datosCancion(clave: string, datos: { titulo: string; artista: string }) {
-    setCanciones((actuales) => {
-      const lista = actuales.map((c) => (c.clave === clave ? { ...c, ...datos } : c));
-      guardarCanciones(lista);
-      return lista;
-    });
-  }
-
-  function pausarYoutube() {
-    control.current?.pausar();
-    setFlotando(false);
-    setInfo((i) => ({ ...i, sonando: false }));
-  }
-
-  // Lo usan efectos montados una vez: lee los ajustes del almacenamiento, no del cierre
-  function ponerSpotify(uri: string, t = 0) {
-    pausarYoutube();
-    cambiarAjustes({ fuente: 'spotify' });
-    void spotify.reproducir(leerAjustes().spotifyClientId, uri, t);
-  }
-
-  // «Compartir → Marginalia» desde YouTube Music o Spotify: se abre Música y suena
-  useEffect(
-    () =>
-      escucharCompartido((enlace: EnlaceMusica | null, deSpotify: EnlaceSpotify | null) => {
-        if (deSpotify) {
-          location.hash = '#/musica';
-          ponerSpotify(deSpotify.uri);
-          return;
-        }
-        if (!enlace) {
-          avisar('Lo compartido no es un enlace de YouTube Music ni de Spotify.');
-          return;
-        }
-        cambiarAjustes({ fuente: 'youtube' });
-        const clave = claveDe(enlace);
-        elegirCancion(
-          { clave, enlace, titulo: enlace.video ? 'Canción de YouTube' : 'Lista de YouTube Music', artista: '' },
-          enlace.inicio ?? 0,
-        );
-        location.hash = '#/musica';
-        void metadatos(enlace).then((d) => d && datosCancion(clave, d));
-      }),
-    [],
-  );
 
   useEffect(() => {
     aplicarTema(ajustes.tema);
@@ -168,38 +67,6 @@ export function ProveedorEstado({ children }: { children: ComponentChildren }) {
       value={{
         ...ajustes,
         cambiarAjustes,
-        setFlotante: (flotante) => cambiarAjustes({ flotante }),
-        sonando: info.sonando,
-        alternar: () => {
-          // Con el reproductor oficial en pantalla, se le ordena; si no, al menos cambia el dibujo.
-          if (control.current) {
-            if (info.sonando) control.current.pausar();
-            else control.current.reproducir();
-          }
-          if (!info.sonando) spotify.pausar();
-          setInfo((i) => ({ ...i, sonando: !i.sonando }));
-        },
-        cancion: canciones[0] ?? null,
-        canciones,
-        elegirCancion,
-        eleccion,
-        datosCancion,
-        quitarCancion: (clave) => {
-          const lista = canciones.filter((c) => c.clave !== clave);
-          setCanciones(lista);
-          guardarCanciones(lista);
-        },
-        info,
-        alCambiarVideo: (parcial) => setInfo((i) => ({ ...i, ...parcial })),
-        control,
-        flotando,
-        setFlotando,
-        cerrarFlotante: () => {
-          setFlotando(false);
-          setInfo((i) => ({ ...i, sonando: false }));
-        },
-        spotify,
-        ponerSpotify,
         comandosAbiertos,
         abrirComandos,
         comandosLocales,

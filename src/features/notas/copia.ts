@@ -28,7 +28,7 @@ export function elegirZip(): Promise<File | null> {
 }
 
 export async function importarCopia(repo: RepositorioNotas, archivo: File): Promise<string> {
-  if (archivo.size > MAX_ZIP) return 'Ese archivo supera 100 MB: no parece una copia de Marginalia.';
+  if (archivo.size > MAX_ZIP) return 'Ese archivo supera 100 MB: no parece una copia de Stark.';
   let lectura;
   try {
     lectura = leerZip(new Uint8Array(await archivo.arrayBuffer()));

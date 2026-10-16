@@ -1,0 +1,88 @@
+.mas__quien {
+  margin: calc(-1 * var(--esp-3)) 0 var(--esp-5);
+  font-size: var(--texto-s);
+  color: var(--texto-2);
+}
+
+/* 1 columna en teléfono; 2 en teléfono ancho; 3–4 en tableta horizontal */
+.mas__rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  gap: var(--esp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 600px) {
+  .mas__rejilla {
+    gap: var(--esp-4);
+  }
+}
+
+.mas__rejilla > li {
+  display: flex;
+  min-width: 0;
+}
+
+.mas__tarjeta {
+  display: flex;
+  flex: 1;
+  align-items: flex-start;
+  gap: var(--esp-3);
+  min-width: 0;
+  min-height: calc(var(--toque) * 2);
+  padding: var(--esp-4);
+  font: inherit;
+  text-align: start;
+  color: var(--texto);
+  text-decoration: none;
+  cursor: pointer;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-l);
+  box-shadow: var(--sombra);
+  transition:
+    transform var(--transicion),
+    box-shadow var(--transicion);
+}
+
+.mas__tarjeta:active {
+  transform: scale(0.97);
+  box-shadow: var(--sombra-s);
+}
+
+.mas__tarjeta--salir {
+  background: var(--hundido);
+  box-shadow: none;
+}
+
+.mas__icono {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--toque);
+  height: var(--toque);
+  color: var(--primario-tinta);
+  background: var(--primario-suave);
+  border-radius: var(--radio);
+}
+
+.mas__texto {
+  display: grid;
+  gap: var(--esp-1);
+  min-width: 0;
+}
+
+.mas__titulo {
+  font-size: var(--texto-m);
+  font-weight: var(--peso-fuerte);
+  overflow-wrap: anywhere;
+}
+
+.mas__descripcion {
+  font-size: var(--texto-s);
+  line-height: var(--interlineado);
+  color: var(--texto-2);
+  overflow-wrap: anywhere;
+}

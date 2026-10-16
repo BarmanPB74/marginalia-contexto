@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'io.github.barmanpb74.appnoti',
-  appName: 'Marginalia',
+  appName: 'Stark',
   webDir: 'dist',
   android: {
     // Nunca mezclar http dentro de la app (docs/SEGURIDAD.md §3).

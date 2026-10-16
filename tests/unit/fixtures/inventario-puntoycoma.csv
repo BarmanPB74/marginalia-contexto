@@ -1,0 +1,6 @@
+sep=;
+Código;Producto;Categoría;Existencia;Precio venta
+A-01;"Sándwich ""Especial""";Comidas;12;"12.500"
+A-02;"Empanada; de carne";Comidas;"1,5";3.000
+A-03;"Jugo
+de mora";Bebidas;-3;"4.500,50"

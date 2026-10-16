@@ -1,0 +1,48 @@
+.insignia:not([class*='cat-']) {
+  --cat-suave: var(--hundido);
+  --cat-tinta: var(--texto);
+}
+
+.insignia {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 2px 10px;
+  font-size: var(--texto-xs);
+  font-weight: var(--peso-fuerte);
+  line-height: 1.5;
+  color: var(--cat-tinta);
+  background: var(--cat-suave);
+  border-radius: var(--radio-pildora);
+  overflow-wrap: anywhere;
+}
+
+.insignia .icono {
+  flex: none;
+}
+
+.insignia.insignia--primario {
+  --cat-suave: var(--primario-suave);
+  --cat-tinta: var(--primario-tinta);
+}
+
+.insignia.insignia--exito {
+  --cat-suave: var(--exito-suave);
+  --cat-tinta: var(--exito-tinta);
+}
+
+.insignia.insignia--aviso {
+  --cat-suave: var(--aviso-suave);
+  --cat-tinta: var(--aviso-tinta);
+}
+
+.insignia.insignia--peligro {
+  --cat-suave: var(--peligro-suave);
+  --cat-tinta: var(--peligro-tinta);
+}
+
+.insignia.insignia--info {
+  --cat-suave: var(--info-suave);
+  --cat-tinta: var(--info-tinta);
+}

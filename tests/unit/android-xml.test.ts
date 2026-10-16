@@ -18,16 +18,21 @@ describe('recursos XML de Android', () => {
 describe('manifiesto de Android', () => {
   const manifiesto = readFileSync('android/app/src/main/AndroidManifest.xml', 'utf8');
 
-  it('solo pide INTERNET (CLAUDE.md regla 3)', () => {
-    expect([...manifiesto.matchAll(/uses-permission[^>]*android:name="([^"]+)"/g)].map((m) => m[1])).toEqual([
-      'android.permission.INTERNET',
-    ]);
+  it('no pide ningún permiso propio: sin INTERNET (ADR-015); el bloqueo lo añade androidx.biometric al compilar', () => {
+    expect([...manifiesto.matchAll(/uses-permission[^>]*android:name="([^"]+)"/g)].map((m) => m[1])).toEqual([]);
   });
 
-  it('las únicas entradas son abrir la app y recibir texto plano compartido', () => {
+  it('la única entrada es abrir la app', () => {
     const acciones = [...manifiesto.matchAll(/<action android:name="([^"]+)"/g)].map((m) => m[1]);
-    expect(acciones).toEqual(['android.intent.action.MAIN', 'android.intent.action.SEND']);
-    expect([...manifiesto.matchAll(/android:mimeType="([^"]+)"/g)].map((m) => m[1])).toEqual(['text/plain']);
+    expect(acciones).toEqual(['android.intent.action.MAIN']);
     for (const c of manifiesto.match(/<!--[\s\S]*?-->/g) ?? []) expect(c.slice(4, -3)).not.toContain('--');
+  });
+
+  it('se adapta a cualquier pantalla (ADR-016): redimensionable, sin orientación fija, todas las densidades', () => {
+    expect(manifiesto).toContain('android:resizeableActivity="true"');
+    expect(manifiesto).not.toContain('screenOrientation');
+    for (const t of ['smallScreens', 'normalScreens', 'largeScreens', 'xlargeScreens', 'anyDensity']) {
+      expect(manifiesto).toContain(`android:${t}="true"`);
+    }
   });
 });

@@ -1,27 +1,87 @@
 .boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--esp-2);
   min-width: var(--toque);
   min-height: var(--toque);
-  padding: 0 18px;
-  font-family: var(--letra-mano);
+  padding: 10px 22px;
+  font-family: var(--letra-interfaz);
   font-size: var(--texto-m);
-  color: var(--tinta);
+  font-weight: var(--peso-medio);
+  line-height: var(--interlineado-justo);
+  color: var(--texto);
+  text-align: center;
   background: none;
-  border: var(--trazo) solid transparent;
-  border-radius: var(--radio);
+  border: 1px solid transparent;
+  border-radius: var(--radio-pildora);
   cursor: pointer;
-  transition: background-color var(--transicion);
 }
 
+.boton .icono {
+  flex: none;
+}
+
+.boton__texto {
+  min-width: 0;
+}
+
+.boton--ancho {
+  width: 100%;
+}
+
+/* Secundaria: píldora que se levanta del fondo */
 .boton--contorno {
-  border-color: var(--tinta);
+  background: var(--superficie);
+  border-color: var(--borde);
+  box-shadow: var(--sombra-s);
 }
 
-.boton:active:not(:disabled) {
-  background: var(--papel-2);
+.boton--contorno:active:not(:disabled) {
+  box-shadow: var(--sombra-hundida);
+}
+
+/* Principal: índigo vívido */
+.boton--primario {
+  font-weight: var(--peso-fuerte);
+  color: var(--sobre-primario);
+  background: var(--primario);
+  box-shadow: var(--sombra-s);
+}
+
+.boton--primario:active:not(:disabled) {
+  background: var(--primario-fuerte);
+}
+
+.boton--tonal {
+  color: var(--primario-tinta);
+  background: var(--primario-suave);
+}
+
+.boton--peligro {
+  font-weight: var(--peso-fuerte);
+  color: var(--sobre-peligro);
+  background: var(--peligro-solido);
+  box-shadow: var(--sombra-s);
+}
+
+.boton--texto {
+  padding-inline: 14px;
+  color: var(--primario-tinta);
+}
+
+.boton--texto:active:not(:disabled) {
+  background: var(--hundido);
 }
 
 .boton:disabled {
-  color: var(--tinta-suave);
-  border-color: var(--separador);
+  color: var(--texto-2);
+  background: var(--hundido);
+  border-color: transparent;
+  box-shadow: none;
   cursor: default;
+}
+
+.boton--texto:disabled {
+  background: none;
 }

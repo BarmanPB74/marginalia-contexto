@@ -2,8 +2,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  margin-top: 22vh;
+  gap: var(--esp-2);
+  margin-top: 18vh;
+  padding: var(--esp-6) var(--esp-4);
   text-align: center;
 }
 
@@ -12,12 +13,13 @@
 }
 
 .estado-vacio__mensaje {
-  font-family: var(--letra-mano);
   font-size: var(--texto-l);
+  font-weight: var(--peso-fuerte);
+  line-height: var(--interlineado-justo);
 }
 
 .estado-vacio__pista {
-  max-width: 28ch;
-  font-size: var(--texto-s);
-  color: var(--tinta-suave);
+  max-width: 32ch;
+  font-size: var(--texto-m);
+  color: var(--texto-2);
 }

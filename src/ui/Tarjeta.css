@@ -1,8 +1,19 @@
 .tarjeta {
-  padding: 16px;
+  min-width: 0;
+  padding: var(--esp-4);
   background: var(--superficie);
-  border: var(--trazo) solid var(--contorno);
-  border-radius: var(--radio);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-l);
   box-shadow: var(--sombra);
   animation: aparecer var(--dur-media) var(--curva) backwards;
+}
+
+.tarjeta--hundida {
+  background: var(--hundido);
+  border-color: transparent;
+  box-shadow: var(--sombra-hundida);
+}
+
+.tarjeta--plana {
+  box-shadow: none;
 }

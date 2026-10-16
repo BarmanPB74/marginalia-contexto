@@ -1,0 +1,114 @@
+.usuarios__seccion {
+  margin-bottom: var(--esp-8);
+}
+
+.usuarios__titulo {
+  margin: 0 0 var(--esp-3);
+  font-size: var(--texto-l);
+  font-weight: var(--peso-fuerte);
+}
+
+.usuarios__yo,
+.usuarios__fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-3);
+}
+
+.usuarios__yo {
+  margin-bottom: var(--esp-4);
+}
+
+.usuarios__datos {
+  flex: 1 1 10rem;
+  min-width: 0;
+}
+
+.usuarios__datos p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.usuarios__nombre {
+  font-size: var(--texto-m);
+  font-weight: var(--peso-medio);
+}
+
+.usuarios__tu {
+  font-weight: var(--peso-normal);
+  color: var(--texto-2);
+}
+
+.usuarios__rol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+  font-size: var(--texto-s);
+  color: var(--texto-2);
+}
+
+.usuarios__botones,
+.usuarios__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+}
+
+.usuarios__lista {
+  display: grid;
+  gap: var(--esp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.usuarios__fila {
+  padding: var(--esp-3) var(--esp-4);
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-l);
+  box-shadow: var(--sombra-s);
+}
+
+.usuarios__fila--inactiva {
+  background: var(--hundido);
+  box-shadow: none;
+}
+
+.usuarios__pista {
+  margin: var(--esp-3) 0 0;
+  font-size: var(--texto-s);
+  color: var(--texto-2);
+}
+
+.usuarios__aviso {
+  margin: 0 0 var(--esp-6);
+  padding: var(--esp-3) var(--esp-4);
+  font-size: var(--texto-s);
+  color: var(--primario-tinta);
+  background: var(--primario-suave);
+  border-radius: var(--radio);
+  overflow-wrap: anywhere;
+}
+
+.usuarios__form {
+  display: grid;
+  gap: var(--esp-5);
+}
+
+.usuarios__etiqueta {
+  margin: 0 0 var(--esp-2);
+  font-size: var(--texto-s);
+  font-weight: var(--peso-medio);
+}
+
+.usuarios__permisos {
+  margin: var(--esp-3) 0 0;
+  padding: var(--esp-3) var(--esp-4);
+  font-size: var(--texto-s);
+  line-height: var(--interlineado);
+  background: var(--hundido);
+  border-radius: var(--radio);
+}

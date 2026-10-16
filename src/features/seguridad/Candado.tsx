@@ -49,7 +49,7 @@ export function Candado({ activo, children }: { activo: boolean; children: Compo
     pidiendo.current = true;
     setError('');
     try {
-      await Bloqueo.autenticar({ titulo: 'Marginalia', subtitulo: 'Desbloquea tus notas' });
+      await Bloqueo.autenticar({ titulo: 'Stark', subtitulo: 'Desbloquea tu negocio' });
       setBloqueada(false);
     } catch (e) {
       const codigo = (e as { code?: unknown } | null)?.code;
@@ -66,8 +66,8 @@ export function Candado({ activo, children }: { activo: boolean; children: Compo
 
   if (!bloqueada) return <>{children}</>;
   return (
-    <main class="candado" aria-label="Marginalia bloqueada">
-      <p class="candado__titulo">Marginalia está bloqueada</p>
+    <main class="candado" aria-label="Stark bloqueada">
+      <p class="candado__titulo">Stark está bloqueada</p>
       <p class="candado__pista">Usa tu huella, tu rostro o el PIN del teléfono.</p>
       <Boton alTocar={() => void desbloquear()}>Desbloquear</Boton>
       {error && (

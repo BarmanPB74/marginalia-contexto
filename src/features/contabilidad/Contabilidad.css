@@ -1,0 +1,160 @@
+/* Contabilidad: aviso fijo, período, cifras con nota, secciones con tabla, exportar y verificar. */
+
+.conta__aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--esp-2);
+  margin: 0 0 var(--esp-5);
+  padding: var(--esp-3) var(--esp-4);
+  font-size: var(--texto-s);
+  font-weight: var(--peso-medio);
+  color: var(--info-tinta);
+  background: var(--info-suave);
+  border-radius: var(--radio);
+}
+
+.conta__aviso .icono {
+  flex: none;
+  margin-top: 2px;
+}
+
+.conta__periodo {
+  display: grid;
+  gap: var(--esp-3);
+  margin-bottom: var(--esp-5);
+}
+
+.conta__rango,
+.conta__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+}
+
+.conta__texto-periodo {
+  margin: 0;
+  font-size: var(--texto-s);
+  color: var(--texto-2);
+}
+
+/* Tarjeta de cifra con su nota debajo: la tarjeta es el contenedor y la Cifra queda plana dentro */
+.conta__cifra {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+  min-width: 0;
+  padding: var(--esp-4);
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-l);
+  box-shadow: var(--sombra);
+}
+
+.conta__cifra .cifra {
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+
+.conta__cifra .cifra__valor {
+  overflow-wrap: anywhere;
+}
+
+.conta__nota {
+  margin: 0;
+  font-size: var(--texto-xs);
+  line-height: var(--interlineado);
+  color: var(--texto-2);
+}
+
+.conta__nota .insignia {
+  margin-inline-end: var(--esp-1);
+}
+
+.conta__seccion {
+  margin-top: var(--esp-8);
+}
+
+.conta__titulo {
+  margin: 0 0 var(--esp-3);
+  font-size: var(--texto-l);
+  font-weight: var(--peso-fuerte);
+  line-height: var(--interlineado-justo);
+}
+
+.conta__pista {
+  margin: var(--esp-2) 0 0;
+  font-size: var(--texto-s);
+  color: var(--texto-2);
+}
+
+.conta__suave {
+  color: var(--texto-2);
+}
+
+.conta__vence {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-1) var(--esp-2);
+}
+
+.conta__error {
+  padding: var(--esp-3) var(--esp-4);
+  color: var(--peligro-tinta);
+  background: var(--peligro-suave);
+  border-radius: var(--radio);
+}
+
+.conta__resultado {
+  margin: var(--esp-3) 0 0;
+  padding: var(--esp-3) var(--esp-4);
+  font-size: var(--texto-s);
+  background: var(--primario-suave);
+  color: var(--primario-tinta);
+  border-radius: var(--radio);
+  overflow-wrap: anywhere;
+}
+
+/* Verificar registro (también en Ajustes) */
+.verificar {
+  display: grid;
+  justify-items: start;
+  gap: var(--esp-3);
+  margin-top: var(--esp-4);
+}
+
+.verificar > div {
+  width: 100%;
+}
+
+.verificar__resultado {
+  padding: var(--esp-3) var(--esp-4);
+  border-radius: var(--radio);
+  overflow-wrap: anywhere;
+}
+
+.verificar__resultado--ok {
+  color: var(--exito-tinta);
+  background: var(--exito-suave);
+}
+
+.verificar__resultado--mal {
+  color: var(--peligro-tinta);
+  background: var(--peligro-suave);
+}
+
+.verificar__texto,
+.verificar__explicacion {
+  margin: 0;
+  font-size: var(--texto-s);
+}
+
+.verificar__texto {
+  font-weight: var(--peso-medio);
+}
+
+.verificar__explicacion {
+  margin-top: var(--esp-2);
+}

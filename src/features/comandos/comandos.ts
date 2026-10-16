@@ -1,3 +1,4 @@
+import { OTRAS, SECCIONES } from '../../app/rutas';
 import type { Ajustes } from '../../app/ajustes';
 import { diaDe } from '../../core/notas/fechas';
 import { PLANTILLAS } from '../../core/notas/plantillas';
@@ -22,8 +23,6 @@ interface Contexto {
   repo: RepositorioNotas;
   ajustes: Ajustes;
   cambiarAjustes: (parcial: Partial<Ajustes>) => void;
-  sonando: boolean;
-  alternar: () => void;
   hoy?: Date;
   /** Mensaje para la persona tras una herramienta (exportar, importar…) */
   avisar?: (mensaje: string) => void;
@@ -34,8 +33,6 @@ export function comandosGlobales({
   repo,
   ajustes,
   cambiarAjustes,
-  sonando,
-  alternar,
   hoy = new Date(),
   avisar = () => undefined,
 }: Contexto): Comando[] {
@@ -58,7 +55,7 @@ export function comandosGlobales({
       nombre: `Nueva nota: ${p.nombre}`,
       grupo: 'Herramientas',
       palabras: 'crear escribir plantilla',
-      icono: 'mas',
+      icono: 'mas-signo',
       ejecutar: () => abrir({ plantilla: p.id }),
     })),
     {
@@ -74,7 +71,7 @@ export function comandosGlobales({
       nombre: 'Importar notas (ZIP)',
       grupo: 'Herramientas',
       palabras: 'copia respaldo backup restaurar recuperar',
-      icono: 'mas',
+      icono: 'mas-signo',
       ejecutar: async () => {
         // elegirZip() se llama sin esperar nada antes: sigue dentro del toque o de Intro
         const archivo = await elegirZip();
@@ -97,7 +94,16 @@ export function comandosGlobales({
       icono: 'calendario',
       ejecutar: () => void (location.hash = '#/calendario'),
     },
-    { id: 'ir-musica', nombre: 'Música', grupo: 'Ir a', icono: 'musica', ejecutar: () => void (location.hash = '#/musica') },
+    // Secciones del negocio (Stark): vender, inventario, caja, compras, gastos, contabilidad…
+    ...[...SECCIONES, ...OTRAS]
+      .filter((s) => !['notas', 'calendario', 'ajustes'].includes(s.id))
+      .map((s): Comando => ({
+        id: `ir-${s.id}`,
+        nombre: s.etiqueta,
+        grupo: 'Ir a',
+        icono: s.icono,
+        ejecutar: () => void (location.hash = `#/${s.id}`),
+      })),
     {
       id: 'ir-ajustes',
       nombre: 'Ajustes',
@@ -134,30 +140,6 @@ export function comandosGlobales({
       palabras: 'vista recientes multitarea',
       icono: ajustes.vistaNotas === 'tarjetas' ? 'lista' : 'tarjetas',
       ejecutar: () => cambiarAjustes({ vistaNotas: ajustes.vistaNotas === 'tarjetas' ? 'lista' : 'tarjetas' }),
-    },
-    {
-      id: 'flotante',
-      nombre: ajustes.flotante ? 'Anclar el reproductor sobre la barra' : 'Reproductor flotante',
-      grupo: 'Ajustes',
-      palabras: 'globo burbuja mini',
-      icono: 'mover',
-      ejecutar: () => cambiarAjustes({ flotante: !ajustes.flotante }),
-    },
-    {
-      id: 'globo',
-      nombre: ajustes.miniEscondido ? 'Mostrar el globo de música' : 'Esconder el globo de música a un lado',
-      grupo: 'Música',
-      palabras: 'reproductor mini burbuja ocultar',
-      icono: 'esconder',
-      ejecutar: () => cambiarAjustes({ miniEscondido: ajustes.miniEscondido ? null : 'derecha' }),
-    },
-    {
-      id: 'reproducir',
-      nombre: sonando ? 'Pausar música' : 'Reproducir música',
-      grupo: 'Música',
-      palabras: 'play pausa cancion',
-      icono: sonando ? 'pausa' : 'reproducir',
-      ejecutar: alternar,
     },
   ];
 }

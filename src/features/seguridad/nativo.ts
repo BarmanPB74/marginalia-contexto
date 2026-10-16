@@ -27,3 +27,28 @@ export const envoltorioKeystore: Envoltorio = {
   envolver: async (clave) => (await Boveda.envolver({ clave })).envuelta,
   desenvolver: async (envuelta) => (await Boveda.desenvolver({ envuelta })).clave,
 };
+
+/**
+ * Versión de escritorio (Windows, Electron, ADR-017): `escritorio/preload.cjs` expone
+ * `window.stark.boveda`, que envuelve la clave con safeStorage (DPAPI de Windows, ligada a la
+ * cuenta del usuario). En el navegador no existe y se sigue con la clave v1.
+ */
+interface PuenteEscritorio {
+  boveda?: {
+    disponible(): Promise<boolean>;
+    envolver(clave: string): Promise<string>;
+    desenvolver(envuelta: string): Promise<string>;
+  };
+}
+
+export function envoltorioEscritorio(): Envoltorio | undefined {
+  const boveda = (globalThis as { stark?: PuenteEscritorio }).stark?.boveda;
+  if (!boveda) return undefined;
+  return {
+    envolver: async (clave) => {
+      if (!(await boveda.disponible())) throw new Error('safeStorage no disponible');
+      return boveda.envolver(clave);
+    },
+    desenvolver: (envuelta) => boveda.desenvolver(envuelta),
+  };
+}

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { entrar } from './sesion';
 
 const dos = (n: number) => String(n).padStart(2, '0');
 const dia = (f: Date) => `${f.getFullYear()}-${dos(f.getMonth() + 1)}-${dos(f.getDate())}`;
@@ -12,7 +13,7 @@ async function notaNueva(page: import('@playwright/test').Page, titulo: string, 
 }
 
 test('autocompletar: @ sugiere fechas en palabras y # las etiquetas que ya existen', async ({ page }) => {
-  await page.goto('/#/notas');
+  await entrar(page, '/#/notas');
   await notaNueva(page, 'Primera', 'Repaso de #francés');
   await page.goto('/#/notas');
   await notaNueva(page, 'Segunda', '');
@@ -38,7 +39,7 @@ test('autocompletar: @ sugiere fechas en palabras y # las etiquetas que ya exist
 });
 
 test('selector de fecha: «@ Fecha» en la barra abre el mes y pone el día tocado', async ({ page }) => {
-  await page.goto('/#/notas');
+  await entrar(page, '/#/notas');
   await notaNueva(page, 'Con fecha', 'Examen ');
   const editor = page.getByLabel('Contenido');
   await editor.click();

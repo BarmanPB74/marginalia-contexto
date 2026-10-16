@@ -14,7 +14,8 @@ import {
 } from '../../core/almacen/cifrado';
 import { discoCapacitor } from '../../core/almacen/disco-capacitor';
 import { RepositorioNotas } from '../../core/notas/repositorio';
-import { enTelefono, envoltorioKeystore } from '../seguridad/nativo';
+import type { Envoltorio } from '../../core/almacen/boveda';
+import { enTelefono, envoltorioEscritorio, envoltorioKeystore } from '../seguridad/nativo';
 
 const Contexto = createContext<RepositorioNotas | null>(null);
 
@@ -28,8 +29,16 @@ let predeterminado: RepositorioNotas | undefined;
  * cifrados con la clave del dispositivo (ADR-008). Antes de la primera operación cifra las
  * notas que aún estén en claro, para que nada se lea ni se escriba a medio migrar.
  */
-function almacenDeLaApp(): Almacen {
-  const { almacen, listo } = enTelefono() ? almacenConKeystore() : almacenWeb();
+let compartido: Almacen | undefined;
+
+/** El mismo almacén cifrado para las notas y para el diario del negocio (ADR-015). */
+export function almacenDeLaApp(): Almacen {
+  return (compartido ??= crearAlmacenDeLaApp());
+}
+
+function crearAlmacenDeLaApp(): Almacen {
+  const envoltorio = enTelefono() ? envoltorioKeystore : envoltorioEscritorio();
+  const { almacen, listo } = envoltorio ? almacenConKeystore(envoltorio) : almacenWeb();
   return {
     leer: async (ruta) => (await listo, almacen.leer(ruta)),
     escribir: async (ruta, contenido) => (await listo, almacen.escribir(ruta, contenido)),
@@ -49,12 +58,13 @@ function almacenWeb() {
  * Las notas v1 se vuelven a cifrar una a una con v2 (cada escritura es atómica: un corte deja
  * cada archivo en v1 o en v2, y ambas se leen). Solo cuando no queda ninguna v1 se borra la
  * clave vieja de IndexedDB. Si el Keystore falla, se sigue con v1 como hasta ahora.
+ * En Windows (ADR-017) el mismo camino usa safeStorage (DPAPI) en lugar del Keystore.
  */
-function almacenConKeystore() {
+function almacenConKeystore(envoltorio: Envoltorio) {
   const plano = crearAlmacen(discoCapacitor);
   let prometida: Promise<CryptoKey> | undefined;
   const v2 = () =>
-    (prometida ??= claveDelKeystore(plano, discoCapacitor, envoltorioKeystore).catch((e: unknown) => {
+    (prometida ??= claveDelKeystore(plano, discoCapacitor, envoltorio).catch((e: unknown) => {
       prometida = undefined;
       throw e;
     }));

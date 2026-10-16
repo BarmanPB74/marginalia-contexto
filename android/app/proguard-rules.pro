@@ -19,3 +19,12 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Stark (ADR-015): los plugins de Capacitor se encuentran por anotaciones y reflexión.
+-keep @com.getcapacitor.annotation.CapacitorPlugin public class * {
+    @com.getcapacitor.PluginMethod public <methods>;
+    public <init>(...);
+}
+-keep class com.getcapacitor.** { *; }
+-keep class io.github.barmanpb74.appnoti.** { *; }
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod

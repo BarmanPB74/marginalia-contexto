@@ -1,14 +1,10 @@
 import { strToU8, zipSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
-import { cancionEnRuta, diaEnRuta, etiquetaEnRuta, idNotaEnRuta } from '../../src/app/rutas';
+import { diaEnRuta, etiquetaEnRuta, idNotaEnRuta } from '../../src/app/rutas';
 import { leerZip, ZipInvalido } from '../../src/core/exportar/zip';
 import { renderMarkdown } from '../../src/core/markdown/render';
-import { leerEnlace } from '../../src/core/musica/enlaces';
-import { cancionDeNota, leerHrefCancion } from '../../src/core/musica/etiqueta';
-import { leerEnlaceSpotify } from '../../src/core/musica/spotify';
 import { escribirNota, leerNota, NotaInvalida } from '../../src/core/notas/nota';
 import { parseNota } from '../../src/core/parser/parser';
-import { estadoSeguro } from '../../src/features/musica/spotifyRemoto';
 
 /**
  * Fuzzing casero (F5, docs/SEGURIDAD.md §5): entradas hostiles generadas al azar, con semilla
@@ -83,7 +79,6 @@ describe('fuzzing (F5)', { timeout: 60_000 }, () => {
         validas++;
         // Ida y vuelta: escribir lo leído y leerlo de nuevo da lo mismo
         expect(leerNota(escribirNota(meta))).toEqual(meta);
-        cancionDeNota(meta);
       } catch (e) {
         if (!(e instanceof NotaInvalida)) throw new Error(`Error inesperado con ${JSON.stringify(texto)}`, { cause: e });
       }
@@ -97,37 +92,14 @@ describe('fuzzing (F5)', { timeout: 60_000 }, () => {
     for (let i = 0; i < VUELTAS / 3; i++) comprobarHtmlSeguro(renderMarkdown(textoHostil(r)));
   });
 
-  it('enlaces, rutas y etiquetas ♪: nunca lanzan y solo devuelven IDs válidos', () => {
+  it('rutas por hash: nunca lanzan, ni con % mal formados', () => {
     const r = azar(5);
     for (let i = 0; i < VUELTAS * 2; i++) {
       const t = textoHostil(r, 12);
-      const yt = leerEnlace(t);
-      if (yt?.video) expect(yt.video).toMatch(/^[A-Za-z0-9_-]{11}$/);
-      const sp = leerEnlaceSpotify(t);
-      if (sp) expect(sp.uri).toMatch(/^spotify:(track|episode|album|playlist):[A-Za-z0-9]{22}$/);
-      const href = leerHrefCancion(t);
-      if (href) expect(href.id).toMatch(/^([A-Za-z0-9_-]{11}|spotify:(track|episode):[A-Za-z0-9]{22})$/);
-      const hash = `#/${r.de(['musica', 'notas', 'calendario'])}${r.de(['?', '/', '?yt=', '?sp=', '?etiqueta='])}${r.siguiente() < 0.5 ? t : `%${t}%E0%A4%A`}`;
-      const c = cancionEnRuta(hash);
-      if (c) expect(Number.isInteger(c.t) && c.t >= 0).toBe(true);
+      const hash = `#/${r.de(['notas', 'calendario', 'inventario'])}${r.de(['?', '/', '?etiqueta='])}${r.siguiente() < 0.5 ? t : `%${t}%E0%A4%A`}`;
       idNotaEnRuta(hash);
       diaEnRuta(hash);
       etiquetaEnRuta(hash);
-    }
-  });
-
-  it('estado de Spotify: cualquier forma de datos se limpia o se descarta', () => {
-    const r = azar(13);
-    const valores = [null, undefined, true, false, 0, -1, NaN, Infinity, 1e20, '', 'x', [], {}, { a: 1 }, 'spotify:track:4uLU6hMCjMI75M1A2tKUQC'];
-    for (let i = 0; i < VUELTAS; i++) {
-      const d = Object.fromEntries(
-        ['pausado', 'posicionMs', 'uri', 'titulo', 'artista', 'duracionMs', '__proto__'].map((k) => [k, r.siguiente() < 0.3 ? textoHostil(r, 3) : r.de(valores)]),
-      );
-      const e = estadoSeguro(d);
-      if (!e) continue;
-      expect(typeof e.pausado).toBe('boolean');
-      expect(Number.isFinite(e.posicionMs) && e.posicionMs >= 0).toBe(true);
-      if (e.uri) expect(e.uri).toMatch(/^spotify:[a-z]+:[A-Za-z0-9]{22}$/);
     }
   });
 
@@ -167,8 +139,6 @@ describe('fuzzing (F5)', { timeout: 60_000 }, () => {
       const inicio = performance.now();
       parseNota(`---\nid: 01JABCDEFGHJKMNPQRSTVWXYZ0\n---\n${cuerpo}`);
       renderMarkdown(cuerpo.slice(0, 200_000));
-      leerEnlace(cuerpo);
-      leerEnlaceSpotify(cuerpo);
       expect(performance.now() - inicio).toBeLessThan(3000);
     }
   });

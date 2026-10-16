@@ -5,40 +5,51 @@
   justify-content: center;
   gap: 4px;
   width: 100%;
-  min-width: var(--toque);
+  min-width: 0;
   min-height: var(--toque);
   padding: 4px 0;
-  font-family: var(--letra-cuerpo);
   font-size: var(--texto-s);
-  color: var(--tinta);
+  font-variant-numeric: tabular-nums;
+  color: var(--texto);
   background: none;
   border: 0;
+  border-radius: var(--radio-s);
   cursor: pointer;
 }
 
+.celda-dia:active:not(:disabled) {
+  background: var(--hundido);
+}
+
 .celda-dia__numero {
-  min-width: 28px;
-  line-height: 1.5;
-  border-radius: var(--radio);
+  display: grid;
+  place-items: center;
+  min-width: 2em;
+  min-height: 2em;
+  line-height: 1;
+  border-radius: var(--radio-pildora);
 }
 
 .celda-dia--hoy .celda-dia__numero {
-  background: var(--marca);
+  font-weight: var(--peso-fuerte);
+  color: var(--sobre-primario);
+  background: var(--primario);
+  box-shadow: var(--sombra-s);
 }
 
 .celda-dia--fuera {
-  color: var(--tinta-suave);
+  color: var(--texto-2);
 }
 
 .celda-dia__notas {
   display: flex;
   gap: 3px;
-  height: var(--trazo);
+  height: 4px;
 }
 
 .celda-dia__nota {
-  width: 6px;
-  height: var(--trazo);
-  background: currentcolor;
-  border-radius: 1px;
+  width: 4px;
+  height: 4px;
+  background: var(--primario);
+  border-radius: 50%;
 }

@@ -1,0 +1,47 @@
+{
+  "name": "stark-escritorio",
+  "productName": "Stark",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Stark: inventario, ventas y caja para café o bar (versión de Windows)",
+  "author": "BarmanPB74",
+  "license": "MIT",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --publish never"
+  },
+  "devDependencies": {
+    "electron": "44.8.0",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "io.github.barmanpb74.stark",
+    "productName": "Stark",
+    "copyright": "BarmanPB74",
+    "directories": { "output": "salida", "buildResources": "build" },
+    "files": ["main.cjs", "preload.cjs", "build/icon.png", "web/**/*"],
+    "asar": true,
+    "electronLanguages": ["es", "es-419", "en-US"],
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "Stark",
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "Stark-Instalador-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "Stark-Portable-${version}.${ext}"
+    }
+  }
+}

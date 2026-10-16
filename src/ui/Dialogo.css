@@ -1,0 +1,71 @@
+.dialogo {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: calc(var(--esp-4) + var(--margen-arriba)) calc(var(--esp-4) + var(--margen-derecha))
+    calc(var(--esp-4) + var(--margen-abajo)) calc(var(--esp-4) + var(--margen-izquierda));
+}
+
+.dialogo__velo {
+  position: absolute;
+  inset: 0;
+  background: var(--velo);
+  animation: fundir var(--dur-media) var(--curva) both;
+}
+
+.dialogo__caja {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+  width: 100%;
+  max-width: 440px;
+  max-height: 100%;
+  padding: var(--esp-6);
+  overflow-y: auto;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-l);
+  box-shadow: var(--sombra-flotante);
+  outline: none;
+  animation: aparecer var(--dur-media) var(--curva) both;
+}
+
+.dialogo__icono {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  color: var(--peligro-tinta);
+  background: var(--peligro-suave);
+  border-radius: 50%;
+}
+
+.dialogo__titulo {
+  margin: 0;
+  font-size: var(--texto-l);
+  font-weight: var(--peso-fuerte);
+  line-height: var(--interlineado-justo);
+}
+
+.dialogo__texto {
+  color: var(--texto-2);
+}
+
+.dialogo__texto p {
+  margin: 0;
+}
+
+.dialogo__acciones {
+  display: flex;
+  flex-wrap: wrap-reverse;
+  justify-content: flex-end;
+  gap: var(--esp-3);
+  margin-top: var(--esp-2);
+}
+
+.dialogo__acciones .boton {
+  flex: 1 1 8rem;
+}

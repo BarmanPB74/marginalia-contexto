@@ -1,0 +1,126 @@
+/* Adjuntos (foto o PDF de facturas y gastos) */
+.adjuntos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.adjuntos__leyenda {
+  padding: 0;
+  margin-bottom: var(--esp-2);
+  font-size: var(--texto-s);
+  font-weight: var(--peso-medio);
+  color: var(--texto);
+}
+
+.adjuntos__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+}
+
+.adjuntos__error {
+  margin: 0;
+  font-size: var(--texto-s);
+  font-weight: var(--peso-medio);
+  color: var(--peligro-tinta);
+}
+
+.adjuntos__lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.adjuntos__item,
+.adjuntos__pdf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-3);
+  min-height: var(--toque);
+  margin: 0;
+  padding: var(--esp-2) var(--esp-3);
+  background: var(--hundido);
+  border-radius: var(--radio);
+}
+
+.adjuntos__mini {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  overflow: hidden;
+  color: var(--texto-2);
+  background: var(--superficie);
+  border-radius: var(--radio-s);
+}
+
+.adjuntos__mini img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.adjuntos__nombre {
+  display: flex;
+  flex: 1 1 10rem;
+  flex-direction: column;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.adjuntos__tamano {
+  font-size: var(--texto-xs);
+  color: var(--texto-2);
+}
+
+.adjuntos__quitar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--toque);
+  height: var(--toque);
+  color: var(--texto);
+  background: none;
+  border: 0;
+  border-radius: var(--radio-pildora);
+  cursor: pointer;
+}
+
+.adjuntos__estado {
+  margin: 0;
+  color: var(--texto-2);
+}
+
+.adjuntos__visor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+  margin: 0;
+}
+
+.adjuntos__imagen {
+  display: block;
+  width: auto;
+  max-width: min(100%, 40rem);
+  height: auto;
+  background: var(--hundido);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+}
+
+.adjuntos__pie {
+  font-size: var(--texto-xs);
+  color: var(--texto-2);
+  overflow-wrap: anywhere;
+}

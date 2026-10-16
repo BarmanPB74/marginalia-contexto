@@ -1,0 +1,85 @@
+name: Publicación (AAB para Play Console)
+
+# Se lanza a mano (Actions → «Publicación» → Run workflow) o al crear una etiqueta v1.2.3.
+# Compila el paquete firmado (.aab) que se sube a Play Console y un .apk firmado para probar.
+# Necesita los secretos STARK_KEYSTORE_B64 y STARK_KEYSTORE_PASS (docs/PLAY_CONSOLE.md).
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versión visible (p. ej. 1.0.0)'
+        required: true
+        default: '1.0.0'
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  aab:
+    name: AAB firmado
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - run: npx cap sync android
+      - name: Llave de subida
+        env:
+          KEYSTORE_B64: ${{ secrets.STARK_KEYSTORE_B64 }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::error::Falta el secreto STARK_KEYSTORE_B64 (ver docs/PLAY_CONSOLE.md, paso 1)."
+            exit 1
+          fi
+          printf '%s' "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/stark.keystore"
+          echo "STARK_KEYSTORE=$RUNNER_TEMP/stark.keystore" >> "$GITHUB_ENV"
+      - name: Versión
+        env:
+          ENTRADA: ${{ inputs.version }}
+          ETIQUETA: ${{ github.ref_name }}
+        run: |
+          NOMBRE="${ENTRADA:-${ETIQUETA#v}}"
+          if ! printf '%s' "$NOMBRE" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Versión no válida: $NOMBRE (usa 1.2.3)"
+            exit 1
+          fi
+          echo "STARK_VERSION_NAME=$NOMBRE" >> "$GITHUB_ENV"
+          # Siempre crece: Play rechaza un versionCode repetido o menor.
+          echo "STARK_VERSION_CODE=$((100 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
+      - name: Compilar AAB y APK firmados
+        working-directory: android
+        env:
+          STARK_KEYSTORE_PASS: ${{ secrets.STARK_KEYSTORE_PASS }}
+        run: ./gradlew bundleRelease assembleRelease --no-daemon
+      - name: Comprobar firma y huellas
+        run: |
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$APKSIGNER" verify --print-certs android/app/build/outputs/apk/release/app-release.apk | grep -E "SHA-256|SHA-1|DN"
+          cd android/app/build/outputs
+          sha256sum bundle/release/app-release.aab apk/release/app-release.apk | tee SHA256SUMS.txt
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: stark-release-${{ env.STARK_VERSION_NAME }}
+          path: |
+            android/app/build/outputs/bundle/release/app-release.aab
+            android/app/build/outputs/apk/release/app-release.apk
+            android/app/build/outputs/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 30

@@ -1,15 +1,23 @@
 .etiqueta {
   display: inline-block;
-  padding: 0 10px;
-  font-family: var(--letra-mano);
+  max-width: 100%;
+  padding: 3px 12px;
   font-size: var(--texto-s);
-  line-height: 1.7;
-  color: var(--tinta);
-  border: var(--trazo) solid currentcolor;
-  border-radius: var(--radio);
-  white-space: nowrap;
+  font-weight: var(--peso-medio);
+  line-height: 1.45;
+  color: var(--texto);
+  background: var(--hundido);
+  border-radius: var(--radio-pildora);
+  overflow-wrap: anywhere;
 }
 
-.etiqueta--cancion {
-  color: var(--acento);
+.etiqueta--cancion,
+.etiqueta--fecha {
+  color: var(--primario-tinta);
+  background: var(--primario-suave);
+}
+
+.etiqueta[class*='cat-'] {
+  color: var(--cat-tinta);
+  background: var(--cat-suave);
 }

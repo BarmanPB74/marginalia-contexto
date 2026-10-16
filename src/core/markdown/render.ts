@@ -1,6 +1,5 @@
 import DOMPurify from 'dompurify';
 import MarkdownIt from 'markdown-it';
-import { leerHrefCancion, rutaCancion } from '../musica/etiqueta';
 import { esDiaValido, FECHA_EN_TEXTO } from '../notas/fechas';
 import { ETIQUETA_EN_TEXTO, MAX_ETIQUETA } from '../parser/parser';
 
@@ -84,25 +83,6 @@ function regla(nombre: string, patron: RegExp, enlazar: Enlazador) {
     }
   });
 }
-
-// [♪ 1:39](yt:ID?t=99) o (spotify:track:ID?t=99) → abre Música y suena desde ese segundo.
-// Un `yt:`/`spotify:` no válido deja de ser enlace.
-md.core.ruler.push('canciones', (estado) => {
-  for (const bloque of estado.tokens) {
-    for (const token of bloque.children ?? []) {
-      if (token.type !== 'link_open') continue;
-      const href = String(token.attrGet('href') ?? '');
-      if (!href.startsWith('yt:') && !href.startsWith('spotify:')) continue;
-      const cancion = leerHrefCancion(href);
-      token.attrs = cancion
-        ? [
-            ['href', rutaCancion(cancion.id, cancion.t)],
-            ['class', 'enlace-cancion'],
-          ]
-        : [];
-    }
-  }
-});
 
 // @AAAA-MM-DD → el día en el Calendario
 regla('fechas', FECHA_EN_TEXTO, (m) => {

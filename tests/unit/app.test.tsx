@@ -1,44 +1,40 @@
-import { render } from 'preact';
-import { act } from 'preact/test-utils';
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { App } from '../../src/app/App';
+import { Negocio } from '../../src/core/negocio';
+import { crearAlmacen, DiscoMemoria } from '../../src/core/almacen/almacen';
+import { montar, repoNuevo } from './ayuda';
 
-let contenedor: HTMLElement;
-
-function montar(hash = '') {
+async function abrir(hash: string, negocio?: Negocio) {
   location.hash = hash;
-  contenedor = document.createElement('div');
-  document.body.append(contenedor);
-  act(() => render(<App />, contenedor));
+  return montar(<App />, repoNuevo(), negocio);
 }
 
-afterEach(() => {
-  render(null, contenedor);
-  contenedor.remove();
-  location.hash = '';
-});
-
 describe('App', () => {
-  it('abre Notas por defecto, con la barra de secciones', () => {
-    montar();
-    expect(contenedor.querySelector('h1')?.textContent).toBe('Notas');
-    expect(contenedor.querySelector('nav[aria-label="Secciones"]')).not.toBeNull();
+  it('la Bitácora (notas) tiene la navegación de secciones', async () => {
+    const c = await abrir('#/notas');
+    expect(c.querySelector('h1')?.textContent).toBe('Notas');
+    expect(c.querySelector('nav[aria-label="Secciones"]')).not.toBeNull();
   });
 
-  it('cada hash abre su sección', () => {
-    montar('#/calendario');
-    expect(contenedor.querySelector('h1')?.textContent).toBe('Calendario');
+  it('cada hash abre su sección', async () => {
+    const c = await abrir('#/calendario');
+    expect(c.querySelector('h1')?.textContent).toBe('Calendario');
   });
 
-  it('la galería se muestra sin barra de secciones', () => {
-    montar('#/galeria');
-    expect(contenedor.querySelector('h1')?.textContent).toBe('Galería');
-    expect(contenedor.querySelector('nav')).toBeNull();
+  it('primer uso: sin dueño no se ve nada del negocio, se pide crearlo', async () => {
+    const vacio = await Negocio.crear(crearAlmacen(new DiscoMemoria()), { iteracionesPin: 1000 });
+    const c = await abrir('#/notas', vacio);
+    expect(c.querySelector('h1')?.textContent).toBe('Bienvenido');
+    expect(c.querySelector('nav[aria-label="Secciones"]')).toBeNull();
   });
 
-  it('Música no carga ningún iframe hasta que se elige una canción', () => {
-    montar('#/musica');
-    expect(contenedor.querySelector('h1')?.textContent).toBe('Música');
-    expect(contenedor.querySelector('iframe')).toBeNull();
+  it('sin sesión se pide la persona y su PIN', async () => {
+    const n = await Negocio.crear(crearAlmacen(new DiscoMemoria()), { iteracionesPin: 1000 });
+    await n.crearUsuario({ nombre: 'Ana', rol: 'dueno', pin: '1234' });
+    n.cerrarSesion();
+    const c = await abrir('#/notas', n);
+    expect(c.querySelector('h1')?.textContent).toBe('Ana');
+    expect(c.querySelector('[role="group"]')?.getAttribute('aria-label')).toBe('Escribe tu PIN');
+    expect(c.querySelector('nav[aria-label="Secciones"]')).toBeNull();
   });
 });

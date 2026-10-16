@@ -1,0 +1,43 @@
+/* Clases .cat-<color>: fijan --cat-base/--cat-suave/--cat-tinta para que un componente se pinte de una categoría. */
+.cat-indigo {
+  --cat-base: var(--cat-indigo);
+  --cat-suave: var(--cat-indigo-suave);
+  --cat-tinta: var(--cat-indigo-tinta);
+}
+
+.cat-coral {
+  --cat-base: var(--cat-coral);
+  --cat-suave: var(--cat-coral-suave);
+  --cat-tinta: var(--cat-coral-tinta);
+}
+
+.cat-cielo {
+  --cat-base: var(--cat-cielo);
+  --cat-suave: var(--cat-cielo-suave);
+  --cat-tinta: var(--cat-cielo-tinta);
+}
+
+.cat-ambar {
+  --cat-base: var(--cat-ambar);
+  --cat-suave: var(--cat-ambar-suave);
+  --cat-tinta: var(--cat-ambar-tinta);
+}
+
+.cat-esmeralda {
+  --cat-base: var(--cat-esmeralda);
+  --cat-suave: var(--cat-esmeralda-suave);
+  --cat-tinta: var(--cat-esmeralda-tinta);
+}
+
+.cat-fucsia {
+  --cat-base: var(--cat-fucsia);
+  --cat-suave: var(--cat-fucsia-suave);
+  --cat-tinta: var(--cat-fucsia-tinta);
+}
+
+.cat-turquesa {
+  --cat-base: var(--cat-turquesa);
+  --cat-suave: var(--cat-turquesa-suave);
+  --cat-tinta: var(--cat-turquesa-tinta);
+}
+

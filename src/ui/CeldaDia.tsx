@@ -3,10 +3,10 @@ import './CeldaDia.css';
 interface Props {
   dia: number;
   notas: number;
-  hoy?: boolean;
+  hoy?: boolean | undefined;
   /** día del mes anterior o siguiente que completa la cuadrícula */
-  fuera?: boolean;
-  alTocar?: () => void;
+  fuera?: boolean | undefined;
+  alTocar?: (() => void) | undefined;
 }
 
 const MAX_MARCAS = 3;

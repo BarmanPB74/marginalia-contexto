@@ -2,7 +2,24 @@ import { esDiaValido } from '../core/notas/fechas';
 import { esUlid } from '../core/notas/ulid';
 import type { NombreIcono } from '../ui/Icono';
 
-export type IdSeccion = 'notas' | 'calendario' | 'musica' | 'ajustes';
+/**
+ * Stark (ADR-015): inventario y ventas primero; notas y calendario quedan como bitácora.
+ * `SECCIONES` son las 5 de la barra (o del riel lateral en pantallas anchas); el resto se abre
+ * desde «Más». Todas son rutas por hash (#/vender…).
+ */
+export type IdSeccion =
+  | 'inicio'
+  | 'vender'
+  | 'inventario'
+  | 'notas'
+  | 'mas'
+  | 'caja'
+  | 'compras'
+  | 'gastos'
+  | 'contabilidad'
+  | 'usuarios'
+  | 'calendario'
+  | 'ajustes';
 export type Ruta = IdSeccion | 'galeria';
 
 interface Seccion {
@@ -11,22 +28,34 @@ interface Seccion {
   icono: NombreIcono;
 }
 
-/** Las 4 secciones de la barra inferior, en orden. */
+/** Las 5 secciones de la navegación principal, en orden. */
 export const SECCIONES: readonly Seccion[] = [
-  { id: 'notas', etiqueta: 'Notas', icono: 'notas' },
+  { id: 'inicio', etiqueta: 'Inicio', icono: 'inicio' },
+  { id: 'vender', etiqueta: 'Vender', icono: 'vender' },
+  { id: 'inventario', etiqueta: 'Inventario', icono: 'inventario' },
+  { id: 'notas', etiqueta: 'Bitácora', icono: 'notas' },
+  { id: 'mas', etiqueta: 'Más', icono: 'mas' },
+];
+
+/** Lo que se abre desde «Más», agrupado. */
+export const OTRAS: readonly Seccion[] = [
+  { id: 'caja', etiqueta: 'Caja', icono: 'caja' },
+  { id: 'compras', etiqueta: 'Compras y facturas', icono: 'factura' },
+  { id: 'gastos', etiqueta: 'Gastos', icono: 'gasto' },
+  { id: 'contabilidad', etiqueta: 'Contabilidad', icono: 'contabilidad' },
+  { id: 'usuarios', etiqueta: 'Usuarios', icono: 'usuarios' },
   { id: 'calendario', etiqueta: 'Calendario', icono: 'calendario' },
-  { id: 'musica', etiqueta: 'Música', icono: 'musica' },
   { id: 'ajustes', etiqueta: 'Ajustes', icono: 'ajustes' },
 ];
 
 /**
  * Ruta a partir del hash (#/calendario). El hash funciona igual en la WebView, en preview y en el navegador.
- * Lo vacío o desconocido abre Notas, la pantalla principal.
+ * Lo vacío o desconocido abre Inicio, la pantalla principal.
  */
 export function rutaActual(hash: string): Ruta {
   const nombre = hash.replace(/^#\//, '').split(/[/?]/)[0];
   if (nombre === 'galeria') return 'galeria';
-  return SECCIONES.find((s) => s.id === nombre)?.id ?? 'notas';
+  return [...SECCIONES, ...OTRAS].find((s) => s.id === nombre)?.id ?? 'inicio';
 }
 
 /** `#/notas/<id>` → id de la nota abierta; cualquier otra cosa → null. */
@@ -52,21 +81,4 @@ export function etiquetaEnRuta(hash: string): string | null {
   } catch {
     return null;
   }
-}
-
-/**
- * `#/musica?yt=ID&t=99` (YouTube) o `#/musica?sp=track:ID&t=99` (Spotify) → la canción que hay
- * que poner desde una etiqueta ♪; si no, null.
- */
-export function cancionEnRuta(hash: string): { yt?: string; spotify?: string; t: number } | null {
-  const [ruta, consulta = ''] = hash.replace(/^#\//, '').split('?');
-  if (ruta !== 'musica') return null;
-  const p = new URLSearchParams(consulta);
-  const n = Number(p.get('t') ?? 0);
-  const t = Number.isInteger(n) && n >= 0 && n <= 86400 ? n : 0;
-  const yt = p.get('yt') ?? '';
-  if (/^[A-Za-z0-9_-]{11}$/.test(yt)) return { yt, t };
-  const sp = `spotify:${p.get('sp') ?? ''}`;
-  if (/^spotify:(track|episode):[A-Za-z0-9]{22}$/.test(sp)) return { spotify: sp, t };
-  return null;
 }

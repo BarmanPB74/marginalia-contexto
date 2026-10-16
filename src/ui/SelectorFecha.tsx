@@ -10,7 +10,7 @@ interface Props {
   alElegir: (dia: Dia) => void;
   alCerrar: () => void;
   /** Para pruebas: qué día es hoy */
-  hoy?: Dia;
+  hoy?: Dia | undefined;
 }
 
 /** Selector de fecha propio (F3): el mismo mes dibujado del Calendario, en una hoja inferior. */

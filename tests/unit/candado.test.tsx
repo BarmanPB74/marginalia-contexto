@@ -47,7 +47,7 @@ describe('bloqueo con huella/PIN (ADR-014)', () => {
     await repo.crear({ titulo: 'Secreta' });
     location.hash = '#/notas';
     const c = await montar(<App />, repo);
-    expect(c.textContent).toContain('Marginalia está bloqueada');
+    expect(c.textContent).toContain('Stark está bloqueada');
     expect(c.textContent).not.toContain('Secreta');
     expect(llamadas).toHaveLength(1); // el diálogo se abre solo
     respuesta = 'ok';
@@ -62,17 +62,17 @@ describe('bloqueo con huella/PIN (ADR-014)', () => {
     ahora.mockReturnValue(1_000_000);
     const c = await montar(<App />, repoNuevo());
     await esperar();
-    expect(c.textContent).not.toContain('Marginalia está bloqueada');
+    expect(c.textContent).not.toContain('Stark está bloqueada');
     await act(async () => fijarVisibilidad('hidden'));
     ahora.mockReturnValue(1_000_000 + 30_000);
     respuesta = 'cancelado';
     await act(async () => fijarVisibilidad('visible'));
-    expect(c.textContent).not.toContain('Marginalia está bloqueada');
+    expect(c.textContent).not.toContain('Stark está bloqueada');
     await act(async () => fijarVisibilidad('hidden'));
     ahora.mockReturnValue(1_000_000 + 200_000);
     await act(async () => fijarVisibilidad('visible'));
     await esperar();
-    expect(c.textContent).toContain('Marginalia está bloqueada');
+    expect(c.textContent).toContain('Stark está bloqueada');
     ahora.mockRestore();
   });
 

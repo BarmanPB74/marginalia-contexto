@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { entrar, teclearPin } from './sesion';
 
 async function nuevaNota(page: Page, plantilla: string) {
   await page.getByRole('button', { name: 'Nueva' }).click();
@@ -7,7 +8,7 @@ async function nuevaNota(page: Page, plantilla: string) {
 }
 
 test('crear desde plantilla, escribir y recargar: todo se conserva', async ({ page }) => {
-  await page.goto('/#/notas');
+  await entrar(page, '/#/notas');
   await expect(page.getByText('Aún no hay notas.')).toBeVisible();
 
   await nuevaNota(page, 'Reunión');
@@ -21,6 +22,7 @@ test('crear desde plantilla, escribir y recargar: todo se conserva', async ({ pa
   await expect(page.getByRole('status')).toHaveText('Guardado');
 
   await page.reload();
+  await teclearPin(page);
   await expect(page.getByLabel('Título', { exact: true })).toHaveValue('Reunión de prueba');
   // Ya editada: abre en lectura, con el Markdown pintado
   await expect(page.locator('.lectura h1')).toHaveText('Acta');
@@ -34,7 +36,7 @@ test('crear desde plantilla, escribir y recargar: todo se conserva', async ({ pa
 });
 
 test('subpáginas: se crean dentro, salen con sangría y atrás vuelve a la madre', async ({ page }) => {
-  await page.goto('/#/notas');
+  await entrar(page, '/#/notas');
   await nuevaNota(page, 'En blanco');
   await page.getByLabel('Título', { exact: true }).fill('Francés');
   await expect(page.getByRole('status')).toHaveText('Guardado');
@@ -61,7 +63,7 @@ test('subpáginas: se crean dentro, salen con sangría y atrás vuelve a la madr
 });
 
 test('borrar una nota (confirmado) la quita de la lista', async ({ page }) => {
-  await page.goto('/#/notas');
+  await entrar(page, '/#/notas');
   await nuevaNota(page, 'Nota rápida');
   await page.getByLabel('Título', { exact: true }).fill('Para borrar');
   await expect(page.getByRole('status')).toHaveText('Guardado');
@@ -72,7 +74,7 @@ test('borrar una nota (confirmado) la quita de la lista', async ({ page }) => {
 });
 
 test('mientras se escribe: barra de formato sobre el teclado, sin barra de secciones', async ({ page }) => {
-  await page.goto('/#/notas');
+  await entrar(page, '/#/notas');
   await nuevaNota(page, 'En blanco');
   await page.getByLabel('Contenido').click();
   const formato = page.getByRole('toolbar', { name: 'Formato' });
@@ -99,7 +101,7 @@ test('XSS: lo escrito en una nota nunca se ejecuta en modo lectura', async ({ pa
     dialogos.push(d.message());
     void d.dismiss();
   });
-  await page.goto('/#/notas');
+  await entrar(page, '/#/notas');
   await nuevaNota(page, 'En blanco');
   await page.getByLabel('Contenido').fill(
     '<img src=x onerror="alert(1)">\n\n<script>alert(2)</script>\n\n[clic](javascript:alert(3))\n\n<svg onload=alert(4)>',

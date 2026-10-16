@@ -1,0 +1,67 @@
+.casilla {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  min-height: var(--toque);
+  padding: 4px 0;
+  font-size: var(--texto-m);
+  color: var(--texto);
+  cursor: pointer;
+}
+
+/* El input nativo queda encima de la caja dibujada: recibe toque, foco y teclado */
+.casilla__entrada {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 26px;
+  height: 26px;
+  margin: 0;
+  opacity: 0;
+  translate: 0 -50%;
+  cursor: pointer;
+}
+
+.casilla__caja {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  color: transparent;
+  background: var(--hundido);
+  border: 1.5px solid var(--borde-fuerte);
+  border-radius: 8px;
+  box-shadow: var(--sombra-hundida);
+  transition:
+    background-color var(--dur-corta) var(--curva),
+    color var(--dur-corta) var(--curva);
+}
+
+.casilla__entrada:checked + .casilla__caja,
+.casilla__entrada:indeterminate + .casilla__caja {
+  color: var(--sobre-primario);
+  background: var(--primario);
+  border-color: var(--primario);
+  box-shadow: none;
+}
+
+.casilla__entrada:focus-visible + .casilla__caja {
+  outline: 3px solid var(--foco);
+  outline-offset: 3px;
+}
+
+.casilla__texto {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.casilla__contador {
+  color: var(--texto-2);
+}
+
+.casilla--desactivada {
+  color: var(--texto-2);
+  cursor: default;
+}

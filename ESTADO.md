@@ -4,76 +4,67 @@
 > Lo actualiza `/cierre`. Si algo aquí contradice el código, arréglalo aquí.
 
 ## Ahora
-- **Fase actual:** F5 — Seguridad (empieza 2026-10-06). F4 cerrada: PR #2 fusionado; Spotify en segundo plano (ADR-013) **probado por el autor en el teléfono**.
-- **Última sesión:** 2026-10-06 — Auditoría F5 (`docs/seguridad/AUDITORIA-F5.md`) y ADR-014: clave en Android Keystore con migración v1 → v2 y bloqueo opcional con huella/PIN. Todo en PR #3.
-- **Siguiente paso concreto:** el autor prueba en el teléfono (lista de abajo, **antes hacer una copia ZIP**); si va bien, fusionar PR #3 y cerrar F5; luego F6.
+- **Fase actual:** Stark 1.0 (ADR-015/016, pedido del autor 2026-10-16): inventario, ventas con caja, compras, gastos, contabilidad, usuarios con PIN; Bitácora (notas + calendario); preparada para Play Console. F5 (seguridad) cerrada en código; falta su prueba en el teléfono.
+- **Última sesión:** 2026-10-16 — nombre **Stark** (ADR-017; BAR BOX es otro producto del autor); versión de **Windows** con Electron (`escritorio/`, `escritorio.yml`, `docs/ESCRITORIO.md`).
+- **Siguiente paso concreto:** prueba de varios días en el bar con el instalador de Windows (copia ZIP cada noche); renombrar el repositorio a `stark` en GitHub; luego llave de subida y prueba interna en Play.
 
 ## Decisiones tomadas (ADR en `docs/ARQUITECTURA.md`)
-- 001 Web + Capacitor + Preact · 002 `.md` fuente de verdad · 003 solo IFrame oficial · 004 MIT (Pablo, 2026) · 005 nombre "Marginalia", appId `io.github.barmanpb74.appnoti`
-- 006 TypeScript 6.0 (no 7): `typescript-eslint` 8.71 solo soporta TS < 6.1. Dependabot ignora TS 7 hasta que lo soporte.
-- Node 24 LTS (Capacitor 8 pide ≥ 22). En el teléfono vive en `/opt/node24` (no reemplaza el Node 20 del sistema): `export PATH=/opt/node24/bin:$PATH`.
-- El APK **solo se compila en GitHub Actions**: el SDK de Android (sdkmanager, aapt2) solo existe para x86_64 y el teléfono es aarch64. Lint, tests unitarios y e2e (Playwright) sí corren en el teléfono.
-- Acciones de GitHub fijadas por SHA; token de CI con permisos mínimos.
-- Sin `@testing-library` por ahora: Preact `render` + `act` + jsdom bastan.
-- Vitest con `css: true`: sin eso los `.css` (incluso con `?raw`) llegan vacíos y las pruebas de tokens pasaban en falso.
-- Contraste: tinta y acento ≥ 7:1 (AAA); `--tinta-suave` solo para texto secundario, exigido ≥ 4.5:1 (AA). `theme-color` de `index.html` repite `--papel` porque una meta no puede leer variables CSS.
-- Fuentes (2026-10-05, elección del autor, combinación B): Newsreader (cuerpo) + Kalam (a mano) + JetBrains Mono (código). Locales en `src/assets/fonts/`, sin CDN.
-- Rutas por hash: `#/notas` (por defecto), `#/calendario`, `#/musica`, `#/ajustes`, `#/galeria` (interna, sin enlace). Funcionan igual en la WebView, en `vite preview` y en el navegador, sin configurar servidor; el botón atrás de Android recorre el historial.
-- Cada componente de `src/ui/` importa su propio CSS; los estilos globales (`a`, `mark`, `code`, foco visible) viven en `base.css`. Pantallas de sección en `src/features/<sección>/`.
-- Icono y arranque (2026-10-05, pedido del autor): marca EK de Eisen-Kern redibujada a mano, tinta sobre papel, sin texto. El arranque (splash, también Android 12+) es la misma marca sobre papel. Fuente `recursos/icono/marca-ek.svg` (el PNG negro original queda en el historial de git); regenerar con `node scripts/icono-android.mjs`. La marca **no** es MIT (README, LEGAL §4).
-- ADR-007 (2026-10-05, autor): búsqueda con índice **en memoria**, no SQLite.
-- Almacén: `Disco` (crudo) + `Almacen` (atómico). En Android, `Filesystem.rename` borra el destino y luego mueve; por eso, si falta `x.md` y hay `x.md.tmp`, se promueve el temporal. Carpeta `Directory.Data` (privada, sin permisos).
-- ULID propio (`src/core/notas/ulid.ts`) en vez del paquete `ulid`. Frontmatter YAML con esquema `core`; las listas se escriben con guiones, como Obsidian.
-- Borrar una página sube sus hijas al nivel de la borrada; nunca se borran en cascada.
-- Bordes del sistema: Capacitor 8 dibuja bajo la barra de estado y la de gestos e inyecta `--safe-area-inset-*`; los tokens `--margen-arriba/--margen-abajo` los usan (con `env()` de respaldo). "Volver" en una nota sube un nivel (madre o lista).
-- Editor: CodeMirror 6 con `@lezer/markdown` + GFM directo (sin `@codemirror/lang-markdown`, que arrastra analizadores de HTML/CSS/JS). Lectura: `markdown-it` con `html: false` + DOMPurify con lista blanca de etiquetas; cada barrera sola frena las 22 cargas de XSS de `tests/unit/render.test.ts`. Enlaces externos con `target=_blank rel=noopener noreferrer`.
-- Modo al abrir: recién creada en esta sesión (el repositorio lo recuerda; `creado === editado` fallaba al segundo) o vacía → Editar; si no → Leer. Mientras se escribe (`.escribiendo` en `<html>`) se esconden la barra de secciones y el mini, y aparece la barra de formato sobre el teclado.
-- Plantillas estilo Obsidian (`{{titulo}}`, `{{fecha}}`, `{{hora}}`), de serie: en blanco, rápida, bitácora (empieza con `@fecha`), reunión.
-- 2026-10-05 (pedidos del autor): ADR-008 cifrado AES-256-GCM al crear/guardar, exportar .md/.txt/.html descifrado a `Documentos/Marginalia`; ADR-009 preferencias y canciones en `localStorage`; ADR-010 reproductor oficial controlado por `postMessage` (sin script externo); ADR-011 paleta blanca tipo Pixel + oscuro + movimiento suave. Notas en **tarjetas tipo recientes** por defecto (lista en Ajustes). Paleta de comandos (lupa o Ctrl+K). Calendario de mes con hoja del día y «Nueva bitácora». Globo de música escondible a un lado (botón, lanzarlo al borde o deslizar).
-- Reproductor: ADR-012 — un solo iframe en la raíz (`CapaVideo`), sobre el hueco en Música y ventana flotante fuera si sonaba; el globo dibujado solo aparece sin video flotando.
-- F4: `cancion:` + `[♪ m:ss](yt:ID?t=S)`; `#/musica?yt=…&t=…` pone esa canción en ese segundo; Share Intent `ACTION_SEND text/plain` con `CompartidoPlugin.java` (texto no confiable, solo IDs válidos); errores 100/101/150 y sin red con aviso; visor ≥ 200 × 200.
-- ADR-013 Spotify: SDK oficial App Remote (controla la app de Spotify, que suena en segundo plano; sin red propia ni permisos nuevos). `.aar` descargado en CI con SHA256 fijo. Firma debug estable con el secreto `MARGINALIA_KEYSTORE_B64` (Spotify exige la SHA-1). Premium + máx. 5 cuentas en modo desarrollo.
-- F3: `core/parser/parseNota` (etiquetas con subetiquetas, sin ReDoS); `#/notas?etiqueta=x` filtra; autocompletar con `@codemirror/autocomplete` (`#` etiquetas existentes, `@` hoy/mañana/días); `SelectorFecha` propio en hoja; Calendario Mes | Agenda. Las llamadas al plugin de archivos van en fila (lectura colgada muy rara en e2e).
+- 001 Web + Capacitor + Preact · 002 `.md` fuente de verdad de las notas · 004 MIT · 005 appId `io.github.barmanpb74.appnoti` (nombre: Stark, 015) · 006 TypeScript 6.0 · 007 índice de notas en memoria · 008/014 cifrado AES-256-GCM con clave envuelta por Android Keystore + bloqueo opcional con huella · 009 preferencias en `localStorage`.
+- **015 Stark:** núcleo `src/core/negocio` = diario de eventos inmutable por día con cadena SHA-256, estado proyectado, reglas (`ReglaRota`), permisos por rol en UNA tabla (dueño, cajero, bodega; descuentos y anular solo dueño), PIN de 4 dígitos PBKDF2 + limitador, contabilidad + CSV. Dinero en centavos y cantidades en milésimas enteras. Se quitaron YouTube, Spotify, Compartir e INTERNET (003/010/012/013 reemplazadas).
+- **016 Diseño:** soft UI vívido (Inter local), barra inferior < 600 px / riel ≥ 600 px, filtros laterales ≥ 840 px u hoja; textZoom = letra del sistema; sin permisos para adaptarse a la pantalla.
+- Importar inventario: tabla HTML con extensión .xls (lo que exportan otros POS), CSV y XLSX; vista previa y confirmación; no guarda nombre ni marca del sistema de origen. El archivo real del autor NO va al repo (público).
+- Puerta de la app: huella del teléfono (opcional) → negocio abierto → persona + PIN (sesión se cierra tras 10 min fuera).
+- Adjuntos (foto/PDF de facturas y gastos) cifrados en `negocio/adjuntos/`, validados por firma, imágenes reducidas a 1600 px; cámara sin permiso (cámara del sistema).
+- Sin factura electrónica: comprobante interno (LEGAL §1 bis).
+- Pantallas por área registradas en `src/features/registro/{ventas,inventario,gestion}.ts`. Agentes del repo en `.claude/agents/`.
+- Node 24 LTS; el APK solo se compila en GitHub Actions. Acciones fijadas por SHA. Sin `@testing-library`. Vitest con `css: true`.
+- **017 Stark + Windows:** Electron 44 sirve `dist/` en `app://stark/`, sin red ni permisos, clave envuelta con safeStorage (DPAPI); NSIS + portable desde `escritorio.yml` (sin firma de código: SmartScreen avisa).
+- Publicación: `release.yml` (AAB + APK firmados con la llave de subida desde secretos `STARK_KEYSTORE_B64/PASS`, versionCode = 100 + ejecución, R8). Guía: `docs/PLAY_CONSOLE.md`.
+- Bitácora: CodeMirror 6 + markdown-it/DOMPurify (22 XSS bloqueados); rutas por hash; almacén atómico con temporal; plantillas; calendario con agenda.
 
 ## Pendiente de decidir con el autor
-- ¿Subir `minSdk` 24 → 26/29? (H5 de la auditoría, F6)
-- Pedidos aún sin fase: plantillas con gráficos/cálculos y plantillas propias; exportar a PDF/carta/documento legal; backlinks, nota diaria, grafo.
+- ¿Subir `minSdk` 24 → 26/29? (H5 de la auditoría, F6) · Icono de Stark (hoy sigue la marca EK).
+- ¿Cajero con descuentos? (hoy solo el dueño) · Ventas por día en contabilidad (gráfico; falta en el núcleo).
+- Pedidos aún sin fase: plantillas con gráficos/cálculos; exportar a PDF/documento legal; backlinks, nota diaria.
 
 ## Probar en el teléfono (lo que el entorno de Claude no puede verificar)
-- **ADR-014 (antes: Ajustes → Exportar notas ZIP):** abrir la app → las notas de antes se leen igual (migración a v2); cerrar y abrir → siguen. Ajustes → «Bloqueo con huella o PIN» pide confirmar; cerrar y abrir → candado; salir 30 s → no pide; salir > 1 min → pide; en «recientes» no se ve el contenido (Android 13+). Elegir ZIP y autorizar Spotify con el bloqueo activo no deben bloquear.
-- **Ventana flotante:** en Música poner una canción, ir a Notas → el video sigue sonando en la ventana, sin cortes; arrastrarla por la barra; ⇥ la esconde y pausa; la pestaña ♪ la trae; × la cierra. Que el teclado no la deje tapada.
-- **F4 — historias 4 y 5:** «♪ Nueva nota con esta canción» → la nota guarda canción y segundo (píldora bajo el título); botón ♪ del editor → inserta `[♪ m:ss]`; en lectura, tocar ♪ (o la píldora) → Música suena desde ese segundo.
-- **Compartir:** en YouTube Music, Compartir → Marginalia (con la app cerrada y abierta) → se abre Música y suena. Compartir texto que no es de YouTube → aviso. Un video que no se deja incrustar → aviso + «Abrir en YouTube Music». Modo avión → aviso de sin conexión. **F3:** autocompletar `#`/`@` con el teclado de Android; «@ Fecha»; filtro por etiqueta; Agenda.
+- **Arranque sin INTERNET:** la app abre y funciona (Capacitor sirve la interfaz sin red). Si no abre, avisar: volver a poner INTERNET es el plan B.
+- **Primer uso:** crear dueño con PIN → importar el inventario (.xls del sistema anterior) → revisar vista previa (133 productos, 15 negativos, 1 repetido) → confirmar.
+- **Caja y venta:** abrir caja con base → vender con efectivo y cambio, y pago mixto → el inventario baja → cerrar caja contando → diferencia.
+- **Compras:** factura con foto desde la **cámara** y con PDF → aplicar → existencias suben → pago parcial. Descargar el PDF desde la ficha.
+- **Usuarios:** crear cajero → cambiar de usuario → el cajero no ve costos, contabilidad ni anular.
+- **Pantallas:** girar el teléfono; en tableta o plegable, riel lateral y filtros al lado; letra del sistema al máximo → todo legible.
+- **ADR-014:** las notas de antes se leen (migración a v2); bloqueo con huella al volver tras > 1 min.
+
+- **Windows (bar):** instalar → primer uso → importar → vender varios días → copia ZIP cada noche → restaurar la copia en otro PC de prueba. Verificar que tras reiniciar el PC los datos abren (DPAPI).
 
 ## Permisos Android autorizados
-- `INTERNET` (reproductor). Verificado en el manifiesto compilado del APK de CI · `USE_BIOMETRIC` + `USE_FINGERPRINT` (ADR-014, normales: Android no pregunta; los declara `androidx.biometric` para el bloqueo opcional).
-- `android.permission.DUMP` aparece en el APK como **protección** del `ProfileInstallReceiver` de AndroidX (solo adb/sistema pueden llamarlo); no es un permiso que la app pida.
+- Ninguno propio (sin INTERNET desde ADR-015). `USE_BIOMETRIC` + `USE_FINGERPRINT` los añade `androidx.biometric` (normales) para el bloqueo opcional.
+- `android.permission.DUMP` aparece como **protección** del `ProfileInstallReceiver` de AndroidX; no es un permiso que la app pida.
 
 ## Dependencias justificadas
-- `preact` 11 · UI de 4 kB · MIT · `@capacitor/core` + `@capacitor/android` 8.5 · puente y proyecto Android · MIT
-- CodeMirror: `@codemirror/state` 6.7.6, `view` 6.43.13, `commands` 6.11.1, `language` 6.12.4, `@lezer/markdown` 1.7.2, `@lezer/highlight` 1.2.5 · editor · MIT · `markdown-it` 15.0.2 · lectura · MIT (trae `entities` BSD-2 → atribución en F6; `argparse` PSF-2.0 solo en su CLI, no entra al bundle) · `dompurify` 3.4.16 · sanitizar · MPL-2.0 o Apache-2.0 (usamos Apache-2.0)
-- Android: Spotify App Remote SDK 0.8.0 (`.aar`, Apache-2.0, beta oficial, 130 kB, sin permisos; descargado y verificado en CI) + `gson` 2.14.0 (Apache-2.0, lo exige el SDK) · `androidx.biometric` 1.1.0 (Apache-2.0, estable oficial; bloqueo, ADR-014)
-- `@capacitor/filesystem` 8.1.4 · notas en la carpeta privada y exportar a Documentos · MIT · no añade permisos · `yaml` 2.9.1 · frontmatter · ISC · Cifrado, búsqueda, enlaces de música: **sin dependencias nuevas** (WebCrypto, código propio) · `fflate` 0.8.3 · ZIP de copia · MIT · sin dependencias · ~8 kB · `@codemirror/autocomplete` 6.20.3 · autocompletar `#`/`@` · MIT · oficial de CodeMirror, reutiliza state/view
-- Fuentes (no son paquetes npm): Newsreader 400/400i/600, Kalam 400, JetBrains Mono 400 · @fontsource 5.3.0, latino · OFL-1.1 con `OFL.txt` en cada carpeta · 120 kB en total
-- Dev: `vite` 8 (build) MIT · `@preact/preset-vite` MIT · `typescript` 6.0 Apache-2.0 · `eslint` 10 + `@eslint/js` + `typescript-eslint` + `globals` MIT · `vitest` 5 + `jsdom` MIT · `@playwright/test` Apache-2.0 · `@capacitor/cli` MIT· Licencias: todas compatibles (`docs/seguridad/LICENCIAS.md`, F5)
+- `preact` 11 · `@capacitor/core`/`android` 8.5 · `@capacitor/filesystem` 8.1.4 · MIT · sin permisos.
+- CodeMirror (`state`, `view`, `commands`, `language`, `autocomplete`) + `@lezer/markdown`/`highlight` · MIT · `markdown-it` 15 (MIT; `entities` BSD-2 → aviso en F6) · `dompurify` 3.4 (Apache-2.0) · `yaml` 2.9 (ISC) · `fflate` 0.8 (MIT, ZIP y XLSX).
+- Android: `androidx.biometric` 1.1.0 (Apache-2.0). Núcleo de negocio, importador, PIN, gráficos: **sin dependencias nuevas** (WebCrypto, DOMParser, código propio).
+- Fuentes locales OFL: Inter variable (~185 kB) + JetBrains Mono. Dev: vite, vitest, jsdom, playwright, eslint, typescript, @capacitor/cli. Licencias: `docs/seguridad/LICENCIAS.md`.
 
 ## Riesgos abiertos
-- Bundle JS 678 kB (≈230 kB gzip) tras CodeMirror + autocompletar + markdown-it. Presupuesto: arranque en frío < 2 s. Si el autor nota lentitud al abrir, cargar editor y lectura con `import()` al abrir una nota.
-- Control del reproductor por `postMessage` probado solo en Chromium (sin red): falta el teléfono. Si algún video no permite incrustarse, solo queda «Abrir en YouTube Music».
-- e2e con 6 navegadores a la vez: 1 de 116 falló al recargar 0,9 s después de escribir (el guardado aún no había terminado). Mismo límite que matar la app justo al teclear.
-- `gitleaks` no está en el entorno de Claude: solo corre en CI (verde en el PR #2). El selector de archivos depende del `WebChromeClient` de Capacitor: probar en el teléfono.
-- Exportar a `Documentos` en Android ≤ 10 necesita un permiso que no pedimos (regla 3): mostrar alternativa (compartir) si el autor lo usa ahí.
-- `overrides` fuerza `uuid` 11.1.1 bajo `xcode` (H1): quitarlo cuando `@capacitor/cli` lo traiga.
-- Test `etiquetas.test.tsx` («con una etiqueta en la ruta…») falló 2 veces en ~15 ejecuciones completas; no se reproduce aislado ni con CPU forzada. Vigilar en CI.
-- Build *release* sin minificación ni firma todavía (corresponde a F6).
+- Quitar INTERNET no se ha probado en un teléfono real.
+- El archivo del diario de cada día se reescribe completo en cada venta: medir en el teléfono con un día de mucho movimiento.
+- La carga con instantánea no revalida la cadena anterior a ella: «Verificar registro» lo hace (correrlo con cada copia).
+- El limitador de intentos de PIN vive en memoria (reiniciar la app lo reinicia).
+- Bundle JS grande (CodeMirror + pantallas nuevas): medir arranque en frío en gama media.
+- Copia completa del negocio (ZIP legible, sin cifrar) y restauración solo en un negocio vacío (primer uso) con verificación de la cadena: probar en el teléfono con fotos grandes.
+- `overrides` fuerza `uuid` 11.1.1 bajo `xcode`: quitarlo cuando `@capacitor/cli` lo traiga.
+- Build release sin probar en teléfono; R8 con reglas para Capacitor añadidas a mano.
+- Windows: instalador sin firma de código (SmartScreen avisa); al arrancar, Chromium intenta una conexión TLS interna (la página no tiene red). Probado en Linux con Xvfb, no en un Windows real.
 
 ## Banco de ideas (NO construir sin decisión del autor)
-- (vacío)
+- Copia del negocio cifrada con contraseña (hoy sale legible, como la de notas).
+- Recetas (un producto de carta gasta varios ingredientes), como en Bar_box (Python).
 
 ## Historial de sesiones
-- 2026-10-06 · F5 · PR #3 Spotify; auditoría (MobSF, apktool, Semgrep, osv, fuzzing); 5 hallazgos corregidos; ADR-014 Keystore + bloqueo; 335 unit + 31 e2e.
-- 2026-10-06 · F4+ · PR #2 fusionado; Spotify en segundo plano (ADR-013): plugin nativo, panel en Música, ♪ y rutas `sp=`, compartir, firma estable; 316 unit + 31 e2e.
-- 2026-10-05/06 · F4 · ♪ con segundo (historias 4 y 5), Share Intent nativo, errores del reproductor, visor ≥ 200 × 200; ventana flotante con el video (opción B, ADR-012), mismo iframe sin recargar, nada delante (e2e en 25 puntos); 291 unit + 30 e2e.
-- 2026-10-05 · F2 cerrada (probada por el autor) + pedidos + F3: rediseño, tarjetas, paleta, calendario, cifrado, YouTube Music, ZIP; parser, filtro por etiqueta, autocompletar, selector de fecha, Agenda; PR #2.
-- 2026-10-05 · F2 · Almacen atómico, formato, ULID, repositorio/árbol, plantillas; pantalla de Notas con autoguardado; editor CodeMirror + lectura sanitizada (22 XSS bloqueados); bordes del sistema; APK de avance por `f2-avance`.
-- 2026-10-04/05 · F0 y F1 cerradas · repo, CI (APK, CodeQL, gitleaks, dependency-review), spike; tokens, fuentes, componentes, galería, icono EK.
+- 2026-10-16 · Stark · pivote a inventario/ventas: núcleo con diario encadenado (66 pruebas), importador (76), diseño soft UI adaptable, pantallas de ventas/caja, inventario/compras/gastos/adjuntos, contabilidad/usuarios/Más; sin música ni INTERNET; release AAB; 503 unit + e2e.
+- 2026-10-06 · F5 · auditoría (MobSF, apktool, Semgrep, osv, fuzzing); ADR-014 Keystore + bloqueo; PR #3.
+- 2026-10-05/06 · F4 · música (YouTube, ventana flotante, Spotify) — retirada en ADR-015.
+- 2026-10-04/05 · F0–F3 · repo, CI, diseño, notas Markdown cifradas, parser, calendario, ZIP.

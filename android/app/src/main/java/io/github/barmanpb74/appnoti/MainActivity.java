@@ -8,10 +8,6 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        // Plugin propio: recibe lo que se comparte desde YouTube Music (antes de crear el puente).
-        registerPlugin(CompartidoPlugin.class);
-        // Plugin propio: controla la app de Spotify del teléfono (ADR-013).
-        registerPlugin(SpotifyPlugin.class);
         // Plugins propios de seguridad (ADR-014): clave en Android Keystore y bloqueo con huella/PIN.
         registerPlugin(BovedaPlugin.class);
         registerPlugin(BloqueoPlugin.class);
@@ -21,5 +17,9 @@ public class MainActivity extends BridgeActivity {
         WebSettings ajustes = getBridge().getWebView().getSettings();
         ajustes.setAllowFileAccess(false);
         ajustes.setAllowContentAccess(false);
+        // Legibilidad (ADR-016): la WebView ignora por defecto el tamaño de letra del teléfono.
+        // Se aplica la escala que eligió la persona en Ajustes de Android (de 85 % a 200 %).
+        float escala = getResources().getConfiguration().fontScale;
+        ajustes.setTextZoom(Math.round(Math.max(0.85f, Math.min(2.0f, escala)) * 100));
     }
 }
