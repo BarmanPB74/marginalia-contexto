@@ -111,8 +111,8 @@
 
 .adjuntos__imagen {
   display: block;
-  width: 100%;
-  max-width: 40rem;
+  width: auto;
+  max-width: min(100%, 40rem);
   height: auto;
   background: var(--hundido);
   border-radius: var(--radio);

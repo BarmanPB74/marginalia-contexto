@@ -396,3 +396,12 @@
   flex-wrap: wrap;
   gap: var(--esp-1);
 }
+
+.inv-resumen {
+  margin-bottom: var(--esp-5);
+}
+
+/* Hueco final para que el botón flotante no tape la última fila */
+.inv-espacio-flotante {
+  height: calc(var(--toque) + var(--esp-8));
+}

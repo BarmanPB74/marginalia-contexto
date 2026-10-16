@@ -139,14 +139,14 @@ export function NuevaFactura() {
         try {
           cantidad = leerCantidad(r.cantidad);
         } catch (e) {
-          throw new Error(`«${nombre}»: ${mensajeDe(e)}`);
+          throw new Error(`«${nombre}»: ${mensajeDe(e)}`, { cause: e });
         }
         if (cantidad === 0) throw new Error(`«${nombre}»: la cantidad debe ser mayor que cero.`);
         let costoUnit;
         try {
           costoUnit = leerDinero(r.costo);
         } catch (e) {
-          throw new Error(`«${nombre}»: costo — ${mensajeDe(e)}`);
+          throw new Error(`«${nombre}»: costo — ${mensajeDe(e)}`, { cause: e });
         }
         return { productoId: r.productoId, cantidad, costoUnit };
       });
@@ -154,7 +154,7 @@ export function NuevaFactura() {
       return setError(e instanceof Error ? e.message : String(e));
     }
     setOcupado(true);
-    let deshacer = async () => undefined as void;
+    let deshacer: () => Promise<void> = () => Promise.resolve();
     try {
       const guardados = await guardarAdjuntos(adjuntos);
       deshacer = guardados.deshacer;

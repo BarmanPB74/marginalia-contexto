@@ -271,6 +271,7 @@ function ListaInventario() {
         )}
       </Disposicion>
 
+      <div class="inv-espacio-flotante" aria-hidden="true" />
       {negocio.puede('producto.crear') && <BotonFlotante etiqueta="Nuevo producto" extendido alTocar={() => setNuevo(true)} />}
       {nuevo && (
         <FormularioProducto

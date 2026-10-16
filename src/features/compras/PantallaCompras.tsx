@@ -108,13 +108,12 @@ function ListaCompras() {
     <Pagina ancho="amplio">
       <Encabezado titulo="Compras y facturas" />
       {filas.length > 0 && (
-        <div class="inv-ficha">
+        <div class="inv-resumen">
           <Rejilla tipo="cifra" etiqueta="Resumen de compras">
             <Cifra etiqueta="Por pagar" icono="gasto" valor={pesos(porPagar)} color="coral" />
             <Cifra etiqueta="Vencidas" icono="alerta" valor={String(vencidas.length)} color="ambar" />
             <Cifra etiqueta="Por aplicar" icono="inventario" valor={String(porAplicar)} color="indigo" />
           </Rejilla>
-          <span />
         </div>
       )}
       <Disposicion
@@ -189,6 +188,7 @@ function ListaCompras() {
           />
         )}
       </Disposicion>
+      <div class="inv-espacio-flotante" aria-hidden="true" />
       {negocio.puede('compra.registrar') && <BotonFlotante etiqueta="Nueva factura" extendido alTocar={() => ir('#/compras?nueva')} />}
     </Pagina>
   );
