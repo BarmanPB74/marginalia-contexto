@@ -43,7 +43,7 @@ export async function montar(): Promise<Montaje> {
 }
 
 /** Crea un usuario con el dueño y deja la sesión en ese usuario. */
-export async function entrarComo(m: Montaje, nombre: string, rol: 'cajero' | 'bodega', pin = '5678'): Promise<string> {
+export async function entrarComo(m: Montaje, nombre: string, rol: 'cajero' | 'bodega' | 'mesero', pin = '5678'): Promise<string> {
   const ev = await m.negocio.crearUsuario({ nombre, rol, pin });
   const r = await m.negocio.iniciarSesion(ev.id, pin);
   if (!r.ok) throw new Error(r.mensaje);

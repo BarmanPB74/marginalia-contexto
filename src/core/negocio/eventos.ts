@@ -80,6 +80,12 @@ export interface LineaCompra {
   readonly costoUnit: Centavos;
 }
 
+/** Lo que se pide en una ronda: qué y cuánto. El precio se pone al cobrar (el vigente). */
+export interface LineaCuenta {
+  readonly productoId: string;
+  readonly cantidad: Milesimas;
+}
+
 export interface DatosProducto {
   readonly nombre: string;
   readonly categoria: string;
@@ -126,6 +132,8 @@ export interface Datos {
     /** Efectivo que entregó el cliente (para calcular el cambio). */
     readonly recibido?: Centavos;
     readonly cambio?: Centavos;
+    /** Cobro de la cuenta de una mesa: la cierra (las líneas son las de la cuenta). */
+    readonly cuentaId?: string;
   };
   'venta.anulada': { readonly ventaId: string; readonly motivo: string };
   'compra.registrada': {
@@ -158,6 +166,20 @@ export interface Datos {
     readonly adjunto?: string;
   };
   'gasto.anulado': { readonly gastoId: string; readonly motivo: string };
+  'mesa.creada': { readonly nombre: string; readonly zona: string };
+  'mesa.retirada': { readonly mesaId: string };
+  /** Se sienta gente: la mesa queda ocupada. Sin caja abierta no se abre cuenta. */
+  'cuenta.abierta': { readonly mesaId: string; readonly personas?: number };
+  /** Una ronda: lo que se pidió. No descuenta inventario (eso pasa al cobrar). */
+  'cuenta.pedido': { readonly cuentaId: string; readonly lineas: readonly LineaCuenta[]; readonly nota?: string };
+  /** Se retira algo pedido (error, no lo quisieron). Con motivo: queda a la vista. */
+  'cuenta.quitado': { readonly cuentaId: string; readonly productoId: string; readonly cantidad: Milesimas; readonly motivo: string };
+  'cuenta.precuenta': { readonly cuentaId: string; readonly pedida: boolean };
+  'cuenta.trasladada': { readonly cuentaId: string; readonly mesaId: string };
+  /** Cuenta sin nada pedido (se abrió por error o se fueron): la mesa queda libre. */
+  'cuenta.liberada': { readonly cuentaId: string };
+  /** Cuenta con pedidos que no se cobra (sólo el dueño, con motivo). */
+  'cuenta.anulada': { readonly cuentaId: string; readonly motivo: string };
 }
 
 export type TipoEvento = keyof Datos;
@@ -181,6 +203,15 @@ export const TIPOS_EVENTO: readonly TipoEvento[] = [
   'pago.factura',
   'gasto.registrado',
   'gasto.anulado',
+  'mesa.creada',
+  'mesa.retirada',
+  'cuenta.abierta',
+  'cuenta.pedido',
+  'cuenta.quitado',
+  'cuenta.precuenta',
+  'cuenta.trasladada',
+  'cuenta.liberada',
+  'cuenta.anulada',
 ];
 
 /** Un evento de un tipo concreto. */
@@ -431,7 +462,7 @@ function leerDatos(tipo: TipoEvento, x: unknown): Datos[TipoEvento] {
       });
     }
     case 'venta.registrada': {
-      const o = objeto(x, 'datos', ['cajaId', 'lineas', 'descuento', 'total', 'pagos', 'recibido', 'cambio']);
+      const o = objeto(x, 'datos', ['cajaId', 'lineas', 'descuento', 'total', 'pagos', 'recibido', 'cambio', 'cuentaId']);
       const lineas = lista(o, 'lineas', 1, LIMITES.lineas).map((l): LineaVenta => {
         const r = objeto(l, 'línea', ['productoId', 'nombre', 'cantidad', 'precioUnit', 'subtotal']);
         return {
@@ -465,6 +496,7 @@ function leerDatos(tipo: TipoEvento, x: unknown): Datos[TipoEvento] {
         pagos,
         recibido: o.recibido === undefined ? undefined : dinero(o, 'recibido'),
         cambio: o.cambio === undefined ? undefined : dinero(o, 'cambio'),
+        cuentaId: o.cuentaId === undefined ? undefined : id(o, 'cuentaId'),
       });
     }
     case 'venta.anulada': {
@@ -519,6 +551,54 @@ function leerDatos(tipo: TipoEvento, x: unknown): Datos[TipoEvento] {
     case 'gasto.anulado': {
       const o = objeto(x, 'datos', ['gastoId', 'motivo']);
       return { gastoId: id(o, 'gastoId'), motivo: texto(o, 'motivo', LIMITES.motivo, true) };
+    }
+    case 'mesa.creada': {
+      const o = objeto(x, 'datos', ['nombre', 'zona']);
+      return { nombre: texto(o, 'nombre', LIMITES.nombre), zona: texto(o, 'zona', LIMITES.categoria) };
+    }
+    case 'mesa.retirada': {
+      const o = objeto(x, 'datos', ['mesaId']);
+      return { mesaId: id(o, 'mesaId') };
+    }
+    case 'cuenta.abierta': {
+      const o = objeto(x, 'datos', ['mesaId', 'personas']);
+      return sinIndefinidos({
+        mesaId: id(o, 'mesaId'),
+        personas: o.personas === undefined ? undefined : entero(o, 'personas', 1, LIMITES.personas),
+      });
+    }
+    case 'cuenta.pedido': {
+      const o = objeto(x, 'datos', ['cuentaId', 'lineas', 'nota']);
+      const lineas = lista(o, 'lineas', 1, LIMITES.lineas).map((l): LineaCuenta => {
+        const r = objeto(l, 'línea', ['productoId', 'cantidad']);
+        return { productoId: id(r, 'productoId'), cantidad: cantidad(r, 'cantidad', 1) };
+      });
+      return sinIndefinidos({ cuentaId: id(o, 'cuentaId'), lineas, nota: textoOpcional(o, 'nota', LIMITES.nota, true) });
+    }
+    case 'cuenta.quitado': {
+      const o = objeto(x, 'datos', ['cuentaId', 'productoId', 'cantidad', 'motivo']);
+      return {
+        cuentaId: id(o, 'cuentaId'),
+        productoId: id(o, 'productoId'),
+        cantidad: cantidad(o, 'cantidad', 1),
+        motivo: texto(o, 'motivo', LIMITES.motivo, true),
+      };
+    }
+    case 'cuenta.precuenta': {
+      const o = objeto(x, 'datos', ['cuentaId', 'pedida']);
+      return { cuentaId: id(o, 'cuentaId'), pedida: booleano(o, 'pedida') };
+    }
+    case 'cuenta.trasladada': {
+      const o = objeto(x, 'datos', ['cuentaId', 'mesaId']);
+      return { cuentaId: id(o, 'cuentaId'), mesaId: id(o, 'mesaId') };
+    }
+    case 'cuenta.liberada': {
+      const o = objeto(x, 'datos', ['cuentaId']);
+      return { cuentaId: id(o, 'cuentaId') };
+    }
+    case 'cuenta.anulada': {
+      const o = objeto(x, 'datos', ['cuentaId', 'motivo']);
+      return { cuentaId: id(o, 'cuentaId'), motivo: texto(o, 'motivo', LIMITES.motivo, true) };
     }
   }
 }

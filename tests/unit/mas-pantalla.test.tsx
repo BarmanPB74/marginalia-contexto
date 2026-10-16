@@ -22,7 +22,7 @@ const ids = (rol: Rol) => seccionesMas((a) => puede(rol, a)).map((s) => `${s.id}
 describe('Más', () => {
   it('el dueño ve todas las secciones y «Cambiar de usuario»', async () => {
     const c = await abrir(await negocioDePrueba());
-    expect(titulos(c)).toEqual(['Caja', 'Compras y facturas', 'Gastos', 'Contabilidad', 'Usuarios', 'Calendario', 'Ajustes', 'Cambiar de usuario']);
+    expect(titulos(c)).toEqual(['Bitácora', 'Caja', 'Compras y facturas', 'Gastos', 'Contabilidad', 'Usuarios', 'Calendario', 'Ajustes', 'Cambiar de usuario']);
     expect(c.querySelector('a[href="#/contabilidad"]')).not.toBeNull();
   });
 
@@ -40,8 +40,8 @@ describe('Más', () => {
   });
 
   it('filtra por la tabla de permisos', () => {
-    expect(ids('cajero')).toEqual(['caja:Caja', 'gastos:Gastos', 'calendario:Calendario', 'usuarios:Mi cuenta', 'ajustes:Ajustes']);
-    expect(ids('bodega')).toEqual(['compras:Compras y facturas', 'calendario:Calendario', 'usuarios:Mi cuenta', 'ajustes:Ajustes']);
+    expect(ids('cajero')).toEqual(['notas:Bitácora', 'caja:Caja', 'gastos:Gastos', 'calendario:Calendario', 'usuarios:Mi cuenta', 'ajustes:Ajustes']);
+    expect(ids('bodega')).toEqual(['notas:Bitácora', 'compras:Compras y facturas', 'calendario:Calendario', 'usuarios:Mi cuenta', 'ajustes:Ajustes']);
   });
 
   it('«Cambiar de usuario» cierra la sesión', async () => {

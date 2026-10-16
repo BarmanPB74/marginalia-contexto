@@ -22,11 +22,12 @@ const ACCESO: Partial<Record<IdSeccion, readonly Accion[]>> = {
 };
 
 const DESCRIPCION: Partial<Record<IdSeccion, string>> = {
+  notas: 'Notas del negocio: novedades del turno, pendientes y recetas.',
   caja: 'Abrir y cerrar la caja, entradas y retiros de efectivo.',
   compras: 'Facturas de proveedores, aplicarlas al inventario y pagarlas.',
   gastos: 'Arriendo, servicios, domicilios y lo que se paga con la caja.',
   contabilidad: 'Ventas, costos, margen, gastos y cuentas por pagar. Exportar CSV.',
-  usuarios: 'Cajeros y bodega: crear, cambiar su PIN o desactivarlos.',
+  usuarios: 'Cajeros, meseros y bodega: crear, cambiar su PIN o desactivarlos.',
   calendario: 'Las notas de la bitácora por día.',
   ajustes: 'Tema, copias de seguridad, privacidad y datos del negocio.',
 };

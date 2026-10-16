@@ -24,6 +24,7 @@ interface Acceso {
 }
 
 const ACCESOS: readonly Acceso[] = [
+  { id: 'mesas', etiqueta: 'Mesas', icono: 'mesa', acciones: ['cuenta.atender'] },
   { id: 'vender', etiqueta: 'Vender', icono: 'vender', acciones: ['venta.registrar'] },
   { id: 'caja', etiqueta: 'Caja', icono: 'caja', acciones: ['caja.abrir', 'caja.cerrar'] },
   { id: 'inventario', etiqueta: 'Inventario', icono: 'inventario', acciones: ['inventario.ver'] },

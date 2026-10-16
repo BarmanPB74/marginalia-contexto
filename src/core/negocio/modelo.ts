@@ -10,11 +10,14 @@ import type { Centavos, Milesimas } from './numeros';
 export const UNIDADES = ['unidad', 'g', 'kg', 'ml', 'L'] as const;
 export type Unidad = (typeof UNIDADES)[number];
 
-/** Cargos. `dueno` sin eñe en el código (identificador); en pantalla se escribe «Dueño». */
-export const ROLES = ['dueno', 'cajero', 'bodega'] as const;
+/**
+ * Cargos. `dueno` sin eñe en el código (identificador); en pantalla se escribe «Dueño».
+ * `mesero` toma pedidos en las mesas, pero no cobra ni toca la caja.
+ */
+export const ROLES = ['dueno', 'cajero', 'bodega', 'mesero'] as const;
 export type Rol = (typeof ROLES)[number];
 
-export const NOMBRE_ROL: Readonly<Record<Rol, string>> = { dueno: 'Dueño', cajero: 'Cajero', bodega: 'Bodega' };
+export const NOMBRE_ROL: Readonly<Record<Rol, string>> = { dueno: 'Dueño', cajero: 'Cajero', bodega: 'Bodega', mesero: 'Mesero' };
 
 /**
  * Formas de pago. Nequi y Daviplata cuentan como `transferencia`. `cortesia` es lo que se
@@ -67,6 +70,15 @@ export interface Usuario {
   readonly pin: PinGuardado;
 }
 
+/** Una mesa (o barra, o silla): donde se abre una cuenta. */
+export interface Mesa {
+  readonly id: string;
+  readonly nombre: string;
+  /** Salón, terraza, barra… (agrupa el mapa). */
+  readonly zona: string;
+  readonly activa: boolean;
+}
+
 /** Límites de texto y de tamaño: el diario rechaza lo que se salga (entradas hostiles). */
 export const LIMITES = {
   nombre: 80,
@@ -81,4 +93,6 @@ export const LIMITES = {
   pagos: 4,
   adjuntos: 10,
   idArchivo: 80,
+  mesas: 200,
+  personas: 99,
 } as const;

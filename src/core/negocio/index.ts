@@ -43,6 +43,7 @@ export {
   type Producto,
   type Usuario,
   type PinGuardado,
+  type Mesa,
 } from './modelo';
 export {
   ReglaRota,
@@ -64,6 +65,7 @@ export {
   type PagoVenta,
   type DescuentoAplicado,
   type LineaCompra,
+  type LineaCuenta,
   type DatosProducto,
 } from './eventos';
 export {
@@ -76,6 +78,8 @@ export {
   vendidoCaja,
   stockDe,
   hayUsuarios,
+  cuentaDeMesa,
+  pedidoEnCuenta,
   HASH_INICIAL,
   type EstadoNegocio,
   type CajaAbierta,
@@ -87,6 +91,7 @@ export {
   type EstadoCompra,
   type Gasto,
   type Alerta,
+  type Cuenta,
 } from './estado';
 export { ACCIONES, PERMISOS, NOMBRE_ACCION, puede, accionDe, type Accion } from './permisos';
 export {

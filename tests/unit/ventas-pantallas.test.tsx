@@ -45,8 +45,8 @@ async function escribir(c: ParentNode, etiqueta: string, valor: string) {
 const texto = (c: HTMLElement) => c.textContent ?? '';
 
 describe('ventas y caja: pantallas', () => {
-  it('registra Inicio, Vender y Caja', () => {
-    expect(Object.keys(PANTALLAS_VENTAS).sort()).toEqual(['caja', 'inicio', 'vender']);
+  it('registra Inicio, Mesas, Vender y Caja', () => {
+    expect(Object.keys(PANTALLAS_VENTAS).sort()).toEqual(['caja', 'inicio', 'mesas', 'vender']);
   });
 
   it('Inicio saluda, ofrece abrir caja y muestra alertas y accesos según el cargo', async () => {

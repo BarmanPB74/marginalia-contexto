@@ -36,7 +36,7 @@ describe('rutas', () => {
   });
 
   it('hay exactamente 5 secciones, en el orden de la barra', () => {
-    expect(SECCIONES.map((s) => s.id)).toEqual(['inicio', 'vender', 'inventario', 'notas', 'mas']);
+    expect(SECCIONES.map((s) => s.id)).toEqual(['inicio', 'mesas', 'vender', 'inventario', 'mas']);
   });
 
   it('todas las secciones (también las de «Más») tienen un icono propio', () => {
@@ -71,8 +71,8 @@ describe('BarraInferior', () => {
     const nav = c.querySelector('nav');
     expect(nav?.getAttribute('aria-label')).toBe('Secciones');
     const enlaces = [...c.querySelectorAll('a')];
-    expect(enlaces.map((a) => a.textContent)).toEqual(['Inicio', 'Vender', 'Inventario', 'Bitácora', 'Más']);
-    expect(enlaces.map((a) => a.getAttribute('href'))).toEqual(['#/inicio', '#/vender', '#/inventario', '#/notas', '#/mas']);
+    expect(enlaces.map((a) => a.textContent)).toEqual(['Inicio', 'Mesas', 'Vender', 'Inventario', 'Más']);
+    expect(enlaces.map((a) => a.getAttribute('href'))).toEqual(['#/inicio', '#/mesas', '#/vender', '#/inventario', '#/mas']);
     expect(enlaces.filter((a) => a.getAttribute('aria-current') === 'page').map((a) => a.textContent)).toEqual([
       'Inventario',
     ]);
