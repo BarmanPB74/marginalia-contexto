@@ -132,6 +132,7 @@ export {
   type UsuarioPublico,
   type ResultadoSesion,
   type Oyente,
+  type MovimientoCaja,
   type ResumenCierre,
   type LineaPedida,
   type PagoPedido,

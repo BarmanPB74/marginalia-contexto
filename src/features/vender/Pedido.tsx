@@ -5,6 +5,7 @@ import { CampoNumero } from '../../ui/CampoNumero';
 import { Icono } from '../../ui/Icono';
 import { Segmentado } from '../../ui/Segmentado';
 import { unidadCorta } from '../caja/comun';
+import { useNegocioOpcional } from '../negocio/contexto';
 import { fijar, quitar, sumar, type LineaPedido, type Pedido as TPedido, type TipoDescuento, type VistaPrevia } from './pedido';
 
 interface Props {
@@ -24,6 +25,8 @@ const OPCIONES_DESCUENTO: ReadonlyArray<{ valor: TipoDescuento; etiqueta: string
 
 /** El pedido: líneas con cantidades, descuento opcional y total (vista previa del núcleo). */
 export function Pedido({ pedido, vista, alCambiar, conAcciones = true, alCobrar }: Props) {
+  // Los descuentos los decide el dueño (permiso 'venta.descuento', NEGOCIO §4.2)
+  const puedeDescontar = useNegocioOpcional()?.negocio.puede('venta.descuento') ?? true;
   if (vista.lineas.length === 0) {
     return (
       <div class="pedido pedido--vacio">
@@ -48,6 +51,7 @@ export function Pedido({ pedido, vista, alCambiar, conAcciones = true, alCobrar 
         ))}
       </ul>
 
+      {puedeDescontar && (
       <div class="pedido__descuento">
         <Segmentado
           etiqueta="Descuento"
@@ -66,6 +70,7 @@ export function Pedido({ pedido, vista, alCambiar, conAcciones = true, alCobrar 
           />
         )}
       </div>
+      )}
 
       <dl class="pedido__totales">
         {vista.descuento > 0 && (

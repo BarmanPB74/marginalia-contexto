@@ -29,9 +29,9 @@ async function crearProducto(page: Page, nombre: string, precio: string) {
   await page.goto('/#/inventario');
   await page.getByRole('button', { name: 'Nuevo producto' }).click();
   const hoja = page.getByRole('dialog', { name: 'Nuevo producto' });
-  await hoja.getByLabel('Nombre').fill(nombre);
-  await hoja.getByLabel('Categoría').fill('Bebidas');
-  await hoja.getByLabel('Precio de venta').fill(precio);
+  await hoja.getByRole('textbox', { name: 'Nombre' }).fill(nombre);
+  await hoja.getByRole('textbox', { name: 'Categoría' }).fill('Bebidas');
+  await hoja.getByRole('textbox', { name: 'Precio de venta' }).fill(precio);
   await hoja.getByRole('button', { name: 'Crear producto' }).click();
   await expect(hoja).toBeHidden();
 }
@@ -95,7 +95,7 @@ for (const vista of VISTAS) {
       await expect(page.getByText('Efectivo esperado en el cajón')).toBeVisible();
       await foto('cierre-resumen');
       await page.getByRole('button', { name: 'Contar efectivo' }).click();
-      await page.getByLabel('Efectivo contado').fill('71000');
+      await page.getByRole('textbox', { name: 'Efectivo contado' }).fill('71000');
       await page.getByRole('button', { name: 'Ver diferencia' }).click();
       await expect(page.locator('.cierre__diferencia')).toContainText('Cuadra');
       await foto('cierre-diferencia');

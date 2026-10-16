@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { diaDe, leerDinero, pesos, vendidoCaja, type CajaCerrada, type Centavos, type Evento } from '../../core/negocio';
+import { leerDinero, pesos, vendidoCaja, type CajaCerrada, type Centavos } from '../../core/negocio';
 import { Boton } from '../../ui/Boton';
 import { CampoTexto } from '../../ui/CampoTexto';
 import { Cifra } from '../../ui/Cifra';
@@ -232,22 +232,27 @@ interface FilaMovimiento {
   valor: string;
 }
 
-/**
- * Movimientos de plata de la caja abierta. El estado sólo guarda totales; el detalle se lee del
- * diario, y el núcleo sólo deja leerlo a quien ve la contabilidad (el dueño).
- */
+/** Movimientos de plata de la caja abierta: los ve quien maneja la caja (`negocio.movimientosCaja`). */
 function Movimientos() {
   const { negocio, estado } = useNegocio();
   const caja = estado.caja;
-  const puedeVer = negocio.puede('contabilidad.ver');
+  const puedeVer = negocio.puede('caja.movimiento');
   const [filas, setFilas] = useState<FilaMovimiento[] | null>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (!caja || !puedeVer) return;
     let vigente = true;
-    negocio.eventos({ desde: diaDe({ en: caja.abiertaEn }) }).then(
-      (eventos) => vigente && setFilas(filasDe(eventos, caja.id)),
+    negocio.movimientosCaja().then(
+      (lista) =>
+        vigente &&
+        setFilas(
+          lista.map((m) => {
+            const entra = m.tipo === 'ingreso';
+            const que = { ingreso: 'Entrada', retiro: 'Retiro', gasto: 'Gasto', pago: 'Pago a proveedor' }[m.tipo];
+            return { id: m.id, en: m.en, que, detalle: m.detalle, valor: `${entra ? '+' : '−'}${pesos(m.monto)}` };
+          }),
+        ),
       (e: unknown) => vigente && setError(textoError(e)),
     );
     return () => {
@@ -255,26 +260,7 @@ function Movimientos() {
     };
   }, [negocio, caja?.id, estado.eventos, puedeVer]);
 
-  if (!caja) return null;
-
-  function filasDe(eventos: readonly Evento[], cajaId: string): FilaMovimiento[] {
-    const desde = eventos.findIndex((e) => e.tipo === 'caja.abierta' && e.id === cajaId);
-    const r: FilaMovimiento[] = [];
-    for (const e of desde < 0 ? [] : eventos.slice(desde)) {
-      if (e.tipo === 'caja.cerrada') break;
-      if (e.tipo === 'caja.abierta') r.push({ id: e.id, en: e.en, que: 'Apertura', detalle: 'Base', valor: `+${pesos(e.datos.base)}` });
-      else if (e.tipo === 'caja.movimiento') {
-        const entra = e.datos.tipo === 'ingreso';
-        r.push({ id: e.id, en: e.en, que: entra ? 'Entrada' : 'Retiro', detalle: e.datos.motivo, valor: `${entra ? '+' : '−'}${pesos(e.datos.monto)}` });
-      } else if (e.tipo === 'gasto.registrado' && e.datos.deCaja) {
-        r.push({ id: e.id, en: e.en, que: 'Gasto', detalle: e.datos.descripcion, valor: `−${pesos(e.datos.monto)}` });
-      } else if (e.tipo === 'pago.factura' && e.datos.deCaja) {
-        const c = estado.compras[e.datos.compraId];
-        r.push({ id: e.id, en: e.en, que: 'Pago a proveedor', detalle: c ? `${c.proveedor} · ${c.numero}` : '', valor: `−${pesos(e.datos.monto)}` });
-      }
-    }
-    return r.reverse();
-  }
+  if (!caja || !puedeVer) return null;
 
   const columnas: Columna<FilaMovimiento>[] = [
     { clave: 'que', titulo: 'Movimiento', celda: (f) => f.que, principal: true },
@@ -288,11 +274,7 @@ function Movimientos() {
       <h2 id="caja-movimientos" class="caja__titulo">
         Movimientos de la caja
       </h2>
-      {!puedeVer ? (
-        <p class="caja__texto">
-          Las cifras de arriba suman las entradas, retiros y gastos de esta caja. El detalle de cada movimiento lo ve el dueño.
-        </p>
-      ) : error ? (
+      {error ? (
         <p class="mensaje-error">{error}</p>
       ) : (
         <Tabla titulo="Movimientos de la caja abierta" columnas={columnas} filas={filas ?? []} claveFila={(f) => f.id} vacia={filas ? 'Sin movimientos.' : 'Cargando…'} />

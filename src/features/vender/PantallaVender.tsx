@@ -139,16 +139,19 @@ function PuntoDeVenta() {
     <>
       <fieldset class="vender__grupo">
         <legend>Existencias</legend>
-        <Segmentado
-          etiqueta="Existencias"
-          opciones={[
-            { valor: 'todas', etiqueta: 'Todas' },
-            { valor: 'con', etiqueta: 'Con existencias' },
-            { valor: 'agotadas', etiqueta: 'Agotadas' },
-          ]}
-          valor={filtroStock}
-          alCambiar={setFiltroStock}
-        />
+        <GrupoChips etiqueta="Existencias">
+          {(
+            [
+              ['todas', 'Todas'],
+              ['con', 'Con existencias'],
+              ['agotadas', 'Agotadas'],
+            ] as const
+          ).map(([v, t]) => (
+            <Chip key={v} seleccionado={filtroStock === v} alCambiar={() => setFiltroStock(v)}>
+              {t}
+            </Chip>
+          ))}
+        </GrupoChips>
       </fieldset>
       <fieldset class="vender__grupo">
         <legend>Ordenar por</legend>

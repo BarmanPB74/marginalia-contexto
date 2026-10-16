@@ -28,6 +28,7 @@ import {
 import { LIMITES, NOMBRE_ROL, type FormaEgreso, type FormaPago, type MotivoAjuste, type Rol, type Unidad, type Usuario } from './modelo';
 import {
   crearEvento,
+  diaDe,
   ReglaRota,
   sinIndefinidos,
   type Comando,
@@ -70,6 +71,17 @@ export type ResultadoSesion =
     };
 
 /** Recibe el estado nuevo y el evento que lo produjo (`null` si sólo cambió la sesión). */
+/** Un movimiento de plata de la caja abierta (ver `movimientosCaja`). */
+export interface MovimientoCaja {
+  readonly id: string;
+  readonly en: string;
+  /** Nombre de quien lo hizo */
+  readonly por: string;
+  readonly tipo: 'ingreso' | 'retiro' | 'gasto' | 'pago';
+  readonly monto: Centavos;
+  readonly detalle: string;
+}
+
 export type Oyente = (estado: EstadoNegocio, evento: Evento | null) => void;
 
 export interface OpcionesNegocio {
@@ -455,12 +467,13 @@ export class Negocio {
    * sólo dice qué, cuánto y cómo pagan. Líneas repetidas se suman. Descuenta el stock de
    * todos los productos en una sola escritura.
    */
-  vender(v: {
+  async vender(v: {
     lineas: readonly LineaPedida[];
     descuento?: Descuento | null;
     pagos: readonly PagoPedido[];
     recibido?: Centavos | null;
   }): Promise<Evento> {
+    if (v.descuento && v.descuento.valor > 0) this.exigir('venta.descuento');
     return this.ejecutar((estado) => {
       const caja = estado.caja;
       if (!caja) throw new ReglaRota('No hay caja abierta. Abre la caja antes de vender.');
@@ -695,6 +708,31 @@ export class Negocio {
   async movimientosStock(productoId: string, rango: { desde?: string; hasta?: string } = {}): Promise<MovimientoStock[]> {
     this.exigir('inventario.ver');
     return movimientosStock(await this.diario.eventos(rango), productoId, this.estado);
+  }
+
+  /**
+   * Movimientos de plata de la caja abierta (entradas, retiros, gastos y pagos desde la caja),
+   * para quien maneja la caja aunque no vea la contabilidad. Lo más reciente primero.
+   */
+  async movimientosCaja(): Promise<MovimientoCaja[]> {
+    this.exigir('caja.movimiento');
+    const caja = this.estado.caja;
+    if (!caja) return [];
+    const lista: MovimientoCaja[] = [];
+    const eventos = await this.diario.eventos({ desde: diaDe({ en: caja.abiertaEn }) });
+    const inicio = eventos.findIndex((e) => e.tipo === 'caja.abierta' && e.id === caja.id);
+    for (const e of inicio < 0 ? [] : eventos.slice(inicio + 1)) {
+      const por = this.estado.usuarios[e.por]?.nombre ?? '';
+      if (e.tipo === 'caja.movimiento') {
+        lista.push({ id: e.id, en: e.en, por, tipo: e.datos.tipo, monto: e.datos.monto, detalle: e.datos.motivo });
+      } else if (e.tipo === 'gasto.registrado' && e.datos.deCaja) {
+        lista.push({ id: e.id, en: e.en, por, tipo: 'gasto', monto: e.datos.monto, detalle: e.datos.descripcion });
+      } else if (e.tipo === 'pago.factura' && e.datos.deCaja) {
+        const compra = this.estado.compras[e.datos.compraId];
+        lista.push({ id: e.id, en: e.en, por, tipo: 'pago', monto: e.datos.monto, detalle: compra ? `${compra.proveedor} ${compra.numero}` : 'Factura' });
+      }
+    }
+    return lista.reverse();
   }
 
   /** Recorre todo el diario y comprueba la cadena de hashes. */
