@@ -1,39 +1,43 @@
 /*
- * Fuentes empaquetadas en la app (combinación B, elegida por el autor el 2026-10-05).
- * Licencia SIL OFL 1.1 (ver OFL.txt en cada carpeta). Archivos de @fontsource 5.3.0, subconjunto latino.
- * Sin CDN: nunca se piden fuentes a la red.
+ * Fuentes empaquetadas en la app (Bar Box, 2026-10-16).
+ * - Inter (variable, pesos 100–900): toda la interfaz. @fontsource-variable/inter 5.3.0,
+ *   subconjuntos latin + latin-ext (normal) y latin (cursiva para <em> de la Bitácora).
+ * - JetBrains Mono 400: código. @fontsource 5.3.0, latin.
+ * Licencia SIL OFL 1.1 (ver OFL.txt en cada carpeta). Sin CDN: nunca se piden fuentes a la red.
  */
 
 @font-face {
-  font-family: 'Newsreader';
-  src: url('../assets/fonts/newsreader/newsreader-latin-400-normal.woff2') format('woff2');
-  font-weight: 400;
+  font-family: 'Inter Variable';
+  src: url('../assets/fonts/inter/inter-latin-wght-normal.woff2') format('woff2');
+  font-weight: 100 900;
   font-style: normal;
   font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 @font-face {
-  font-family: 'Newsreader';
-  src: url('../assets/fonts/newsreader/newsreader-latin-400-italic.woff2') format('woff2');
-  font-weight: 400;
+  font-family: 'Inter Variable';
+  src: url('../assets/fonts/inter/inter-latin-ext-wght-normal.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'Inter Variable';
+  src: url('../assets/fonts/inter/inter-latin-wght-italic.woff2') format('woff2');
+  font-weight: 100 900;
   font-style: italic;
   font-display: swap;
-}
-
-@font-face {
-  font-family: 'Newsreader';
-  src: url('../assets/fonts/newsreader/newsreader-latin-600-normal.woff2') format('woff2');
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Kalam';
-  src: url('../assets/fonts/kalam/kalam-latin-400-normal.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 @font-face {

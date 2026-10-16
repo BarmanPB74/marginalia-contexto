@@ -2,8 +2,11 @@ import { SECCIONES, type IdSeccion } from '../app/rutas';
 import { Icono } from './Icono';
 import './BarraInferior.css';
 
-/** Navegación principal: 4 secciones con icono y etiqueta manuscrita. Son enlaces (#/…), no botones. */
-export function BarraInferior({ actual }: { actual: IdSeccion }) {
+/**
+ * Navegación principal: las 5 secciones de `SECCIONES` con icono y etiqueta. Son enlaces (#/…).
+ * Solo CSS decide la forma: barra inferior en teléfonos (< 600 px) y riel lateral desde 600 px.
+ */
+export function BarraInferior({ actual }: { actual?: IdSeccion }) {
   return (
     <nav class="barra-inferior" aria-label="Secciones">
       {SECCIONES.map((s) => (

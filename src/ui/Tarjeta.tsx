@@ -1,7 +1,13 @@
 import type { ComponentChildren } from 'preact';
 import './Tarjeta.css';
 
-/** Contenedor con contorno dibujado: sin relleno ni sombra. */
-export function Tarjeta({ children }: { children: ComponentChildren }) {
-  return <div class="tarjeta">{children}</div>;
+interface Props {
+  children: ComponentChildren;
+  /** elevada: se levanta del fondo (por defecto) · hundida: zona de entrada o resumen · plana: sin sombra */
+  variante?: 'elevada' | 'hundida' | 'plana';
+}
+
+/** Contenedor de bloque: esquinas generosas y sombra suave de dos capas. */
+export function Tarjeta({ children, variante = 'elevada' }: Props) {
+  return <div class={`tarjeta tarjeta--${variante}`}>{children}</div>;
 }

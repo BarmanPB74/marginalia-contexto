@@ -1,103 +1,313 @@
 /*
- * Tokens de diseño — ÚNICA fuente de colores, trazos y medidas (docs/DISENO.md).
- * Ningún otro archivo de src/ puede escribir un color literal (lo vigila tests/unit/tokens.test.ts).
+ * Tokens de diseño de Bar Box — ÚNICA fuente de colores y medidas (docs/DISENO.md).
+ * Ningún otro archivo de src/ puede escribir un color literal (lo vigila tests/unit/tokens.test.ts,
+ * que además mide los contrastes de este archivo).
  *
- * Paleta (2026-10-05, pedido del autor): blanco limpio y neutros fríos al estilo del sistema de
- * Android (Pixel), con el trazo a mano de siempre. Dos temas: claro (por defecto) y oscuro, que
- * sigue al teléfono salvo que Ajustes → Tema fije uno (`data-tema` en <html>).
+ * Estilo «soft UI» (2026-10-16, pedido del dueño): fondo gris azulado muy claro, paneles que se
+ * levantan con dos sombras suaves (luz arriba-izquierda, sombra abajo-derecha), campos hundidos,
+ * esquinas generosas y colores vívidos. Dos temas: claro (por defecto) y oscuro, que sigue al
+ * teléfono salvo que Ajustes → Tema fije uno (`data-tema` en <html>).
+ *
+ * Regla de color: un color «base» vívido (--cat-*, --exito…) nunca lleva texto encima ni es texto;
+ * el texto va en su «tinta» (--cat-*-tinta), sobre su «suave» o sobre una superficie.
  */
 :root {
   color-scheme: light;
 
-  /* Superficies y tinta — tema claro */
-  --papel: #fcfcff;
-  --papel-2: #f0f2f7;
-  --superficie: #ffffff;
-  --tinta: #1b1c20;
-  --tinta-suave: #5b5f68;
-  --acento: #0b4cb4;
-  --acento-suave: #d8e4fb;
-  --marca: rgb(168 199 250 / 0.45);
-  --sombra: 0 1px 2px rgb(20 30 60 / 0.06), 0 6px 20px rgb(20 30 60 / 0.07);
-  --velo: rgb(15 18 25 / 0.32);
-  --separador: color-mix(in srgb, var(--tinta) 12%, transparent);
-  --contorno: color-mix(in srgb, var(--tinta) 78%, transparent);
+  /* ── Superficies (tema claro) ─────────────────────────────────────────── */
+  --fondo: #e8ecf4;
+  --superficie: #f3f5fa;
+  --superficie-alta: #fafbfd;
+  --hundido: #e1e6ef;
+  --texto: #121a33;
+  --texto-2: #4a5372;
+  --borde: rgb(18 26 51 / 0.07);
+  --borde-fuerte: rgb(18 26 51 / 0.32);
 
-  /* Trazo "a mano": radios asimétricos fijos, deterministas y baratos para la WebView */
-  --trazo: 1.5px;
-  --trazo-icono: 1.75;
-  --radio: 14px 12px 15px 11px / 12px 15px 11px 14px;
-  --radio-grande: 26px 22px 28px 21px / 22px 27px 21px 26px;
+  /* ── Primario vívido: índigo eléctrico ────────────────────────────────── */
+  --primario: #4b3fe0;
+  --primario-fuerte: #3a2fc0;
+  --sobre-primario: #ffffff;
+  --primario-tinta: #3a2fc0;
+  --primario-suave: #e2e0ff;
 
-  /* Sin textura de papel viejo: el fondo es liso (se deja el token por compatibilidad) */
-  --textura: none;
+  /* ── Paleta categórica: base vívida · fondo suave · tinta legible ─────── */
+  --cat-indigo: #5b4cf0;
+  --cat-indigo-suave: #e4e1ff;
+  --cat-indigo-tinta: #3a2db8;
+  --cat-coral: #ff5a5f;
+  --cat-coral-suave: #ffe2e0;
+  --cat-coral-tinta: #b0222c;
+  --cat-cielo: #1aa3f0;
+  --cat-cielo-suave: #d9f0fd;
+  --cat-cielo-tinta: #065a8c;
+  --cat-ambar: #ffaa00;
+  --cat-ambar-suave: #ffefc7;
+  --cat-ambar-tinta: #874600;
+  --cat-esmeralda: #12b886;
+  --cat-esmeralda-suave: #d4f5e7;
+  --cat-esmeralda-tinta: #05694a;
+  --cat-fucsia: #e040fb;
+  --cat-fucsia-suave: #f8e0fe;
+  --cat-fucsia-tinta: #8e1c9f;
+  --cat-turquesa: #11c2b3;
+  --cat-turquesa-suave: #d1f5f1;
+  --cat-turquesa-tinta: #0a675e;
+  /* Neutros para muestras de color (negro y blanco del producto) */
+  --cat-oscuro: #22263a;
+  --cat-claro: #ffffff;
 
-  /* Tipografía (fuentes locales en src/ui/fuentes.css). La letra a mano nunca va en párrafos largos. */
-  --letra-cuerpo: 'Newsreader', Georgia, serif;
-  --letra-mano: 'Kalam', cursive;
-  --letra-codigo: 'JetBrains Mono', ui-monospace, monospace;
-  --texto-xs: 13px;
-  --texto-s: 15px;
-  --texto-m: 17px;
-  --texto-l: 22px;
-  --texto-xl: 30px;
-  --interlineado: 1.6;
-  --ancho-lectura: 68ch;
+  /* ── Estados ───────────────────────────────────────────────────────────── */
+  --exito: #16a34a;
+  --exito-suave: #d8f5e1;
+  --exito-tinta: #11663a;
+  --aviso: #f59e0b;
+  --aviso-suave: #fff1cc;
+  --aviso-tinta: #8a4500;
+  --peligro: #e5303c;
+  --peligro-suave: #ffe0e1;
+  --peligro-tinta: #ab1824;
+  --peligro-solido: #d42a35;
+  --sobre-peligro: #ffffff;
+  --info: #1d8cf8;
+  --info-suave: #dcecff;
+  --info-tinta: #0a5aa8;
+
+  /* ── Luz y sombra (las sombras compuestas de abajo las usan) ──────────── */
+  --luz: rgb(255 255 255 / 0.95);
+  --umbra: rgb(64 80 128 / 0.2);
+  --umbra-fuerte: rgb(64 80 128 / 0.3);
+  --velo: rgb(14 18 34 / 0.42);
+  --marca: rgb(255 194 60 / 0.42);
+  --foco: #4b3fe0;
 
   /*
-   * Bordes del sistema: barra de estado arriba, barra de gestos abajo. Capacitor 8 (SystemBars)
-   * dibuja la app bajo esas barras e inyecta sus medidas en --safe-area-inset-*; en el navegador
-   * no existen y se usa env().
+   * ── Alias de los tokens de Marginalia ────────────────────────────────────
+   * Las pantallas de la Bitácora (notas, calendario) siguen usando estos nombres.
+   * Apuntan a los nuevos: al cambiar de tema cambian solos.
+   */
+  --papel: var(--fondo);
+  --papel-2: var(--hundido);
+  --tinta: var(--texto);
+  --tinta-suave: var(--texto-2);
+  --acento: var(--primario-tinta);
+  --acento-suave: var(--primario-suave);
+  --separador: color-mix(in srgb, var(--texto) 12%, transparent);
+  --contorno: var(--borde-fuerte);
+  --textura: none;
+  --trazo: 1.5px;
+  --trazo-icono: 1.75;
+
+  /* ── Sombras «soft»: dos capas, luz arriba-izquierda y sombra abajo-derecha ── */
+  --sombra-s: -2px -2px 5px var(--luz), 3px 3px 7px var(--umbra);
+  --sombra: -5px -5px 12px var(--luz), 6px 6px 16px var(--umbra);
+  --sombra-l: -8px -8px 20px var(--luz), 10px 12px 28px var(--umbra-fuerte);
+  --sombra-hundida: inset 2px 2px 5px var(--umbra), inset -2px -2px 5px var(--luz);
+  --sombra-flotante: 0 10px 28px var(--umbra-fuerte), 0 2px 6px var(--umbra);
+
+  /* ── Radios ────────────────────────────────────────────────────────────── */
+  --radio-s: 10px;
+  --radio: 16px;
+  --radio-l: 24px;
+  --radio-grande: var(--radio-l);
+  --radio-pildora: 999px;
+
+  /* ── Espacios: escala de 4 px ──────────────────────────────────────────── */
+  --esp-1: 4px;
+  --esp-2: 8px;
+  --esp-3: 12px;
+  --esp-4: 16px;
+  --esp-5: 20px;
+  --esp-6: 24px;
+  --esp-8: 32px;
+  --esp-10: 40px;
+  --esp-12: 48px;
+
+  /*
+   * ── Tipografía (fuentes locales en src/ui/fuentes.css) ───────────────────
+   * En rem para que crezca con la letra del sistema (la WebView aplica textZoom).
+   * Fluida con clamp(): el cuerpo nunca baja de 16 px y nada baja de 13 px.
+   */
+  --letra-interfaz: 'Inter Variable', 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --letra-cuerpo: var(--letra-interfaz);
+  --letra-mano: var(--letra-interfaz);
+  --letra-codigo: 'JetBrains Mono', ui-monospace, monospace;
+  --texto-xs: clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem);
+  --texto-s: clamp(0.875rem, 0.85rem + 0.12vw, 0.9375rem);
+  --texto-m: clamp(1rem, 0.97rem + 0.15vw, 1.0625rem);
+  --texto-l: clamp(1.25rem, 1.15rem + 0.45vw, 1.5rem);
+  --texto-xl: clamp(1.625rem, 1.4rem + 1vw, 2.25rem);
+  --texto-cifra: clamp(1.75rem, 1.45rem + 1.4vw, 2.75rem);
+  --peso-normal: 400;
+  --peso-medio: 550;
+  --peso-fuerte: 700;
+  --interlineado: 1.55;
+  --interlineado-justo: 1.25;
+  --ancho-lectura: 68ch;
+  --ancho-amplio: 1280px;
+
+  /*
+   * ── Bordes del sistema ───────────────────────────────────────────────────
+   * Capacitor 8 (SystemBars) dibuja la app bajo las barras del sistema e inyecta sus medidas en
+   * --safe-area-inset-*; en el navegador no existen y se usa env().
    */
   --margen-arriba: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
   --margen-abajo: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
-  /* Margen lateral que crece con la pantalla: 16 px en teléfonos pequeños, 24 px en los grandes */
-  --margen-lado: clamp(16px, 5vw, 24px);
+  --margen-izquierda: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+  --margen-derecha: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+  /* Margen lateral que crece con la pantalla: 16 px en teléfonos pequeños, 32 px en tabletas */
+  --margen-lado: clamp(16px, 4.5vw, 32px);
 
-  /* Espacio y tacto */
+  /* ── Tacto y navegación ────────────────────────────────────────────────── */
   --toque: 48px;
-  --alto-barra: 64px;
+  --toque-min: 44px;
+  --alto-barra: 72px;
+  --ancho-riel: clamp(84px, 5.75rem, 136px);
+  --ancho-panel: clamp(260px, 26vw, 320px);
+  --tarjeta-min: 8.5rem;
   --alto-mini: 60px;
+  /* Lo que la navegación ocupa (base.css los fija según el tamaño de pantalla) */
+  --reserva-abajo: var(--margen-abajo);
+  --reserva-lado: 0px;
 
-  /* Movimiento suave: curva "enfatizada" de Material, corta para tocar y larga para entrar */
+  /* ── Movimiento suave: curva «enfatizada» de Material ─────────────────── */
   --curva: cubic-bezier(0.2, 0, 0, 1);
   --curva-salida: cubic-bezier(0.3, 0, 0.8, 0.15);
   --transicion: 160ms var(--curva);
   --dur-corta: 180ms;
-  --dur-media: 320ms;
-  --dur-larga: 460ms;
+  --dur-media: 280ms;
+  --dur-larga: 420ms;
 }
 
 /* Tema oscuro: el del teléfono (salvo que Ajustes fije "claro")… */
 @media (prefers-color-scheme: dark) {
   :root:not([data-tema='claro']) {
     color-scheme: dark;
-    --papel: #111318;
-    --papel-2: #1d2026;
-    --superficie: #191c21;
-    --tinta: #e4e6ec;
-    --tinta-suave: #a3a8b3;
-    --acento: #a8c7fa;
-    --acento-suave: #233a5e;
-    --marca: rgb(168 199 250 / 0.22);
-    --sombra: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.35);
-    --velo: rgb(0 0 0 / 0.5);
+    --fondo: #131722;
+    --superficie: #1b2030;
+    --superficie-alta: #222839;
+    --hundido: #0e121b;
+    --texto: #eef1fa;
+    --texto-2: #adb4cc;
+    --borde: rgb(238 241 250 / 0.07);
+    --borde-fuerte: rgb(238 241 250 / 0.34);
+    --primario: #8c84ff;
+    --primario-fuerte: #a59fff;
+    --sobre-primario: #110d33;
+    --primario-tinta: #b3adff;
+    --primario-suave: #2c2866;
+    --cat-indigo: #8c84ff;
+    --cat-indigo-suave: #2c2866;
+    --cat-indigo-tinta: #cbc6ff;
+    --cat-coral: #ff7a7e;
+    --cat-coral-suave: #4a2027;
+    --cat-coral-tinta: #ffc2c3;
+    --cat-cielo: #4cc0ff;
+    --cat-cielo-suave: #14344b;
+    --cat-cielo-tinta: #b6e3ff;
+    --cat-ambar: #ffbf3c;
+    --cat-ambar-suave: #43320f;
+    --cat-ambar-tinta: #ffdc94;
+    --cat-esmeralda: #36d39c;
+    --cat-esmeralda-suave: #103d31;
+    --cat-esmeralda-tinta: #a6f0d3;
+    --cat-fucsia: #ec6cff;
+    --cat-fucsia-suave: #45204f;
+    --cat-fucsia-tinta: #f6c3ff;
+    --cat-turquesa: #33dccb;
+    --cat-turquesa-suave: #0f3d3a;
+    --cat-turquesa-tinta: #a5f1e8;
+    --cat-oscuro: #05070c;
+    --cat-claro: #f4f6fb;
+    --exito: #3ad07a;
+    --exito-suave: #123d26;
+    --exito-tinta: #a6efc2;
+    --aviso: #ffbf3c;
+    --aviso-suave: #43320f;
+    --aviso-tinta: #ffdc94;
+    --peligro: #ff6b73;
+    --peligro-suave: #4a1d22;
+    --peligro-tinta: #ffc0c3;
+    --peligro-solido: #ff6b73;
+    --sobre-peligro: #1a0508;
+    --info: #5ab4ff;
+    --info-suave: #14324d;
+    --info-tinta: #b9ddff;
+    --luz: rgb(255 255 255 / 0.045);
+    --umbra: rgb(0 0 0 / 0.45);
+    --umbra-fuerte: rgb(0 0 0 / 0.6);
+    --velo: rgb(0 0 0 / 0.6);
+    --marca: rgb(255 191 60 / 0.3);
+    --foco: #b3adff;
   }
 }
 
 /* …o el que fije Ajustes → Tema. Mismos valores que el bloque de arriba. */
 :root[data-tema='oscuro'] {
   color-scheme: dark;
-  --papel: #111318;
-  --papel-2: #1d2026;
-  --superficie: #191c21;
-  --tinta: #e4e6ec;
-  --tinta-suave: #a3a8b3;
-  --acento: #a8c7fa;
-  --acento-suave: #233a5e;
-  --marca: rgb(168 199 250 / 0.22);
-  --sombra: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.35);
-  --velo: rgb(0 0 0 / 0.5);
+  --fondo: #131722;
+  --superficie: #1b2030;
+  --superficie-alta: #222839;
+  --hundido: #0e121b;
+  --texto: #eef1fa;
+  --texto-2: #adb4cc;
+  --borde: rgb(238 241 250 / 0.07);
+  --borde-fuerte: rgb(238 241 250 / 0.34);
+  --primario: #8c84ff;
+  --primario-fuerte: #a59fff;
+  --sobre-primario: #110d33;
+  --primario-tinta: #b3adff;
+  --primario-suave: #2c2866;
+  --cat-indigo: #8c84ff;
+  --cat-indigo-suave: #2c2866;
+  --cat-indigo-tinta: #cbc6ff;
+  --cat-coral: #ff7a7e;
+  --cat-coral-suave: #4a2027;
+  --cat-coral-tinta: #ffc2c3;
+  --cat-cielo: #4cc0ff;
+  --cat-cielo-suave: #14344b;
+  --cat-cielo-tinta: #b6e3ff;
+  --cat-ambar: #ffbf3c;
+  --cat-ambar-suave: #43320f;
+  --cat-ambar-tinta: #ffdc94;
+  --cat-esmeralda: #36d39c;
+  --cat-esmeralda-suave: #103d31;
+  --cat-esmeralda-tinta: #a6f0d3;
+  --cat-fucsia: #ec6cff;
+  --cat-fucsia-suave: #45204f;
+  --cat-fucsia-tinta: #f6c3ff;
+  --cat-turquesa: #33dccb;
+  --cat-turquesa-suave: #0f3d3a;
+  --cat-turquesa-tinta: #a5f1e8;
+  --cat-oscuro: #05070c;
+  --cat-claro: #f4f6fb;
+  --exito: #3ad07a;
+  --exito-suave: #123d26;
+  --exito-tinta: #a6efc2;
+  --aviso: #ffbf3c;
+  --aviso-suave: #43320f;
+  --aviso-tinta: #ffdc94;
+  --peligro: #ff6b73;
+  --peligro-suave: #4a1d22;
+  --peligro-tinta: #ffc0c3;
+  --peligro-solido: #ff6b73;
+  --sobre-peligro: #1a0508;
+  --info: #5ab4ff;
+  --info-suave: #14324d;
+  --info-tinta: #b9ddff;
+  --luz: rgb(255 255 255 / 0.045);
+  --umbra: rgb(0 0 0 / 0.45);
+  --umbra-fuerte: rgb(0 0 0 / 0.6);
+  --velo: rgb(0 0 0 / 0.6);
+  --marca: rgb(255 191 60 / 0.3);
+  --foco: #b3adff;
+}
+
+/* Tabletas: tarjetas de producto algo más anchas */
+@media (min-width: 840px) {
+  :root {
+    --tarjeta-min: 10.5rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

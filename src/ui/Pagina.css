@@ -1,14 +1,40 @@
+/*
+ * El contenido se centra en el espacio que deja la navegación: a la izquierda el riel (≥ 600 px,
+ * --reserva-lado) y abajo la barra (< 600 px, --reserva-abajo). Los márgenes laterales crecen
+ * para que la línea no pase del ancho máximo; el 100 % de un padding es el ancho del <body>.
+ */
 .pagina {
-  box-sizing: border-box;
+  --ancho-max: calc(var(--ancho-lectura) + 48px);
+
   width: 100%;
-  max-width: calc(var(--ancho-lectura) + 48px);
+  min-width: 0;
   min-height: 100vh;
-  margin: 0 auto;
-  /* abajo deja sitio a la barra inferior fija (y al mini reproductor si va anclado) */
-  padding: calc(24px + var(--margen-arriba)) var(--margen-lado)
-    calc(48px + var(--alto-barra) + var(--reserva-mini, 0px) + var(--margen-abajo));
+  min-height: 100dvh;
+  margin: 0;
+  padding-top: calc(var(--esp-6) + var(--margen-arriba));
+  padding-right: max(
+    calc(var(--margen-lado) + var(--margen-derecha)),
+    calc((100% - var(--reserva-lado) - var(--ancho-max)) / 2)
+  );
+  padding-bottom: calc(var(--esp-12) + var(--reserva-abajo) + var(--reserva-mini, 0px));
+  padding-left: calc(
+    var(--reserva-lado) +
+      max(var(--margen-lado), calc((100% - var(--reserva-lado) - var(--ancho-max)) / 2))
+  );
   /* Cada pantalla entra con un fundido corto hacia arriba */
   animation: entrar var(--dur-media) var(--curva) backwards;
+}
+
+.pagina--amplio {
+  --ancho-max: var(--ancho-amplio);
+}
+
+/* Sin riel ni barra no hay reserva a la izquierda, pero sí el borde del sistema (horizontal) */
+:root:not(:has(.barra-inferior)) .pagina {
+  padding-left: max(
+    calc(var(--margen-lado) + var(--margen-izquierda)),
+    calc((100% - var(--ancho-max)) / 2)
+  );
 }
 
 .con-mini-anclado {

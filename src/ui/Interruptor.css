@@ -2,58 +2,79 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: var(--esp-4);
   width: 100%;
   min-height: var(--toque);
-  padding: 0;
-  font: inherit;
+  padding: 4px 0;
   font-size: var(--texto-m);
-  color: var(--tinta);
+  color: var(--texto);
   text-align: start;
   background: none;
   border: 0;
   cursor: pointer;
 }
 
+.interruptor:active:not(:disabled) {
+  transform: none;
+}
+
+.interruptor__texto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.interruptor__descripcion {
+  font-size: var(--texto-s);
+  color: var(--texto-2);
+}
+
 .interruptor__pista {
   position: relative;
   flex: none;
-  width: 44px;
-  height: 24px;
-  border: var(--trazo) solid var(--contorno);
-  border-radius: 13px 11px 12px 12px / 12px 13px 11px 12px;
-  transition:
-    background-color var(--dur-media) var(--curva),
-    border-color var(--dur-media) var(--curva);
+  width: 52px;
+  height: 30px;
+  background: var(--hundido);
+  border-radius: var(--radio-pildora);
+  box-shadow: var(--sombra-hundida);
+  transition: background-color var(--dur-media) var(--curva);
 }
 
 .interruptor__punto {
   position: absolute;
   top: 50%;
   left: 4px;
-  width: 14px;
-  height: 14px;
-  border: var(--trazo) solid var(--tinta);
+  width: 22px;
+  height: 22px;
+  background: var(--superficie-alta);
+  border: 1px solid var(--borde-fuerte);
   border-radius: 50%;
-  background: var(--papel);
+  box-shadow: var(--sombra-s);
   translate: 0 -50%;
   transition:
     left var(--dur-media) var(--curva),
-    background-color var(--dur-media) var(--curva),
     scale var(--dur-corta) var(--curva);
 }
 
-.interruptor:active .interruptor__punto {
-  scale: 1.2;
+.interruptor:active:not(:disabled) .interruptor__punto {
+  scale: 1.12;
 }
 
 .interruptor[aria-checked='true'] .interruptor__pista {
-  background: var(--acento-suave);
-  border-color: var(--acento);
+  background: var(--primario);
+  box-shadow: none;
 }
 
 .interruptor[aria-checked='true'] .interruptor__punto {
-  left: 23px;
-  background: var(--acento);
-  border-color: var(--acento);
+  left: 26px;
+  border-color: transparent;
+}
+
+.interruptor:disabled {
+  color: var(--texto-2);
+  cursor: default;
+}
+
+.interruptor:disabled .interruptor__pista {
+  opacity: 0.5;
 }

@@ -1,20 +1,92 @@
 /* Base global. Solo usa tokens de src/ui/tokens.css: aquí no se escriben colores. */
 :root {
-  background: var(--papel);
-  color: var(--tinta);
-  font-family: var(--letra-cuerpo);
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: var(--letra-interfaz);
+  font-size: 100%;
+  font-optical-sizing: auto;
   line-height: var(--interlineado);
+  /* Que el navegador no agrande por su cuenta: la escala la pone la letra del sistema (textZoom) */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--papel);
+  min-height: 100dvh;
+  font-size: var(--texto-m);
+  background: var(--fondo);
+  /* Ninguna pantalla se desplaza de lado: lo ancho se envuelve o se desplaza dentro de su caja */
+  overflow-x: clip;
+  overflow-wrap: break-word;
   /* Cambiar de tema (claro ↔ oscuro) se funde en vez de saltar */
   transition:
     background-color var(--dur-media) var(--curva),
     color var(--dur-media) var(--curva);
   -webkit-tap-highlight-color: transparent;
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/*
+ * ── Disposición adaptable (Material 3) ──────────────────────────────────────
+ * compacto  < 600 px  → barra inferior de 5 secciones (reserva abajo)
+ * medio     600–839   → riel lateral (reserva a la izquierda)
+ * expandido ≥ 840     → riel lateral + panel de filtros fijo (Disposicion)
+ * Solo cuenta si la pantalla tiene navegación (`.barra-inferior`).
+ */
+:root:has(.barra-inferior) {
+  --reserva-abajo: calc(var(--alto-barra) + var(--margen-abajo));
+}
+
+@media (min-width: 600px) {
+  :root:has(.barra-inferior) {
+    --reserva-abajo: var(--margen-abajo);
+    --reserva-lado: calc(var(--ancho-riel) + var(--margen-izquierda));
+  }
+}
+
+/* Mientras se escribe una nota la navegación se esconde (BarraFormato.css) */
+:root.escribiendo {
+  --reserva-abajo: var(--margen-abajo);
+  --reserva-lado: 0px;
+}
+
+/* Números de dinero y cantidades: cifras del mismo ancho para que las columnas cuadren */
+.cifras,
+.dinero {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Solo para lectores de pantalla */
+.solo-lector {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Movimiento suave compartido (docs/DISENO.md § Movimiento). Con "reducir movimiento" duran 0 ms. */
@@ -44,12 +116,25 @@ body {
   }
 }
 
+@keyframes temblar {
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
+}
+
 /* Lo que se toca responde con un hundimiento leve */
 button,
 a {
   transition:
     transform var(--dur-corta) var(--curva),
     background-color var(--dur-corta) var(--curva),
+    box-shadow var(--dur-corta) var(--curva),
     color var(--dur-corta) var(--curva);
 }
 
@@ -59,34 +144,36 @@ button:active:not(:disabled) {
 
 /* Texto enriquecido básico */
 a {
-  color: var(--acento);
+  color: var(--primario-tinta);
+  text-underline-offset: 0.18em;
 }
 
 mark {
   color: inherit;
   background: var(--marca);
+  border-radius: 3px;
 }
 
 code {
-  padding: 1px 4px;
+  padding: 1px 5px;
   font-family: var(--letra-codigo);
-  font-size: var(--texto-xs);
-  background: var(--papel-2);
-  border-radius: 4px;
+  font-size: 0.9em;
+  background: var(--hundido);
+  border-radius: 6px;
 }
 
 /* Foco visible para teclado y lectores de pantalla; el toque no lo muestra. */
 :focus-visible {
-  outline: var(--trazo) dashed var(--acento);
+  outline: 3px solid var(--foco);
   outline-offset: 3px;
 }
 
 /* Aviso corto tras una herramienta (exportar, importar…): sube sobre la barra y se va solo */
 .aviso-global {
   position: fixed;
-  right: 12px;
-  bottom: calc(var(--alto-barra) + var(--margen-abajo) + 12px);
-  left: 12px;
+  right: calc(var(--margen-lado) + var(--margen-derecha));
+  bottom: calc(var(--reserva-abajo) + 12px);
+  left: calc(var(--margen-lado) + var(--reserva-lado));
   z-index: 60;
   display: flex;
   justify-content: center;
@@ -96,15 +183,15 @@ code {
 .aviso-global__texto {
   max-width: 560px;
   min-height: var(--toque);
-  padding: 10px 16px;
-  font: inherit;
+  padding: 10px 18px;
   font-size: var(--texto-s);
-  color: var(--papel);
+  font-weight: var(--peso-medio);
+  color: var(--fondo);
   text-align: start;
-  background: var(--tinta);
+  background: var(--texto);
   border: 0;
   border-radius: var(--radio);
-  box-shadow: var(--sombra);
+  box-shadow: var(--sombra-flotante);
   pointer-events: auto;
   animation: subir-aviso var(--dur-media) var(--curva) backwards;
 }

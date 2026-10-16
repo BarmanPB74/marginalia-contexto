@@ -16,42 +16,91 @@
 
 .hoja__panel {
   position: relative;
-  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  max-width: calc(var(--ancho-lectura) + 48px);
-  max-height: 75vh;
+  max-width: 640px;
+  max-height: min(85vh, 85dvh);
   margin: 0 auto;
-  padding: 8px var(--margen-lado) calc(16px + var(--margen-abajo));
-  overflow-y: auto;
+  padding: var(--esp-2) 0 0;
   background: var(--superficie);
-  border: var(--trazo) solid var(--contorno);
+  border: 1px solid var(--borde);
   border-bottom: 0;
-  border-radius: var(--radio-grande);
-  border-bottom-right-radius: 0;
-  border-bottom-left-radius: 0;
-  box-shadow: var(--sombra);
+  border-radius: var(--radio-l) var(--radio-l) 0 0;
+  box-shadow: var(--sombra-flotante);
   outline: none;
   animation: subir var(--dur-larga) var(--curva) both;
-  overscroll-behavior: contain;
 }
 
 .hoja__asa {
   display: block;
-  width: 36px;
-  height: 4px;
+  flex: none;
+  width: 40px;
+  height: 5px;
   margin: 4px auto 8px;
-  background: var(--separador);
-  border-radius: 2px;
+  background: var(--borde-fuerte);
+  border-radius: var(--radio-pildora);
 }
 
 .hoja__titulo {
-  margin: 0 0 8px;
-  font-family: var(--letra-mano);
+  flex: none;
+  margin: 0;
+  padding: 0 calc(var(--margen-lado) + var(--margen-derecha)) var(--esp-3) calc(var(--margen-lado) + var(--margen-izquierda));
   font-size: var(--texto-l);
-  line-height: 1.3;
+  font-weight: var(--peso-fuerte);
+  line-height: var(--interlineado-justo);
+}
+
+.hoja__contenido {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0 calc(var(--margen-lado) + var(--margen-derecha)) calc(var(--esp-4) + var(--margen-abajo))
+    calc(var(--margen-lado) + var(--margen-izquierda));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.hoja__pie {
+  flex: none;
+  padding: var(--esp-3) calc(var(--margen-lado) + var(--margen-derecha)) calc(var(--esp-3) + var(--margen-abajo))
+    calc(var(--margen-lado) + var(--margen-izquierda));
+  border-top: 1px solid var(--borde);
+}
+
+.hoja__contenido:has(+ .hoja__pie) {
+  padding-bottom: var(--esp-4);
 }
 
 /* Recibe el foco al abrirse (para lectores de pantalla), sin dibujar el trazo de foco */
 .hoja__panel:focus-visible {
   outline: none;
+}
+
+/* Pantallas anchas: la hoja se separa del borde y redondea las cuatro esquinas */
+@media (min-width: 600px) and (min-height: 560px) {
+  .hoja {
+    justify-content: center;
+    padding: var(--esp-6);
+  }
+
+  .hoja__panel {
+    max-height: min(80vh, 80dvh);
+    border-bottom: 1px solid var(--borde);
+    border-radius: var(--radio-l);
+    animation-name: aparecer;
+    animation-duration: var(--dur-media);
+  }
+
+  .hoja__asa {
+    display: none;
+  }
+
+  .hoja__titulo {
+    padding-top: var(--esp-4);
+  }
+
+  .hoja__contenido,
+  .hoja__pie {
+    padding-bottom: var(--esp-4);
+  }
 }

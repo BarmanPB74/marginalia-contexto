@@ -1,31 +1,57 @@
+/* Campos: etiqueta arriba y caja hundida (también la usan CampoNumero, Buscador y Rango) */
 .campo {
   display: flex;
   flex-direction: column;
+  gap: 6px;
+  min-width: 0;
 }
 
 .campo__etiqueta {
-  font-family: var(--letra-mano);
   font-size: var(--texto-s);
-  color: var(--tinta-suave);
+  font-weight: var(--peso-medio);
+  color: var(--texto);
 }
 
-.campo__entrada {
+.campo__entrada,
+.campo__caja {
+  width: 100%;
+  min-width: 0;
   min-height: var(--toque);
-  padding: 0;
-  font: inherit;
+  padding: 10px 14px;
   font-size: var(--texto-m);
-  color: var(--tinta);
-  background: none;
-  border: 0;
-  border-bottom: var(--trazo) solid var(--tinta);
-  border-radius: 0;
+  color: var(--texto);
+  background: var(--hundido);
+  border: 1.5px solid transparent;
+  border-radius: var(--radio);
+  box-shadow: var(--sombra-hundida);
   outline: none;
+  transition:
+    border-color var(--dur-corta) var(--curva),
+    background-color var(--dur-corta) var(--curva);
 }
 
 .campo__entrada::placeholder {
-  color: var(--tinta-suave);
+  color: var(--texto-2);
+  opacity: 1;
 }
 
-.campo__entrada:focus-visible {
-  border-bottom-color: var(--acento);
+.campo__entrada:focus-visible,
+.campo__caja:focus-within {
+  border-color: var(--foco);
+}
+
+.campo--error .campo__entrada,
+.campo--error .campo__caja {
+  border-color: var(--peligro);
+}
+
+.campo__nota {
+  margin: 0;
+  font-size: var(--texto-xs);
+  color: var(--texto-2);
+}
+
+.campo--error .campo__nota {
+  font-weight: var(--peso-medio);
+  color: var(--peligro-tinta);
 }
