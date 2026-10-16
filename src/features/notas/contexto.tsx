@@ -28,7 +28,14 @@ let predeterminado: RepositorioNotas | undefined;
  * cifrados con la clave del dispositivo (ADR-008). Antes de la primera operación cifra las
  * notas que aún estén en claro, para que nada se lea ni se escriba a medio migrar.
  */
-function almacenDeLaApp(): Almacen {
+let compartido: Almacen | undefined;
+
+/** El mismo almacén cifrado para las notas y para el diario del negocio (ADR-015). */
+export function almacenDeLaApp(): Almacen {
+  return (compartido ??= crearAlmacenDeLaApp());
+}
+
+function crearAlmacenDeLaApp(): Almacen {
   const { almacen, listo } = enTelefono() ? almacenConKeystore() : almacenWeb();
   return {
     leer: async (ruta) => (await listo, almacen.leer(ruta)),

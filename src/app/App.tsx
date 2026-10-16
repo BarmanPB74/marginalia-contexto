@@ -4,7 +4,12 @@ import { PantallaCalendario } from '../features/calendario/PantallaCalendario';
 import { Paleta } from '../features/comandos/Paleta';
 import { PantallaNota } from '../features/notas/PantallaNota';
 import { PantallaNotas } from '../features/notas/PantallaNotas';
+import { ProveedorNegocio } from '../features/negocio/contexto';
+import { PANTALLAS_GESTION } from '../features/registro/gestion';
+import { PANTALLAS_INVENTARIO } from '../features/registro/inventario';
+import { PANTALLAS_VENTAS } from '../features/registro/ventas';
 import { Candado } from '../features/seguridad/Candado';
+import { Sesion } from '../features/sesion/Sesion';
 import { BarraInferior } from '../ui/BarraInferior';
 import { ProveedorEstado, useEstado } from './estado';
 import { Galeria } from './Galeria';
@@ -14,6 +19,9 @@ import type { FunctionComponent } from 'preact';
 
 /** Pantalla de cada sección. Las de negocio se registran al integrarse (ADR-015). */
 const PANTALLAS: Partial<Record<IdSeccion, FunctionComponent>> = {
+  ...PANTALLAS_VENTAS,
+  ...PANTALLAS_INVENTARIO,
+  ...PANTALLAS_GESTION,
   ajustes: PantallaAjustes,
 };
 
@@ -71,7 +79,16 @@ function ConCandado({ hash }: { hash: string }) {
   const ruta = rutaActual(hash);
   return (
     <Candado activo={bloqueo}>
-      {ruta === 'galeria' ? <Galeria /> : <Secciones ruta={ruta} idNota={idNotaEnRuta(hash)} dia={diaEnRuta(hash)} etiqueta={etiquetaEnRuta(hash)} />}
+      {ruta === 'galeria' ? (
+        <Galeria />
+      ) : (
+        // Huella del teléfono (Candado) → negocio abierto → persona con su PIN (Sesion) → la app
+        <ProveedorNegocio>
+          <Sesion>
+            <Secciones ruta={ruta} idNota={idNotaEnRuta(hash)} dia={diaEnRuta(hash)} etiqueta={etiquetaEnRuta(hash)} />
+          </Sesion>
+        </ProveedorNegocio>
+      )}
     </Candado>
   );
 }
