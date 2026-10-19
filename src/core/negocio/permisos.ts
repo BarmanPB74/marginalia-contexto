@@ -11,7 +11,9 @@
  * - Bodega: inventario (ajustes, conteos, facturas de compra, importar), sin ventas ni
  *   contabilidad.
  * - Mesero: abre cuentas en las mesas y pide rondas (no cobra, no quita lo pedido, no ve
- *   caja ni inventario). Quitar algo de una cuenta es de caja (con motivo): así lo servido
+ *   caja ni inventario).
+ * - Recepcionista: reservas y clientes; sienta a la gente (abre la cuenta y le pone nombre a
+ *   la mesa), pero no pide rondas ni cobra. Quitar algo de una cuenta es de caja (con motivo): así lo servido
  *   no desaparece sin que nadie responda.
  * - Sólo dueño: anular ventas y cuentas, mesas, precios y costos, usuarios, contabilidad y pagos.
  */
@@ -53,13 +55,18 @@ export const ACCIONES = [
   'cuenta.atender',
   'cuenta.quitar',
   'cuenta.anular',
+  'cuenta.sentar',
+  'cliente.gestionar',
+  'reserva.gestionar',
 ] as const;
 
 export type Accion = (typeof ACCIONES)[number];
 
-const TODOS: readonly Rol[] = ['dueno', 'cajero', 'bodega', 'mesero'];
+const TODOS: readonly Rol[] = ['dueno', 'cajero', 'bodega', 'mesero', 'recepcionista'];
 const PERSONAL: readonly Rol[] = ['dueno', 'cajero', 'bodega'];
 const ATIENDE: readonly Rol[] = ['dueno', 'cajero', 'mesero'];
+const SIENTA: readonly Rol[] = ['dueno', 'cajero', 'mesero', 'recepcionista'];
+const RECEPCION: readonly Rol[] = ['dueno', 'cajero', 'recepcionista'];
 const DUENO: readonly Rol[] = ['dueno'];
 const SALA: readonly Rol[] = ['dueno', 'cajero'];
 const BODEGA: readonly Rol[] = ['dueno', 'bodega'];
@@ -105,6 +112,9 @@ export const PERMISOS: Readonly<Record<Accion, readonly Rol[]>> = {
   'cuenta.atender': ATIENDE,
   'cuenta.quitar': SALA,
   'cuenta.anular': DUENO,
+  'cuenta.sentar': SIENTA,
+  'cliente.gestionar': RECEPCION,
+  'reserva.gestionar': RECEPCION,
 };
 
 /** Cómo se dice cada acción en un mensaje («Tu cargo no permite …»). */
@@ -143,6 +153,9 @@ export const NOMBRE_ACCION: Readonly<Record<Accion, string>> = {
   'cuenta.atender': 'atender mesas',
   'cuenta.quitar': 'quitar productos de una cuenta',
   'cuenta.anular': 'anular cuentas',
+  'cuenta.sentar': 'sentar clientes en las mesas',
+  'cliente.gestionar': 'registrar clientes',
+  'reserva.gestionar': 'manejar reservas',
 };
 
 /** ¿Este cargo puede hacer esta acción? Un cargo o acción desconocidos: no. */
@@ -202,14 +215,30 @@ export function accionDe(evento: Evento): Accion {
     case 'mesa.retirada':
       return 'mesa.administrar';
     case 'cuenta.abierta':
-    case 'cuenta.pedido':
-    case 'cuenta.precuenta':
+    case 'cuenta.cliente':
     case 'cuenta.trasladada':
     case 'cuenta.liberada':
+      return 'cuenta.sentar';
+    case 'cuenta.pedido':
+    case 'cuenta.precuenta':
       return 'cuenta.atender';
     case 'cuenta.quitado':
       return 'cuenta.quitar';
     case 'cuenta.anulada':
       return 'cuenta.anular';
+    case 'producto.descontinuado':
+      return 'producto.editar';
+    case 'cliente.creado':
+    case 'cliente.editado':
+      return 'cliente.gestionar';
+    case 'reserva.creada':
+    case 'reserva.llamada':
+    case 'reserva.demora':
+    case 'reserva.noLlego':
+    case 'reserva.cancelada':
+      return 'reserva.gestionar';
+    case 'reserva.llego':
+      // Si la sientan, la cuenta se abre en la misma escritura (permiso de sentar aparte)
+      return 'reserva.gestionar';
   }
 }

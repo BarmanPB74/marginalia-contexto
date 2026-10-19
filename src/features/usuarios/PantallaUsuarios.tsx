@@ -8,7 +8,7 @@ import { Encabezado } from '../../ui/Encabezado';
 import { Hoja } from '../../ui/Hoja';
 import { Insignia } from '../../ui/Insignia';
 import { Pagina } from '../../ui/Pagina';
-import { Segmentado } from '../../ui/Segmentado';
+import { Chip, GrupoChips } from '../../ui/Chip';
 import { useNegocio } from '../negocio/contexto';
 import { LARGO_PIN } from '../sesion/Sesion';
 import { PedirPin } from './PedirPin';
@@ -220,7 +220,14 @@ function CrearPersona({ alCerrar, alCrear }: { alCerrar: () => void; alCrear: (n
             <p class="usuarios__etiqueta" aria-hidden="true">
               Cargo
             </p>
-            <Segmentado etiqueta="Cargo" opciones={OPCIONES_ROL} valor={rol} alCambiar={setRol} />
+            {/* Chips (no segmentado): con cinco cargos se acomodan en varias líneas en el teléfono */}
+            <GrupoChips etiqueta="Cargo">
+              {OPCIONES_ROL.map((o) => (
+                <Chip key={o.valor} seleccionado={rol === o.valor} alCambiar={() => setRol(o.valor)}>
+                  {o.etiqueta}
+                </Chip>
+              ))}
+            </GrupoChips>
             <p class="usuarios__permisos" aria-live="polite">
               <strong>{NOMBRE_ROL[rol]}:</strong> {quePuede(rol)}
             </p>

@@ -10,6 +10,7 @@ import type { NombreIcono } from '../ui/Icono';
 export type IdSeccion =
   | 'inicio'
   | 'mesas'
+  | 'reservas'
   | 'vender'
   | 'inventario'
   | 'notas'
@@ -40,6 +41,7 @@ export const SECCIONES: readonly Seccion[] = [
 
 /** Lo que se abre desde «Más», agrupado. */
 export const OTRAS: readonly Seccion[] = [
+  { id: 'reservas', etiqueta: 'Reservas y clientes', icono: 'calendario' },
   { id: 'notas', etiqueta: 'Bitácora', icono: 'notas' },
   { id: 'caja', etiqueta: 'Caja', icono: 'caja' },
   { id: 'compras', etiqueta: 'Compras y facturas', icono: 'factura' },

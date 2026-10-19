@@ -56,7 +56,7 @@ for (const t of TAMANOS) {
       await page.getByRole('button', { name: 'Nueva persona' }).click();
       const hoja = page.getByRole('dialog', { name: 'Nueva persona' });
       await hoja.getByLabel('Nombre').fill('Carlos');
-      await hoja.getByRole('radio', { name: 'Cajero' }).click();
+      await hoja.getByRole('button', { name: 'Cajero', exact: true }).click();
       await expect(hoja.getByText(/Puede abrir la caja/)).toBeVisible();
       await captura('usuarios-nueva');
       await hoja.getByRole('button', { name: 'Seguir: crear su PIN' }).click();

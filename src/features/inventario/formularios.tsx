@@ -23,6 +23,7 @@ import { Segmentado } from '../../ui/Segmentado';
 import { useEstado } from '../../app/estado';
 import { useNegocio } from '../negocio/contexto';
 import { ABREV_UNIDAD, mensajeDe, normal } from './comun';
+import { enCopas, leerBotellasYCopas } from './copas';
 import { CampoNota } from './Selector';
 
 /** Pie de las hojas: Cancelar + acción principal. */
@@ -88,7 +89,8 @@ export function FormularioProducto({ producto, alCerrar }: { producto?: Producto
   const [costo, setCosto] = useState(dineroTexto(producto?.costo ?? null));
   const [minimo, setMinimo] = useState(producto?.stockMinimo != null ? mostrarCantidad(producto.stockMinimo) : '');
   const [codigo, setCodigo] = useState(producto?.codigo ?? '');
-  const [errores, setErrores] = useState<Partial<Record<'nombre' | 'precio' | 'costo' | 'minimo', string>>>({});
+  const [copas, setCopas] = useState(producto?.copas ? String(producto.copas) : '');
+  const [errores, setErrores] = useState<Partial<Record<'nombre' | 'precio' | 'costo' | 'minimo' | 'copas', string>>>({});
   const op = useOperacion(() => undefined);
 
   const categorias = [...new Set(Object.values(estado.productos).filter((p) => p.activo).map((p) => p.categoria))].sort((a, b) =>
@@ -122,6 +124,8 @@ export function FormularioProducto({ producto, alCerrar }: { producto?: Producto
     } catch (x) {
       e.minimo = mensajeDe(x);
     }
+    const vCopas = unidad === 'unidad' && copas.trim() ? Number(copas.trim()) : null;
+    if (vCopas !== null && (!Number.isInteger(vCopas) || vCopas < 1 || vCopas > 1000)) e.copas = 'Copas por botella: un número entero de 1 a 1000.';
     setErrores(e);
     if (Object.keys(e).length > 0) return;
 
@@ -136,6 +140,7 @@ export function FormularioProducto({ producto, alCerrar }: { producto?: Producto
           costo: vCosto ?? null,
           stockMinimo: vMinimo,
           codigo: codigo || null,
+          copas: vCopas,
         };
         id = (await negocio.crearProducto(datos)).id;
       }, `«${nombre.trim()}» creado.`);
@@ -150,6 +155,7 @@ export function FormularioProducto({ producto, alCerrar }: { producto?: Producto
     if (vCosto !== undefined && vCosto !== producto.costo) cambios.costo = vCosto;
     if (vMinimo !== producto.stockMinimo) cambios.stockMinimo = vMinimo;
     if (codigo.trim() !== (producto.codigo ?? '')) cambios.codigo = codigo;
+    if ((vCopas ?? null) !== (producto.copas ?? null)) cambios.copas = vCopas;
     if (Object.keys(cambios).length === 0) return alCerrar();
     let listo = false;
     await op.correr(async () => {
@@ -210,6 +216,16 @@ export function FormularioProducto({ producto, alCerrar }: { producto?: Producto
           />
           <CampoTexto etiqueta="Código" valor={codigo} alCambiar={setCodigo} marcador="Opcional" />
         </div>
+        {unidad === 'unidad' && (
+          <CampoNumero
+            etiqueta="Copas por botella"
+            valor={copas}
+            alCambiar={setCopas}
+            marcador="Opcional"
+            ayuda="Para licores y vinos: si lo llenas, el conteo se hace en botellas y copas sueltas."
+            error={errores.copas}
+          />
+        )}
         <Aviso texto={op.error} />
       </div>
     </Hoja>
@@ -224,14 +240,20 @@ export function HojaContar({ producto, alCerrar }: { producto: Producto; alCerra
   // Lo que se veía al empezar: si alguien vende mientras cuentas, el núcleo lo detecta
   const [antes] = useState(() => stockDe(estado, producto.id));
   const [texto, setTexto] = useState('');
+  const [botellas, setBotellas] = useState('');
+  const [copas, setCopas] = useState('');
   const [nota, setNota] = useState('');
   const op = useOperacion(alCerrar);
   const u = ABREV_UNIDAD[producto.unidad];
+  const porBotella = producto.copas ?? 0;
+  const leer = (): Milesimas => (porBotella ? leerBotellasYCopas(botellas, copas, porBotella) : leerCantidad(texto));
   let diferencia: string | null = null;
   try {
-    if (texto.trim()) {
-      const d = leerCantidad(texto) - antes;
-      diferencia = `${d > 0 ? '+' : ''}${mostrarCantidad(milesimas(d))} ${u}`;
+    if (texto.trim() || botellas.trim() || copas.trim()) {
+      const d = leer() - antes;
+      diferencia = porBotella
+        ? `${d > 0 ? '+' : ''}${enCopas(milesimas(d), porBotella).total} copas`
+        : `${d > 0 ? '+' : ''}${mostrarCantidad(milesimas(d))} ${u}`;
     }
   } catch {
     diferencia = null;
@@ -239,9 +261,9 @@ export function HojaContar({ producto, alCerrar }: { producto: Producto; alCerra
   const contar = () => {
     let contado: Milesimas;
     try {
-      contado = leerCantidad(texto);
+      contado = leer();
     } catch (e) {
-      op.setError(mensajeDe(e));
+      op.setError(e instanceof RangeError ? e.message : mensajeDe(e));
       return;
     }
     void op.correr(() => negocio.contar(producto.id, contado, { nota, antesVisto: antes }), `Conteo de «${producto.nombre}» guardado.`);
@@ -250,9 +272,28 @@ export function HojaContar({ producto, alCerrar }: { producto: Producto; alCerra
     <Hoja titulo={`Contar ${producto.nombre}`} alCerrar={alCerrar} pie={<Pie etiqueta="Guardar conteo" alCerrar={alCerrar} alConfirmar={contar} ocupado={op.ocupado} />}>
       <div class="inv-form">
         <p class="inv-form__dato">
-          Según la app hay <strong class="cifras">{mostrarCantidad(antes)} {u}</strong>.
+          Según la app hay{' '}
+          <strong class="cifras">
+            {porBotella ? `${enCopas(antes, porBotella).botellas} ${u} + ${enCopas(antes, porBotella).copas} copas` : `${mostrarCantidad(antes)} ${u}`}
+          </strong>
+          .
         </p>
-        <CampoNumero etiqueta="¿Cuántas hay?" sufijo={u} valor={texto} alCambiar={setTexto} alConfirmar={contar} grande />
+        {porBotella ? (
+          <div class="inv-form__par">
+            <CampoNumero etiqueta="Botellas enteras" sufijo={u} valor={botellas} alCambiar={setBotellas} alConfirmar={contar} grande />
+            <CampoNumero
+              etiqueta="Copas sueltas"
+              sufijo="copas"
+              valor={copas}
+              alCambiar={setCopas}
+              alConfirmar={contar}
+              grande
+              ayuda={`Una botella = ${porBotella} copas.`}
+            />
+          </div>
+        ) : (
+          <CampoNumero etiqueta="¿Cuántas hay?" sufijo={u} valor={texto} alCambiar={setTexto} alConfirmar={contar} grande />
+        )}
         {diferencia && (
           <p class="inv-form__dato" aria-live="polite">
             Diferencia: <strong class="cifras">{diferencia}</strong>

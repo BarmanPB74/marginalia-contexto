@@ -267,3 +267,50 @@ describe('Importar inventario', () => {
     expect(c.textContent).not.toContain('viejo.xls');
   });
 });
+
+describe('Inventario: descontinuado, copas y conteo por categoría', () => {
+  it('marcar descontinuado quita la alerta y se puede volver a vender', async () => {
+    const { negocio, ids } = await conProductos();
+    location.hash = `#/inventario?producto=${ids.cerveza}`;
+    const c = await montar(<Pantalla />, repoNuevo(), negocio);
+    expect(c.textContent).toMatch(/Negativo/);
+    await tocar(boton(c, 'Descontinuado'));
+    await tocar(boton(hay(c.querySelector<HTMLElement>('[role=alertdialog]')), 'Marcar descontinuado'));
+    await hastaQue(() => negocio.estado.productos[ids.cerveza]?.descontinuado === true);
+    expect(c.querySelector('.inv-ficha__estado')?.textContent).toMatch(/Descontinuado/);
+    expect(c.querySelector('.inv-ficha__estado')?.textContent).not.toMatch(/Negativo/);
+    await tocar(boton(c, 'Volver a vender'));
+    await hastaQue(() => negocio.estado.productos[ids.cerveza]?.descontinuado === undefined);
+  });
+
+  it('un licor con copas por botella se cuenta en botellas y copas sueltas', async () => {
+    const negocio = await negocioDePrueba();
+    const ron = (await negocio.crearProducto({ nombre: 'Ron', categoria: 'Licores', unidad: 'unidad', precio: $(90000), copas: 20 })).id;
+    location.hash = `#/inventario?producto=${ron}`;
+    const c = await montar(<Pantalla />, repoNuevo(), negocio);
+    await tocar(boton(c, 'Contar'));
+    await escribir(campo(c, 'Botellas enteras'), '2');
+    await escribir(campo(c, 'Copas sueltas'), '5');
+    expect(c.textContent).toMatch(/Diferencia: \+45 copas/);
+    await tocar(boton(c, 'Guardar conteo'));
+    await hastaQue(() => stockDe(negocio.estado, ron) === u(2.25));
+    expect(c.textContent).toMatch(/2 und \+ 5 copas/);
+  });
+
+  it('cuenta toda una categoría de una vez, con el total del grupo', async () => {
+    const { negocio, ids } = await conProductos();
+    location.hash = '#/inventario?conteo=Bebidas';
+    const c = await montar(<Pantalla />, repoNuevo(), negocio);
+    expect(c.querySelector('h1')?.textContent).toBe('Conteo por categoría');
+    // Bebidas: café 5 + cerveza −2 + agua 20 = 23 und
+    expect(c.querySelector('.inv-conteo__total')?.textContent).toMatch(/En la app: 23 und/);
+    await escribir(campo(c, 'Contado de Café'), '7');
+    await escribir(campo(c, 'Contado de Cerveza'), '0');
+    expect(c.querySelector('.inv-conteo__total')?.textContent).toMatch(/Contado: 27 und/);
+    await tocar(boton(c, 'Guardar conteo (2)'));
+    await hastaQue(() => stockDe(negocio.estado, ids.cafe) === u(7));
+    expect(stockDe(negocio.estado, ids.cerveza)).toBe(u(0));
+    expect(stockDe(negocio.estado, ids.agua)).toBe(u(20)); // en blanco: no cambia
+    expect(location.hash).toBe('#/inventario');
+  });
+});

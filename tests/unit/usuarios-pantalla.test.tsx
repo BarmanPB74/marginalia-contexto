@@ -4,7 +4,7 @@ import { App } from '../../src/app/App';
 import { ProveedorNegocio } from '../../src/features/negocio/contexto';
 import { PantallaUsuarios, quePuede } from '../../src/features/usuarios/PantallaUsuarios';
 import type { Negocio } from '../../src/core/negocio';
-import { boton, esperar, montar, negocioDePrueba, repoNuevo } from './ayuda';
+import { boton, esperar, hastaQue, montar, negocioDePrueba, repoNuevo } from './ayuda';
 
 async function abrir(n: Negocio) {
   return montar(
@@ -86,10 +86,12 @@ describe('Usuarios', () => {
     await teclear(c, '9999');
     await teclear(c, '4321');
     await teclear(c, '4321');
+    await hastaQue(() => (c.textContent ?? '').includes('El PIN actual no es correcto.'));
     expect(c.textContent).toContain('El PIN actual no es correcto.');
     await teclear(c, '1234');
     await teclear(c, '4321');
     await teclear(c, '4321');
+    await hastaQue(() => (c.textContent ?? '').includes('Tu PIN cambió.'));
     expect(c.textContent).toContain('Tu PIN cambió.');
     expect((await n.iniciarSesion(yo, '4321')).ok).toBe(true);
   });

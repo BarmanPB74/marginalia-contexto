@@ -25,7 +25,17 @@ import {
   type Descuento,
   type Milesimas,
 } from './numeros';
-import { LIMITES, NOMBRE_ROL, type FormaEgreso, type FormaPago, type MotivoAjuste, type Rol, type Unidad, type Usuario } from './modelo';
+import {
+  LIMITES,
+  NOMBRE_ROL,
+  type FormaEgreso,
+  type FormaPago,
+  type MotivoAjuste,
+  type RefCliente,
+  type Rol,
+  type Unidad,
+  type Usuario,
+} from './modelo';
 import {
   crearEvento,
   diaDe,
@@ -148,6 +158,23 @@ export interface NuevoProducto {
   readonly costo?: Centavos | null;
   readonly stockMinimo?: Milesimas | null;
   readonly codigo?: string | null;
+  /** Copas por unidad (botella), para contar en botellas y copas. */
+  readonly copas?: number | null;
+}
+
+/** Una reserva nueva (`Negocio.crearReserva`). */
+export interface NuevaReserva {
+  readonly cliente: RefCliente;
+  readonly telefono?: string | null;
+  readonly fecha: string;
+  readonly hora: string;
+  readonly personas: number;
+  readonly mesaId?: string | null;
+  /** Minutos de espera tras la hora antes de poder cancelarla. */
+  readonly tolerancia: number;
+  /** Quien la toma le avisó al cliente ese tiempo (obligatorio). */
+  readonly avisado: boolean;
+  readonly nota?: string | null;
 }
 
 export interface NuevaCompra {
@@ -170,6 +197,14 @@ export interface NuevoGasto {
 }
 
 /** Texto recortado; vacío → undefined (para campos opcionales). */
+/** Recorta el nombre escrito a mano (lo demás son identificadores). */
+function limpiarRef(ref: RefCliente): RefCliente {
+  if (ref.tipo !== 'nombre') return ref;
+  const nombre = recortar(ref.nombre, LIMITES.nombre);
+  if (!nombre) throw new ReglaRota('Escribe el nombre.');
+  return { tipo: 'nombre', nombre };
+}
+
 function opcional(t: string | null | undefined): string | undefined {
   const r = (t ?? '').trim();
   return r ? r : undefined;
@@ -494,7 +529,9 @@ export class Negocio {
       if (c.lineas.length === 0) throw new ReglaRota('La cuenta está vacía: no hay nada que cobrar. Libera la mesa.');
       for (const l of c.lineas) {
         const p = estado.productos[l.productoId];
-        if (!p?.activo) throw new ReglaRota(`«${p?.nombre ?? 'Un producto'}» se archivó: quítalo de la cuenta (con su motivo) y cobra el resto.`);
+        if (!p?.activo || p.descontinuado) {
+          throw new ReglaRota(`«${p?.nombre ?? 'Un producto'}» se archivó o se descontinuó: quítalo de la cuenta (con su motivo) y cobra el resto.`);
+        }
       }
       return armarVenta(estado, { ...v, lineas: c.lineas }, c.id);
     });
@@ -533,8 +570,25 @@ export class Negocio {
     return this.ejecutar({ tipo: 'mesa.retirada', datos: { mesaId } });
   }
 
-  abrirCuenta(mesaId: string, personas?: number | null): Promise<Evento> {
-    return this.ejecutar({ tipo: 'cuenta.abierta', datos: sinIndefinidos({ mesaId, personas: personas ?? undefined }) });
+  abrirCuenta(mesaId: string, personas?: number | null, cliente?: RefCliente | null): Promise<Evento> {
+    return this.ejecutar({
+      tipo: 'cuenta.abierta',
+      datos: sinIndefinidos({ mesaId, personas: personas ?? undefined, cliente: cliente ? limpiarRef(cliente) : undefined }),
+    });
+  }
+
+  /**
+   * Nombre de momento de la mesa: un cliente registrado, alguien del equipo, un nombre escrito
+   * o nada (`null`, vuelve al nombre de la mesa). Si la mesa está libre, la abre a ese nombre.
+   */
+  nombrarMesa(mesaId: string, cliente: RefCliente | null): Promise<Evento> {
+    return this.ejecutar((estado) => {
+      const c = Object.values(estado.cuentas).find((x) => x.mesaId === mesaId);
+      const ref = cliente ? limpiarRef(cliente) : null;
+      if (c) return { tipo: 'cuenta.cliente', datos: { cuentaId: c.id, cliente: ref } };
+      if (!ref) throw new ReglaRota('La mesa está libre: no hay nombre que quitar.');
+      return { tipo: 'cuenta.abierta', datos: { mesaId, cliente: ref } };
+    });
   }
 
   /**
@@ -594,6 +648,7 @@ export class Negocio {
       costo: p.costo ?? null,
       stockMinimo: p.stockMinimo ?? null,
       codigo: opcional(p.codigo) ?? null,
+      ...(p.copas ? { copas: p.copas } : {}),
     };
     return this.ejecutar({ tipo: 'producto.creado', datos });
   }
@@ -608,7 +663,13 @@ export class Negocio {
     if (cambios.costo !== undefined) c.costo = cambios.costo;
     if (cambios.stockMinimo !== undefined) c.stockMinimo = cambios.stockMinimo;
     if (cambios.codigo !== undefined) c.codigo = opcional(cambios.codigo) ?? null;
+    if (cambios.copas !== undefined) c.copas = cambios.copas || null;
     return this.ejecutar({ tipo: 'producto.editado', datos: { productoId, cambios: c as Partial<DatosProducto> } });
+  }
+
+  /** Descontinuado: no se vende, no da alertas ni entra en conteos. Reversible. */
+  descontinuarProducto(productoId: string, descontinuado: boolean): Promise<Evento> {
+    return this.ejecutar({ tipo: 'producto.descontinuado', datos: { productoId, descontinuado } });
   }
 
   archivarProducto(productoId: string): Promise<Evento> {
@@ -655,6 +716,96 @@ export class Negocio {
         }),
       };
     });
+  }
+
+  /**
+   * Conteo de varios productos a la vez (por ejemplo, toda una categoría: infusiones,
+   * siropes, galletas). Todo o nada: una sola escritura. `antesVisto` es lo que mostraba la
+   * pantalla; si cambió mientras contaban, la regla lo detecta.
+   */
+  contarVarios(conteos: readonly { productoId: string; contado: Milesimas; antesVisto?: Milesimas }[], nota?: string | null): Promise<Evento[]> {
+    if (conteos.length === 0) throw new ReglaRota('Escribe al menos una cantidad contada.');
+    return this.ejecutarVarios((estado) =>
+      conteos.map((c): Comando => {
+        const antes = c.antesVisto ?? stockDe(estado, c.productoId);
+        return {
+          tipo: 'inventario.ajuste',
+          datos: sinIndefinidos({
+            productoId: c.productoId,
+            delta: milesimas(c.contado - antes),
+            motivo: 'conteo' as const,
+            antes,
+            despues: c.contado,
+            nota: opcional(nota),
+          }),
+        };
+      }),
+    );
+  }
+
+  // --- Clientes y reservas ---------------------------------------------------------
+
+  crearCliente(c: { nombre: string; telefono?: string | null; nota?: string | null }): Promise<Evento> {
+    return this.ejecutar({
+      tipo: 'cliente.creado',
+      datos: sinIndefinidos({ nombre: c.nombre.trim(), telefono: opcional(c.telefono), nota: opcional(c.nota) }),
+    });
+  }
+
+  editarCliente(clienteId: string, c: { nombre: string; telefono?: string | null; nota?: string | null }): Promise<Evento> {
+    return this.ejecutar({
+      tipo: 'cliente.editado',
+      datos: sinIndefinidos({ clienteId, nombre: c.nombre.trim(), telefono: opcional(c.telefono), nota: opcional(c.nota) }),
+    });
+  }
+
+  crearReserva(r: NuevaReserva): Promise<Evento> {
+    return this.ejecutar({
+      tipo: 'reserva.creada',
+      datos: sinIndefinidos({
+        cliente: limpiarRef(r.cliente),
+        telefono: opcional(r.telefono),
+        fecha: r.fecha,
+        hora: r.hora,
+        personas: r.personas,
+        mesaId: r.mesaId ?? undefined,
+        tolerancia: r.tolerancia,
+        avisado: r.avisado,
+        nota: opcional(r.nota),
+      }),
+    });
+  }
+
+  llamadaReserva(reservaId: string, contesto: boolean): Promise<Evento> {
+    return this.ejecutar({ tipo: 'reserva.llamada', datos: { reservaId, contesto } });
+  }
+
+  demoraReserva(reservaId: string, minutos: number): Promise<Evento> {
+    return this.ejecutar({ tipo: 'reserva.demora', datos: { reservaId, minutos } });
+  }
+
+  /**
+   * Llegó. Con `mesaId` la sientan: abre la cuenta de esa mesa a nombre del cliente de la
+   * reserva, en la misma escritura.
+   */
+  async llegoReserva(reservaId: string, opciones: { mesaId?: string | null } = {}): Promise<Evento[]> {
+    return this.ejecutarVarios((estado, nuevoId) => {
+      const r = estado.reservas[reservaId];
+      if (!r) throw new ReglaRota('Esa reserva no existe.');
+      if (!opciones.mesaId) return [{ tipo: 'reserva.llego', datos: { reservaId } }];
+      return [
+        { tipo: 'cuenta.abierta', datos: { mesaId: opciones.mesaId, personas: r.personas, cliente: r.cliente } },
+        { tipo: 'reserva.llego', datos: { reservaId, cuentaId: nuevoId(0) } },
+      ];
+    });
+  }
+
+  noLlegoReserva(reservaId: string): Promise<Evento> {
+    return this.ejecutar({ tipo: 'reserva.noLlego', datos: { reservaId } });
+  }
+
+  cancelarReserva(reservaId: string, motivo: string): Promise<Evento> {
+    return this.ejecutar({ tipo: 'reserva.cancelada', datos: { reservaId, motivo: motivo.trim() } });
   }
 
   // --- Compras y pagos ----------------------------------------------------------

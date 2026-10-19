@@ -32,7 +32,10 @@ for (const t of TAMANOS) {
     test('primer uso → importar → filtrar → contar → factura con foto → aplicar', async ({ page }) => {
       const captura = async (nombre: string) => {
         expect(await desbordeHorizontal(page), `scroll horizontal en ${nombre}`).toBeLessThanOrEqual(0);
-        await page.screenshot({ path: `capturas/inventario/${nombre}-${t.nombre}.png`, fullPage: true });
+        // Con una hoja abierta, solo lo visible: la captura de página completa cambia el tamaño
+        // de la ventana un instante y, en pantalla dividida, la ficha se vuelve a montar.
+        const conHoja = (await page.getByRole('dialog').count()) > 0;
+        await page.screenshot({ path: `capturas/inventario/${nombre}-${t.nombre}.png`, fullPage: !conHoja });
       };
       const compacto = t.width < 840;
       await page.goto('/');
@@ -87,7 +90,7 @@ for (const t of TAMANOS) {
       // Contar CAFÉ OSCURO: había -2, hay 6
       await page.getByRole('button', { name: 'CAFÉ OSCURO' }).click();
       await expect(page.getByRole('heading', { level: 1, name: 'CAFÉ OSCURO' })).toBeVisible();
-      await page.getByRole('button', { name: 'Contar' }).click();
+      await page.getByRole('button', { name: 'Contar', exact: true }).click();
       const contar = page.getByRole('dialog', { name: 'Contar CAFÉ OSCURO' });
       await contar.getByLabel('¿Cuántas hay?').fill('6');
       await expect(contar.getByText('+8 und')).toBeVisible();

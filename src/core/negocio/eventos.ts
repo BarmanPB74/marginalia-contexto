@@ -30,6 +30,7 @@ import {
   type FormaPago,
   type MotivoAjuste,
   type PinGuardado,
+  type RefCliente,
   type Rol,
   type Unidad,
 } from './modelo';
@@ -94,6 +95,8 @@ export interface DatosProducto {
   readonly costo: Centavos | null;
   readonly stockMinimo: Milesimas | null;
   readonly codigo: string | null;
+  /** Opcional (los productos de antes no lo traen): copas por unidad. */
+  readonly copas?: number | null;
 }
 
 export interface Datos {
@@ -169,7 +172,9 @@ export interface Datos {
   'mesa.creada': { readonly nombre: string; readonly zona: string };
   'mesa.retirada': { readonly mesaId: string };
   /** Se sienta gente: la mesa queda ocupada. Sin caja abierta no se abre cuenta. */
-  'cuenta.abierta': { readonly mesaId: string; readonly personas?: number };
+  'cuenta.abierta': { readonly mesaId: string; readonly personas?: number; readonly cliente?: RefCliente };
+  /** Nombre de momento de la mesa (quién está): cliente, usuario, nombre o nada (`null`). */
+  'cuenta.cliente': { readonly cuentaId: string; readonly cliente: RefCliente | null };
   /** Una ronda: lo que se pidió. No descuenta inventario (eso pasa al cobrar). */
   'cuenta.pedido': { readonly cuentaId: string; readonly lineas: readonly LineaCuenta[]; readonly nota?: string };
   /** Se retira algo pedido (error, no lo quisieron). Con motivo: queda a la vista. */
@@ -180,6 +185,33 @@ export interface Datos {
   'cuenta.liberada': { readonly cuentaId: string };
   /** Cuenta con pedidos que no se cobra (sólo el dueño, con motivo). */
   'cuenta.anulada': { readonly cuentaId: string; readonly motivo: string };
+  'producto.descontinuado': { readonly productoId: string; readonly descontinuado: boolean };
+  'cliente.creado': { readonly nombre: string; readonly telefono?: string; readonly nota?: string };
+  'cliente.editado': { readonly clienteId: string; readonly nombre: string; readonly telefono?: string; readonly nota?: string };
+  /**
+   * Reserva. `tolerancia`: minutos que se espera después de la hora (más la demora avisada)
+   * antes de poder cancelarla. `avisado`: quien la tomó le dijo al cliente ese tiempo.
+   */
+  'reserva.creada': {
+    readonly cliente: RefCliente;
+    readonly telefono?: string;
+    /** 'AAAA-MM-DD' y 'HH:MM' (hora local) */
+    readonly fecha: string;
+    readonly hora: string;
+    readonly personas: number;
+    readonly mesaId?: string;
+    readonly tolerancia: number;
+    readonly avisado: boolean;
+    readonly nota?: string;
+  };
+  /** Llamada para confirmar: contestó o no contestó. */
+  'reserva.llamada': { readonly reservaId: string; readonly contesto: boolean };
+  /** El cliente avisó que llega tarde: corre la hora esperada. */
+  'reserva.demora': { readonly reservaId: string; readonly minutos: number };
+  /** Llegó. Si se sentó en una mesa, `cuentaId` es la cuenta que se abrió. */
+  'reserva.llego': { readonly reservaId: string; readonly cuentaId?: string };
+  'reserva.noLlego': { readonly reservaId: string };
+  'reserva.cancelada': { readonly reservaId: string; readonly motivo: string };
 }
 
 export type TipoEvento = keyof Datos;
@@ -212,6 +244,16 @@ export const TIPOS_EVENTO: readonly TipoEvento[] = [
   'cuenta.trasladada',
   'cuenta.liberada',
   'cuenta.anulada',
+  'cuenta.cliente',
+  'producto.descontinuado',
+  'cliente.creado',
+  'cliente.editado',
+  'reserva.creada',
+  'reserva.llamada',
+  'reserva.demora',
+  'reserva.llego',
+  'reserva.noLlego',
+  'reserva.cancelada',
 ];
 
 /** Un evento de un tipo concreto. */
@@ -353,6 +395,39 @@ export function sinIndefinidos<T extends object>(o: T): SinIndefinidos<T> {
   return Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) as SinIndefinidos<T>;
 }
 
+const HORA = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+/** Hora 'HH:MM' de 00:00 a 23:59. */
+export function esHora(v: unknown): v is string {
+  return typeof v === 'string' && HORA.test(v);
+}
+
+function horaDe(o: Objeto, k: string): string {
+  const v = o[k];
+  if (!esHora(v)) throw new EventoInvalido(`«${k}» debe ser una hora HH:MM`);
+  return v;
+}
+
+function leerRefCliente(x: unknown): RefCliente {
+  if (!esObjeto(x)) throw new EventoInvalido('«cliente» debe ser un objeto');
+  switch (x.tipo) {
+    case 'cliente': {
+      const o = objeto(x, 'cliente', ['tipo', 'clienteId']);
+      return { tipo: 'cliente', clienteId: id(o, 'clienteId') };
+    }
+    case 'usuario': {
+      const o = objeto(x, 'cliente', ['tipo', 'usuarioId']);
+      return { tipo: 'usuario', usuarioId: id(o, 'usuarioId') };
+    }
+    case 'nombre': {
+      const o = objeto(x, 'cliente', ['tipo', 'nombre']);
+      return { tipo: 'nombre', nombre: texto(o, 'nombre', LIMITES.nombre) };
+    }
+    default:
+      throw new EventoInvalido('«cliente.tipo» debe ser cliente, usuario o nombre');
+  }
+}
+
 function leerPin(x: unknown): PinGuardado {
   const o = objeto(x, 'pin', ['sal', 'hash', 'iteraciones']);
   for (const k of ['sal', 'hash'] as const) {
@@ -363,7 +438,9 @@ function leerPin(x: unknown): PinGuardado {
   return { sal: o.sal as string, hash: o.hash as string, iteraciones: entero(o, 'iteraciones', 1, 5_000_000) };
 }
 
-const CAMPOS_PRODUCTO = ['nombre', 'categoria', 'unidad', 'precio', 'costo', 'stockMinimo', 'codigo'] as const;
+const CAMPOS_PRODUCTO = ['nombre', 'categoria', 'unidad', 'precio', 'costo', 'stockMinimo', 'codigo', 'copas'] as const;
+/** Los que todo producto trae desde el principio; `copas` llegó después y es opcional. */
+const CAMPOS_OBLIGATORIOS = CAMPOS_PRODUCTO.filter((k) => k !== 'copas');
 
 function leerCampoProducto(o: Objeto, k: (typeof CAMPOS_PRODUCTO)[number]): unknown {
   switch (k) {
@@ -381,16 +458,19 @@ function leerCampoProducto(o: Objeto, k: (typeof CAMPOS_PRODUCTO)[number]): unkn
       return o[k] === null ? null : cantidad(o, k);
     case 'codigo':
       return o[k] === null ? null : texto(o, k, LIMITES.codigo);
+    case 'copas':
+      return o[k] === null ? null : entero(o, k, 1, LIMITES.copas);
   }
 }
 
 function leerProducto(x: unknown): DatosProducto {
   const o = objeto(x, 'datos', CAMPOS_PRODUCTO);
   const r: Record<string, unknown> = {};
-  for (const k of CAMPOS_PRODUCTO) {
+  for (const k of CAMPOS_OBLIGATORIOS) {
     if (o[k] === undefined) throw new EventoInvalido(`falta «${k}»`);
     r[k] = leerCampoProducto(o, k);
   }
+  if (o.copas !== undefined) r.copas = leerCampoProducto(o, 'copas');
   return r as unknown as DatosProducto;
 }
 
@@ -561,11 +641,71 @@ function leerDatos(tipo: TipoEvento, x: unknown): Datos[TipoEvento] {
       return { mesaId: id(o, 'mesaId') };
     }
     case 'cuenta.abierta': {
-      const o = objeto(x, 'datos', ['mesaId', 'personas']);
+      const o = objeto(x, 'datos', ['mesaId', 'personas', 'cliente']);
       return sinIndefinidos({
         mesaId: id(o, 'mesaId'),
         personas: o.personas === undefined ? undefined : entero(o, 'personas', 1, LIMITES.personas),
+        cliente: o.cliente === undefined ? undefined : leerRefCliente(o.cliente),
       });
+    }
+    case 'cuenta.cliente': {
+      const o = objeto(x, 'datos', ['cuentaId', 'cliente']);
+      return { cuentaId: id(o, 'cuentaId'), cliente: o.cliente === null ? null : leerRefCliente(o.cliente) };
+    }
+    case 'producto.descontinuado': {
+      const o = objeto(x, 'datos', ['productoId', 'descontinuado']);
+      return { productoId: id(o, 'productoId'), descontinuado: booleano(o, 'descontinuado') };
+    }
+    case 'cliente.creado': {
+      const o = objeto(x, 'datos', ['nombre', 'telefono', 'nota']);
+      return sinIndefinidos({
+        nombre: texto(o, 'nombre', LIMITES.nombre),
+        telefono: textoOpcional(o, 'telefono', LIMITES.telefono),
+        nota: textoOpcional(o, 'nota', LIMITES.nota, true),
+      });
+    }
+    case 'cliente.editado': {
+      const o = objeto(x, 'datos', ['clienteId', 'nombre', 'telefono', 'nota']);
+      return sinIndefinidos({
+        clienteId: id(o, 'clienteId'),
+        nombre: texto(o, 'nombre', LIMITES.nombre),
+        telefono: textoOpcional(o, 'telefono', LIMITES.telefono),
+        nota: textoOpcional(o, 'nota', LIMITES.nota, true),
+      });
+    }
+    case 'reserva.creada': {
+      const o = objeto(x, 'datos', ['cliente', 'telefono', 'fecha', 'hora', 'personas', 'mesaId', 'tolerancia', 'avisado', 'nota']);
+      return sinIndefinidos({
+        cliente: leerRefCliente(o.cliente),
+        telefono: textoOpcional(o, 'telefono', LIMITES.telefono),
+        fecha: fecha(o, 'fecha'),
+        hora: horaDe(o, 'hora'),
+        personas: entero(o, 'personas', 1, LIMITES.personas),
+        mesaId: o.mesaId === undefined ? undefined : id(o, 'mesaId'),
+        tolerancia: entero(o, 'tolerancia', LIMITES.toleranciaMin, LIMITES.toleranciaMax),
+        avisado: booleano(o, 'avisado'),
+        nota: textoOpcional(o, 'nota', LIMITES.nota, true),
+      });
+    }
+    case 'reserva.llamada': {
+      const o = objeto(x, 'datos', ['reservaId', 'contesto']);
+      return { reservaId: id(o, 'reservaId'), contesto: booleano(o, 'contesto') };
+    }
+    case 'reserva.demora': {
+      const o = objeto(x, 'datos', ['reservaId', 'minutos']);
+      return { reservaId: id(o, 'reservaId'), minutos: entero(o, 'minutos', 1, LIMITES.demoraMax) };
+    }
+    case 'reserva.llego': {
+      const o = objeto(x, 'datos', ['reservaId', 'cuentaId']);
+      return sinIndefinidos({ reservaId: id(o, 'reservaId'), cuentaId: o.cuentaId === undefined ? undefined : id(o, 'cuentaId') });
+    }
+    case 'reserva.noLlego': {
+      const o = objeto(x, 'datos', ['reservaId']);
+      return { reservaId: id(o, 'reservaId') };
+    }
+    case 'reserva.cancelada': {
+      const o = objeto(x, 'datos', ['reservaId', 'motivo']);
+      return { reservaId: id(o, 'reservaId'), motivo: texto(o, 'motivo', LIMITES.motivo, true) };
     }
     case 'cuenta.pedido': {
       const o = objeto(x, 'datos', ['cuentaId', 'lineas', 'nota']);

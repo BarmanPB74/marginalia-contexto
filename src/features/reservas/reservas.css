@@ -1,0 +1,217 @@
+/*
+ * Reservas y clientes (recepción). La situación de cada reserva se dice con texto y color:
+ * a tiempo, esperando (dentro del tiempo de espera) y en tiempo de cancelación. Solo tokens.
+ */
+.elegir-cliente {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+}
+
+.elegir-cliente__pista,
+.elegir-cliente__elegido {
+  margin: 0;
+  color: var(--texto-2);
+}
+
+.elegir-cliente__elegido strong {
+  color: var(--tinta);
+}
+
+.elegir-cliente__error {
+  margin: 0;
+  font-weight: var(--peso-medio);
+  color: var(--peligro-tinta);
+}
+
+.elegir-cliente__clientes,
+.elegir-cliente__nuevo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+}
+
+.elegir-cliente__lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 12rem), 1fr));
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.elegir-cliente__opcion {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  min-height: var(--toque);
+  padding: var(--esp-2) var(--esp-3);
+  font: inherit;
+  color: var(--tinta);
+  text-align: start;
+  cursor: pointer;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+}
+
+.elegir-cliente__opcion span {
+  font-size: var(--texto-s);
+  color: var(--texto-2);
+}
+
+.elegir-cliente__opcion--elegida {
+  color: var(--primario-tinta);
+  background: var(--primario-suave);
+  border-color: var(--primario);
+}
+
+/* --- Pantalla de reservas --- */
+.reservas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+  margin-top: var(--esp-4);
+}
+
+.reservas__aviso {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  margin: 0;
+  padding: var(--esp-3) var(--esp-4);
+  color: var(--peligro-tinta);
+  background: var(--peligro-suave);
+  border-radius: var(--radio-l);
+}
+
+.reservas__lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+  gap: var(--esp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reserva {
+  --reserva-marca: var(--primario);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+  height: 100%;
+  padding: var(--esp-4);
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-l);
+  box-shadow: inset 6px 0 0 var(--reserva-marca), var(--sombra);
+}
+
+.reserva--esperando {
+  --reserva-marca: var(--aviso);
+}
+
+.reserva--cancelable {
+  --reserva-marca: var(--peligro);
+}
+
+.reserva--cerrada {
+  --reserva-marca: var(--borde-fuerte);
+
+  opacity: 0.85;
+}
+
+.reserva__cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--esp-2);
+}
+
+.reserva__hora {
+  font-size: var(--texto-xl);
+  font-weight: var(--peso-fuerte);
+  line-height: 1.1;
+}
+
+.reserva__nombre {
+  margin: 0;
+  font-size: var(--texto-l);
+  font-weight: var(--peso-fuerte);
+}
+
+.reserva__datos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-1) var(--esp-3);
+  margin: 0;
+  color: var(--texto-2);
+}
+
+.reserva__insignias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+}
+
+.reserva__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+  margin-top: auto;
+  padding-top: var(--esp-2);
+}
+
+.reserva__nota {
+  margin: 0;
+  font-style: italic;
+  color: var(--texto-2);
+}
+
+.reservas__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+}
+
+.reservas__par {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  gap: var(--esp-3);
+}
+
+.reservas__recordatorio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+  padding: var(--esp-3) var(--esp-4);
+  color: var(--aviso-tinta);
+  background: var(--aviso-suave);
+  border-radius: var(--radio-l);
+}
+
+.reservas__recordatorio p {
+  margin: 0;
+}
+
+.reservas__fecha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.reservas__error {
+  margin: 0;
+  font-weight: var(--peso-medio);
+  color: var(--peligro-tinta);
+}
+
+.clientes__lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

@@ -19,6 +19,20 @@ export function useHash(): string {
   return hash;
 }
 
+/** ¿La ventana mide al menos `px` de ancho? Se actualiza al girar o cambiar el tamaño. */
+export function useAncho(px: number): boolean {
+  const consulta = `(min-width: ${px}px)`;
+  const [si, setSi] = useState(() => typeof matchMedia === 'function' && matchMedia(consulta).matches);
+  useEffect(() => {
+    if (typeof matchMedia !== 'function') return;
+    const m = matchMedia(consulta);
+    const alCambiar = () => setSi(m.matches);
+    m.addEventListener('change', alCambiar);
+    return () => m.removeEventListener('change', alCambiar);
+  }, [consulta]);
+  return si;
+}
+
 /** Parámetros de la consulta del hash: `#/compras?factura=X` → { factura: 'X' }. */
 export function consultaDe(hash: string): URLSearchParams {
   const i = hash.indexOf('?');

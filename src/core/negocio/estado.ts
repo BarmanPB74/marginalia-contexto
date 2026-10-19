@@ -35,7 +35,17 @@ import {
   type Centavos,
   type Milesimas,
 } from './numeros';
-import { FORMAS_PAGO, LIMITES, type FormaEgreso, type FormaPago, type Mesa, type Producto, type Usuario } from './modelo';
+import {
+  FORMAS_PAGO,
+  LIMITES,
+  type Cliente,
+  type FormaEgreso,
+  type FormaPago,
+  type Mesa,
+  type Producto,
+  type RefCliente,
+  type Usuario,
+} from './modelo';
 import {
   ReglaRota,
   type DatosProducto,
@@ -49,8 +59,8 @@ import {
 } from './eventos';
 
 export const HASH_INICIAL = '0'.repeat(64);
-/** 2: mesas y cuentas. Una instantánea de otra versión se ignora y se repite el diario. */
-export const VERSION_ESTADO = 2;
+/** 3: clientes y reservas. Una instantánea de otra versión se ignora y se repite el diario. */
+export const VERSION_ESTADO = 3;
 
 export type PorForma = Readonly<Record<FormaPago, Centavos>>;
 
@@ -149,6 +159,34 @@ export interface Cuenta {
   readonly ultimoPedidoEn: string | null;
   /** La mesa pidió la cuenta. */
   readonly precuenta: boolean;
+  /** Quién está (nombre de momento de la mesa). `null`: la mesa con su nombre de siempre. */
+  readonly cliente: RefCliente | null;
+}
+
+export type EstadoReserva = 'pendiente' | 'llego' | 'noLlego' | 'cancelada';
+
+export interface Reserva {
+  readonly id: string;
+  readonly cliente: RefCliente;
+  readonly telefono: string | null;
+  readonly fecha: string;
+  readonly hora: string;
+  readonly personas: number;
+  readonly mesaId: string | null;
+  /** Minutos de espera tras la hora (más la demora) antes de poder cancelarla. */
+  readonly tolerancia: number;
+  /** Minutos de demora que avisó el cliente (se suman a la hora). */
+  readonly demora: number;
+  readonly nota: string | null;
+  readonly creadaEn: string;
+  readonly por: string;
+  /** Última llamada de confirmación: contestó o no (null: no se ha llamado). */
+  readonly llamada: { readonly en: string; readonly contesto: boolean } | null;
+  readonly llamadas: number;
+  readonly estado: EstadoReserva;
+  readonly cerradaEn: string | null;
+  readonly motivo: string | null;
+  readonly cuentaId: string | null;
 }
 
 export interface EstadoNegocio {
@@ -166,6 +204,9 @@ export interface EstadoNegocio {
   readonly mesas: Readonly<Record<string, Mesa>>;
   /** Cuentas abiertas (las cobradas o anuladas salen de aquí; quedan en el diario). */
   readonly cuentas: Readonly<Record<string, Cuenta>>;
+  readonly clientes: Readonly<Record<string, Cliente>>;
+  /** Reservas pendientes y las cerradas de los últimos días (las viejas quedan en el diario). */
+  readonly reservas: Readonly<Record<string, Reserva>>;
   /** Cuántos eventos se han aplicado. */
   readonly eventos: number;
   readonly ultimoId: string | null;
@@ -185,6 +226,8 @@ export function estadoVacio(): EstadoNegocio {
     gastos: {},
     mesas: {},
     cuentas: {},
+    clientes: {},
+    reservas: {},
     eventos: 0,
     ultimoId: null,
     ultimoHash: HASH_INICIAL,
@@ -219,6 +262,45 @@ export function cuentaDeMesa(estado: EstadoNegocio, mesaId: string): Cuenta | nu
 /** Cantidad pedida de un producto en una cuenta. */
 export function pedidoEnCuenta(c: Cuenta, productoId: string): Milesimas {
   return c.lineas.find((l) => l.productoId === productoId)?.cantidad ?? milesimas(0);
+}
+
+/** Nombre para mostrar de un cliente, usuario o nombre de momento. */
+export function nombreDe(estado: EstadoNegocio, ref: RefCliente): string {
+  switch (ref.tipo) {
+    case 'cliente':
+      return estado.clientes[ref.clienteId]?.nombre ?? 'Cliente';
+    case 'usuario':
+      return estado.usuarios[ref.usuarioId]?.nombre ?? 'Usuario';
+    case 'nombre':
+      return ref.nombre;
+  }
+}
+
+/** Minutos desde la medianoche de 'HH:MM'. */
+function minutosDe(hora: string): number {
+  const [h = 0, m = 0] = hora.split(':').map(Number);
+  return h * 60 + m;
+}
+
+/** Fecha y hora local de la reserva (más la demora avisada), como `Date`. */
+export function horaEsperada(r: Pick<Reserva, 'fecha' | 'hora' | 'demora'>): Date {
+  const [a = 0, mes = 1, d = 1] = r.fecha.split('-').map(Number);
+  return new Date(a, mes - 1, d, 0, minutosDe(r.hora) + r.demora);
+}
+
+/**
+ * Cómo va una reserva pendiente respecto a la hora:
+ * - `aTiempo`: aún no es la hora (con la demora avisada);
+ * - `esperando`: ya pasó la hora, dentro del tiempo de espera (tolerancia);
+ * - `cancelable`: pasó el tiempo de espera: entra en tiempo de cancelación.
+ */
+export type SituacionReserva = 'aTiempo' | 'esperando' | 'cancelable';
+
+export function situacionReserva(r: Pick<Reserva, 'fecha' | 'hora' | 'demora' | 'tolerancia'>, ahora: Date): SituacionReserva {
+  const esperada = horaEsperada(r).getTime();
+  const t = ahora.getTime();
+  if (t < esperada) return 'aTiempo';
+  return t < esperada + r.tolerancia * 60_000 ? 'esperando' : 'cancelable';
 }
 
 export function stockDe(estado: EstadoNegocio, productoId: string): Milesimas {
@@ -269,6 +351,24 @@ function sinRepetidos(ids: readonly string[], que: string) {
   if (new Set(ids).size !== ids.length) falla(`Hay un producto repetido en ${que}: súmalo en una sola línea.`);
 }
 
+/** Producto que se puede vender o pedir: activo y no descontinuado. */
+function vendible(estado: EstadoNegocio, id: string): Producto {
+  const p = producto(estado, id);
+  if (p.descontinuado) falla(`«${p.nombre}» está descontinuado: no se vende.`);
+  return p;
+}
+
+function refValida(estado: EstadoNegocio, ref: RefCliente) {
+  if (ref.tipo === 'cliente' && !estado.clientes[ref.clienteId]) falla('Ese cliente no está registrado.');
+  if (ref.tipo === 'usuario' && !estado.usuarios[ref.usuarioId]?.activo) falla('Ese usuario no existe o está desactivado.');
+}
+
+function reservaPendiente(estado: EstadoNegocio, id: string): Reserva {
+  const r = estado.reservas[id] ?? falla('Esa reserva no existe.');
+  if (r.estado !== 'pendiente') falla('Esa reserva ya se cerró (llegó, no llegó o se canceló).');
+  return r;
+}
+
 function mesa(estado: EstadoNegocio, id: string): Mesa {
   const m = estado.mesas[id] ?? falla('Esa mesa no existe.');
   if (!m.activa) falla(`«${m.nombre}» ya no está en el mapa.`);
@@ -298,7 +398,7 @@ function validarVenta(estado: EstadoNegocio, e: EventoDe<'venta.registrada'>) {
   }
   let bruto = 0;
   for (const l of d.lineas) {
-    const p = producto(estado, l.productoId);
+    const p = vendible(estado, l.productoId);
     if (l.precioUnit !== p.precio || l.nombre !== p.nombre) {
       falla(`«${p.nombre}» cambió (precio o nombre) mientras armabas la venta. Vuelve a armarla.`);
     }
@@ -352,13 +452,14 @@ export function validar(estado: EstadoNegocio, evento: Evento): void {
   }
   const creaAlgo = new Set([
     'usuario.creado', 'producto.creado', 'caja.abierta', 'venta.registrada', 'compra.registrada', 'gasto.registrado',
-    'mesa.creada', 'cuenta.abierta',
+    'mesa.creada', 'cuenta.abierta', 'cliente.creado', 'reserva.creada',
   ]);
   if (creaAlgo.has(evento.tipo)) {
     const usado =
       evento.id in estado.usuarios || evento.id in estado.productos || evento.id in estado.ventas ||
       evento.id in estado.compras || evento.id in estado.gastos || evento.id in estado.mesas ||
-      evento.id in estado.cuentas || estado.caja?.id === evento.id;
+      evento.id in estado.cuentas || evento.id in estado.clientes || evento.id in estado.reservas ||
+      estado.caja?.id === evento.id;
     if (usado) falla('Ese registro ya existe (identificador repetido).');
   }
 
@@ -500,13 +601,62 @@ export function validar(estado: EstadoNegocio, evento: Evento): void {
     case 'cuenta.abierta':
       cajaAbierta(estado, 'atender mesas');
       mesaLibre(estado, evento.datos.mesaId);
+      if (evento.datos.cliente) refValida(estado, evento.datos.cliente);
       return;
+    case 'cuenta.cliente': {
+      cuenta(estado, evento.datos.cuentaId);
+      if (evento.datos.cliente) refValida(estado, evento.datos.cliente);
+      return;
+    }
+    case 'producto.descontinuado': {
+      const p = producto(estado, evento.datos.productoId);
+      if (Boolean(p.descontinuado) === evento.datos.descontinuado) {
+        falla(evento.datos.descontinuado ? `«${p.nombre}» ya está descontinuado.` : `«${p.nombre}» ya está a la venta.`);
+      }
+      return;
+    }
+    case 'cliente.creado':
+    case 'cliente.editado': {
+      const d = evento.datos;
+      const excepto = evento.tipo === 'cliente.editado' ? evento.datos.clienteId : null;
+      if (excepto !== null && !estado.clientes[excepto]) falla('Ese cliente no existe.');
+      const repetido = Object.values(estado.clientes).find(
+        (c) => c.id !== excepto && norma(c.nombre) === norma(d.nombre) && (c.telefono ?? '') === (d.telefono ?? ''),
+      );
+      if (repetido) falla(`«${d.nombre}» ya está registrado${d.telefono ? ' con ese teléfono' : ''}.`);
+      return;
+    }
+    case 'reserva.creada': {
+      const d = evento.datos;
+      if (!d.avisado) falla('Avísale al cliente el tiempo de espera (cuándo se cancela la reserva) y márcalo.');
+      refValida(estado, d.cliente);
+      if (d.fecha < diaLocal(evento.en)) falla('La reserva no puede ser para un día que ya pasó.');
+      if (d.mesaId) {
+        const m = mesa(estado, d.mesaId);
+        const choca = Object.values(estado.reservas).find(
+          (r) => r.estado === 'pendiente' && r.mesaId === d.mesaId && r.fecha === d.fecha && Math.abs(minutosDe(r.hora) - minutosDe(d.hora)) < 120,
+        );
+        if (choca) falla(`«${m.nombre}» ya tiene una reserva a las ${choca.hora} ese día (a nombre de ${nombreDe(estado, choca.cliente)}).`);
+      }
+      return;
+    }
+    case 'reserva.llamada':
+    case 'reserva.demora':
+    case 'reserva.noLlego':
+    case 'reserva.cancelada':
+      reservaPendiente(estado, evento.datos.reservaId);
+      return;
+    case 'reserva.llego': {
+      reservaPendiente(estado, evento.datos.reservaId);
+      if (evento.datos.cuentaId !== undefined && !estado.cuentas[evento.datos.cuentaId]) falla('Esa cuenta no está abierta.');
+      return;
+    }
     case 'cuenta.pedido': {
       const d = evento.datos;
       const c = cuenta(estado, d.cuentaId);
       sinRepetidos(d.lineas.map((l) => l.productoId), 'la ronda');
       for (const l of d.lineas) {
-        const p = producto(estado, l.productoId);
+        const p = vendible(estado, l.productoId);
         if (p.unidad === 'unidad' && l.cantidad % 1000 !== 0) falla(`«${p.nombre}» se pide por unidades enteras.`);
       }
       const productos = new Set([...c.lineas.map((l) => l.productoId), ...d.lineas.map((l) => l.productoId)]);
@@ -576,7 +726,26 @@ function datosAProducto(id: string, d: DatosProducto, activo: boolean): Producto
     stockMinimo: d.stockMinimo,
     activo,
   };
-  return d.codigo ? { ...p, codigo: d.codigo } : p;
+  return { ...p, ...(d.codigo ? { codigo: d.codigo } : {}), ...(d.copas ? { copas: d.copas } : {}) };
+}
+
+/** Día local 'AAAA-MM-DD' de un instante ISO con desfase (los primeros 10 caracteres). */
+function diaLocal(en: string): string {
+  return en.slice(0, 10);
+}
+
+/** 'AAAA-MM-DD' menos `n` días. */
+function diasAntes(dia: string, n: number): string {
+  const [a = 0, m = 1, d = 1] = dia.split('-').map(Number);
+  return new Date(Date.UTC(a, m - 1, d - n)).toISOString().slice(0, 10);
+}
+
+/** Las reservas cerradas de hace más de una semana salen del estado (siguen en el diario). */
+const DIAS_RESERVAS = 7;
+
+function conReserva(estado: EstadoNegocio, id: string, cambio: (r: Reserva) => Partial<Reserva>): EstadoNegocio['reservas'] {
+  const r = estado.reservas[id];
+  return r ? { ...estado.reservas, [id]: { ...r, ...cambio(r) } } : estado.reservas;
 }
 
 /** Suma (o resta) cantidades a las líneas de una cuenta; las que llegan a cero salen. */
@@ -621,9 +790,9 @@ function siguiente(estado: EstadoNegocio, evento: Evento): EstadoNegocio {
     case 'producto.editado': {
       const p = estado.productos[evento.datos.productoId];
       if (!p) return estado;
-      const actual: DatosProducto = { ...p, codigo: p.codigo ?? null };
+      const actual: DatosProducto = { ...p, codigo: p.codigo ?? null, copas: p.copas ?? null };
       const nuevo = datosAProducto(p.id, { ...actual, ...evento.datos.cambios }, p.activo);
-      return { ...estado, productos: { ...estado.productos, [p.id]: nuevo } };
+      return { ...estado, productos: { ...estado.productos, [p.id]: p.descontinuado ? { ...nuevo, descontinuado: true } : nuevo } };
     }
     case 'producto.archivado': {
       const p = estado.productos[evento.datos.productoId];
@@ -817,9 +986,84 @@ function siguiente(estado: EstadoNegocio, evento: Evento): EstadoNegocio {
         rondas: 0,
         ultimoPedidoEn: null,
         precuenta: false,
+        cliente: evento.datos.cliente ?? null,
       };
       return { ...estado, cuentas: { ...estado.cuentas, [c.id]: c } };
     }
+    case 'cuenta.cliente':
+      return { ...estado, cuentas: conCuenta(estado, evento.datos.cuentaId, () => ({ cliente: evento.datos.cliente })) };
+    case 'producto.descontinuado': {
+      const p = estado.productos[evento.datos.productoId];
+      if (!p) return estado;
+      const resto = Object.fromEntries(Object.entries(p).filter(([k]) => k !== 'descontinuado')) as unknown as Producto;
+      const nuevo: Producto = evento.datos.descontinuado ? { ...resto, descontinuado: true } : resto;
+      return { ...estado, productos: { ...estado.productos, [p.id]: nuevo } };
+    }
+    case 'cliente.creado':
+    case 'cliente.editado': {
+      const d = evento.datos;
+      const id = evento.tipo === 'cliente.editado' ? evento.datos.clienteId : evento.id;
+      const c: Cliente = { id, nombre: d.nombre, telefono: d.telefono ?? null, nota: d.nota ?? null };
+      return { ...estado, clientes: { ...estado.clientes, [id]: c } };
+    }
+    case 'reserva.creada': {
+      const d = evento.datos;
+      const r: Reserva = {
+        id: evento.id,
+        cliente: d.cliente,
+        telefono: d.telefono ?? null,
+        fecha: d.fecha,
+        hora: d.hora,
+        personas: d.personas,
+        mesaId: d.mesaId ?? null,
+        tolerancia: d.tolerancia,
+        demora: 0,
+        nota: d.nota ?? null,
+        creadaEn: evento.en,
+        por: evento.por,
+        llamada: null,
+        llamadas: 0,
+        estado: 'pendiente',
+        cerradaEn: null,
+        motivo: null,
+        cuentaId: null,
+      };
+      const limite = diasAntes(diaLocal(evento.en), DIAS_RESERVAS);
+      const vigentes = Object.fromEntries(
+        Object.entries(estado.reservas).filter(([, x]) => x.estado === 'pendiente' || x.fecha >= limite),
+      );
+      return { ...estado, reservas: { ...vigentes, [r.id]: r } };
+    }
+    case 'reserva.llamada':
+      return {
+        ...estado,
+        reservas: conReserva(estado, evento.datos.reservaId, (r) => ({
+          llamada: { en: evento.en, contesto: evento.datos.contesto },
+          llamadas: r.llamadas + 1,
+        })),
+      };
+    case 'reserva.demora':
+      return { ...estado, reservas: conReserva(estado, evento.datos.reservaId, (r) => ({ demora: r.demora + evento.datos.minutos })) };
+    case 'reserva.llego':
+      return {
+        ...estado,
+        reservas: conReserva(estado, evento.datos.reservaId, () => ({
+          estado: 'llego',
+          cerradaEn: evento.en,
+          cuentaId: evento.datos.cuentaId ?? null,
+        })),
+      };
+    case 'reserva.noLlego':
+      return { ...estado, reservas: conReserva(estado, evento.datos.reservaId, () => ({ estado: 'noLlego', cerradaEn: evento.en })) };
+    case 'reserva.cancelada':
+      return {
+        ...estado,
+        reservas: conReserva(estado, evento.datos.reservaId, () => ({
+          estado: 'cancelada',
+          cerradaEn: evento.en,
+          motivo: evento.datos.motivo,
+        })),
+      };
     case 'cuenta.pedido':
       return {
         ...estado,
@@ -887,7 +1131,8 @@ export interface Alerta {
 export function alertas(estado: EstadoNegocio): Alerta[] {
   const r: Alerta[] = [];
   for (const p of Object.values(estado.productos)) {
-    if (!p.activo) continue;
+    // Descontinuado: ya no se trabaja, sus existencias no son una inconsistencia que pedir
+    if (!p.activo || p.descontinuado) continue;
     const stock = stockDe(estado, p.id);
     if (stock < 0) r.push({ productoId: p.id, nombre: p.nombre, tipo: 'negativo', stock, minimo: p.stockMinimo });
     else if (p.stockMinimo !== null && stock <= p.stockMinimo) {
