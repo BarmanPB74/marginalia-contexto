@@ -32,7 +32,10 @@ for (const t of TAMANOS) {
     test('primer uso → importar → filtrar → contar → factura con foto → aplicar', async ({ page }) => {
       const captura = async (nombre: string) => {
         expect(await desbordeHorizontal(page), `scroll horizontal en ${nombre}`).toBeLessThanOrEqual(0);
-        await page.screenshot({ path: `capturas/inventario/${nombre}-${t.nombre}.png`, fullPage: true });
+        // Con una hoja abierta, solo lo visible: la captura de página completa cambia el tamaño
+        // de la ventana un instante y, en pantalla dividida, la ficha se vuelve a montar.
+        const conHoja = (await page.getByRole('dialog').count()) > 0;
+        await page.screenshot({ path: `capturas/inventario/${nombre}-${t.nombre}.png`, fullPage: !conHoja });
       };
       const compacto = t.width < 840;
       await page.goto('/');
