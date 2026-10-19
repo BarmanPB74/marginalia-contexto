@@ -17,7 +17,8 @@
 | **Dueño** | Todo: precios y costos, usuarios, anular ventas, contabilidad, pagos de facturas | — |
 | **Cajero** | Abrir y cerrar caja, vender, entradas/retiros de caja, gastos pagados desde la caja, ver inventario (sin costos) | Ver costos y contabilidad, anular, cambiar precios, usuarios |
 | **Bodega** | Inventario: conteos, mermas, importar, registrar y aplicar compras | Vender, caja, contabilidad, pagos |
-| **Mesero** | Abrir cuentas en las mesas, pedir rondas, marcar «pidió la cuenta», cambiar de mesa | Cobrar, caja, quitar lo pedido, ver inventario, contabilidad |
+| **Mesero** | Abrir cuentas en las mesas, pedir rondas, marcar «pidió la cuenta», cambiar de mesa, ponerle nombre a la mesa | Cobrar, caja, quitar lo pedido, ver inventario, contabilidad |
+| **Recepcionista** | Reservas y clientes; sentar a la gente (abrir la mesa a su nombre), cambiar de mesa | Pedir rondas, cobrar, caja, inventario, contabilidad |
 
 - Cada persona entra con **su PIN** (4 a 8 dígitos). Tras 5 errores la app espera cada vez más.
 - **Todo queda firmado**: cada movimiento guarda quién, cuándo y qué. Nada se borra: se corrige con otro
@@ -65,9 +66,23 @@
    cuenta vacía se libera; una con pedidos que no se cobra la **anula el dueño** con motivo (si se
    consumió, mejor cobrarla como *cortesía*: sale del inventario y queda en las ventas).
 6. «Cambiar de mesa» mueve la cuenta a una mesa libre.
+6 bis. **Nombre de la mesa** (de momento): «Nombre de la mesa» → un cliente registrado, alguien del equipo, un
+   nombre escrito («Cumpleaños de Leo») o *Sin nombre*. El mapa muestra ese nombre; al cobrar, la mesa vuelve
+   a su nombre de siempre. Si la mesa está libre, ponerle nombre la abre.
 7. **No se cierra la caja con mesas abiertas:** todo lo servido se cobra (o se anula) en su turno.
 
-### 4.5 Cerrar caja
+### 4.5 Reservas (recepción)
+1. Más → Reservas → «Nueva reserva»: a nombre de un cliente (registrado o nombre escrito), teléfono, fecha,
+   hora, personas, mesa (opcional) y **tiempo de espera** (10, 15, 20, 30 min u otro).
+2. **Aviso obligatorio:** la app muestra lo que hay que decirle al cliente («si no llega a las 20:15, la
+   reserva se puede cancelar») y no guarda hasta marcar «Ya le avisé al cliente».
+3. La lista del día dice la situación de cada reserva: **A tiempo**, **Esperando** (pasó la hora, dentro
+   del tiempo de espera) y **En tiempo de cancelación** (aviso arriba y en Inicio).
+4. Botones: **Contestó / No contestó** (llamada de confirmación), **Se demora** (corre la hora y el tiempo de
+   cancelación), **Llegó** (sentarla en su mesa o en otra libre: la mesa queda a su nombre), **No llegó**,
+   **Cancelar** (con motivo). La pestaña *Clientes* guarda nombre, teléfono y nota.
+
+### 4.6 Cerrar caja
 1. Caja → Cerrar → la app muestra el resumen: ventas por forma de pago, entradas, retiros, gastos y
    pagos desde la caja, y el **efectivo esperado** = base + ventas en efectivo + entradas − retiros −
    gastos y pagos desde la caja.
@@ -81,6 +96,13 @@
 - **Conteo físico**: Inventario → producto → Contar → escribes lo que hay; la app guarda el ajuste con
   «antes» y «después». Hazlo al menos una vez por semana con los productos que más se mueven.
 - **Merma** (se dañó, se venció, se regaló sin venta): ajuste con motivo.
+- **Conteo por categoría**: Inventario → «Contar por categoría» → eliges el grupo (infusiones, siropes,
+  galletas…) y escribes lo contado de cada uno; arriba ves el total del grupo en la app, el contado y la
+  diferencia. Lo que dejes en blanco no cambia. Al filtrar por categoría, la lista muestra el total.
+- **Copas**: en un licor o vino, «Copas por botella» (p. ej. 20). Se cuenta en botellas enteras + copas
+  sueltas y las existencias se ven así («3 und + 5 copas»).
+- **Descontinuado**: en la ficha del producto. Ya no se vende ni da alertas (no es una inconsistencia),
+  no entra en conteos, conserva su historial y se puede volver a vender.
 - **Alertas**: existencias negativas (se vendió algo que no estaba registrado) y bajo el mínimo.
   «Sugerido para pedir» = mínimo − existencia, nunca negativo.
 

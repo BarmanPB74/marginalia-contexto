@@ -12,12 +12,19 @@ export type Unidad = (typeof UNIDADES)[number];
 
 /**
  * Cargos. `dueno` sin eñe en el código (identificador); en pantalla se escribe «Dueño».
- * `mesero` toma pedidos en las mesas, pero no cobra ni toca la caja.
+ * `mesero` toma pedidos en las mesas, pero no cobra ni toca la caja. `recepcionista` lleva
+ * las reservas y los clientes, y sienta a la gente en las mesas (no pide ni cobra).
  */
-export const ROLES = ['dueno', 'cajero', 'bodega', 'mesero'] as const;
+export const ROLES = ['dueno', 'cajero', 'bodega', 'mesero', 'recepcionista'] as const;
 export type Rol = (typeof ROLES)[number];
 
-export const NOMBRE_ROL: Readonly<Record<Rol, string>> = { dueno: 'Dueño', cajero: 'Cajero', bodega: 'Bodega', mesero: 'Mesero' };
+export const NOMBRE_ROL: Readonly<Record<Rol, string>> = {
+  dueno: 'Dueño',
+  cajero: 'Cajero',
+  bodega: 'Bodega',
+  mesero: 'Mesero',
+  recepcionista: 'Recepcionista',
+};
 
 /**
  * Formas de pago. Nequi y Daviplata cuentan como `transferencia`. `cortesia` es lo que se
@@ -50,7 +57,14 @@ export interface Producto {
   readonly costo: Centavos | null;
   readonly stockMinimo: Milesimas | null;
   readonly codigo?: string;
+  /** Copas que salen de una unidad (botella): se puede contar en botellas y copas sueltas. */
+  readonly copas?: number;
   readonly activo: boolean;
+  /**
+   * Ya no se trabaja (sigue en la lista y con su historial): no se vende, no da alertas de
+   * existencias y no entra en los conteos. Se puede volver a activar.
+   */
+  readonly descontinuado?: true;
 }
 
 /** PIN guardado: nunca el PIN, sólo su derivación PBKDF2 (ver `pin.ts`). */
@@ -79,6 +93,23 @@ export interface Mesa {
   readonly activa: boolean;
 }
 
+/** Cliente registrado (para reservas y para ponerle nombre a una mesa). */
+export interface Cliente {
+  readonly id: string;
+  readonly nombre: string;
+  readonly telefono: string | null;
+  readonly nota: string | null;
+}
+
+/**
+ * Quién está en una mesa o a nombre de quién va una reserva: un cliente registrado, alguien
+ * del equipo (usuario) o un nombre de momento.
+ */
+export type RefCliente =
+  | { readonly tipo: 'cliente'; readonly clienteId: string }
+  | { readonly tipo: 'usuario'; readonly usuarioId: string }
+  | { readonly tipo: 'nombre'; readonly nombre: string };
+
 /** Límites de texto y de tamaño: el diario rechaza lo que se salga (entradas hostiles). */
 export const LIMITES = {
   nombre: 80,
@@ -95,4 +126,10 @@ export const LIMITES = {
   idArchivo: 80,
   mesas: 200,
   personas: 99,
+  telefono: 30,
+  copas: 1000,
+  /** Minutos de espera de una reserva antes de poder cancelarla. */
+  toleranciaMin: 5,
+  toleranciaMax: 240,
+  demoraMax: 240,
 } as const;

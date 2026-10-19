@@ -1,5 +1,7 @@
-import { useMemo, useState } from 'preact/hooks';
-import { alertas, mostrarCantidad, pesos } from '../../core/negocio';
+import { useEffect, useMemo, useState } from 'preact/hooks';
+import { alertas, milesimas, mostrarCantidad, pesos } from '../../core/negocio';
+import { textoExistencias as conCopas } from './copas';
+import { ConteoPorCategoria } from './ConteoPorCategoria';
 import { Boton } from '../../ui/Boton';
 import { BotonFlotante } from '../../ui/BotonFlotante';
 import { Buscador } from '../../ui/Buscador';
@@ -16,7 +18,7 @@ import { Rango } from '../../ui/Rango';
 import { Tabla } from '../../ui/Tabla';
 import { TarjetaProducto } from '../../ui/TarjetaProducto';
 import { useNegocio } from '../negocio/contexto';
-import { ABREV_UNIDAD, consultaDe, ir, NOMBRE_ESTADO_STOCK, useHash } from './comun';
+import { ABREV_UNIDAD, consultaDe, ir, NOMBRE_ESTADO_STOCK, useAncho, useHash } from './comun';
 import { FichaProducto } from './FichaProducto';
 import {
   contarCategorias,
@@ -44,20 +46,42 @@ function leerVista(): 'rejilla' | 'lista' {
   }
 }
 
+/** Desde este ancho la ficha se abre al lado de la lista (pantalla dividida). */
+export const ANCHO_DIVIDIDA = 900;
+
 /**
  * Inventario (`#/inventario`). Con `?producto=<id>` abre la ficha; con `?importar` el importador.
+ * En pantallas anchas la ficha es un panel a la derecha y la lista no se mueve (guardar un
+ * producto no la devuelve al principio). En el teléfono la ficha ocupa la pantalla y, al
+ * volver, la lista recupera la posición donde estaba.
  */
 export function PantallaInventario() {
   const q = consultaDe(useHash());
+  const dividida = useAncho(ANCHO_DIVIDIDA);
   const id = q.get('producto');
   if (q.has('importar')) return <ImportarInventario />;
+  if (q.has('conteo')) return <ConteoPorCategoria inicial={q.get('conteo') ?? ''} />;
+  if (dividida) return <ListaInventario seleccionado={id} />;
   if (id) return <FichaProducto key={id} id={id} />;
-  return <ListaInventario />;
+  return <ListaInventario seleccionado={null} />;
 }
 
-const abrirProducto = (id: string) => ir(`#/inventario?producto=${encodeURIComponent(id)}`);
+/** Posición de la lista al abrir una ficha (teléfono), para volver al mismo sitio. */
+let posicionLista: number | null = null;
 
-function ListaInventario() {
+const abrirProducto = (id: string) => {
+  posicionLista = window.scrollY;
+  ir(`#/inventario?producto=${encodeURIComponent(id)}`);
+};
+
+function ListaInventario({ seleccionado }: { seleccionado: string | null }) {
+  useEffect(() => {
+    if (posicionLista === null) return;
+    const y = posicionLista;
+    posicionLista = null;
+    // Tras pintar la lista (las filas ya tienen alto)
+    requestAnimationFrame(() => window.scrollTo(0, y));
+  }, []);
   const { negocio, estado } = useNegocio();
   const [f, setF] = useState<Filtros>(FILTROS_INICIALES);
   const [vista, setVistaEstado] = useState(leerVista);
@@ -89,7 +113,17 @@ function ListaInventario() {
     }
   };
   const textoExistencias = (x: FilaInventario) =>
-    `${mostrarCantidad(x.stock)} ${ABREV_UNIDAD[x.producto.unidad]}${x.estado === 'negativo' ? ' (negativo)' : ''}`;
+    `${conCopas(x.stock, x.producto, ABREV_UNIDAD[x.producto.unidad])}${x.estado === 'negativo' ? ' (negativo)' : ''}`;
+  // Total de lo que se ve, por unidad (p. ej. todas las infusiones: «34 und»)
+  const totales = useMemo(() => {
+    const porUnidad = new Map<string, number>();
+    for (const x of visibles) {
+      if (!x.producto.activo) continue;
+      const k = ABREV_UNIDAD[x.producto.unidad];
+      porUnidad.set(k, (porUnidad.get(k) ?? 0) + x.stock);
+    }
+    return [...porUnidad].map(([k, v]) => `${mostrarCantidad(milesimas(v))} ${k}`).join(' · ');
+  }, [visibles]);
 
   const qCat = buscarCat.trim().toLocaleLowerCase('es');
   const panel = (
@@ -172,6 +206,11 @@ function ListaInventario() {
             <span class="inv-buscador">
               <Buscador etiqueta="Buscar productos" marcador="Buscar por nombre, categoría o código" valor={f.busqueda} alCambiar={(v) => cambiar({ busqueda: v })} />
             </span>
+            {negocio.puede('inventario.contar') && (
+              <Boton icono="check" alTocar={() => ir(`#/inventario?conteo=${encodeURIComponent(f.categorias.length === 1 ? (f.categorias[0] ?? '') : '')}`)}>
+                Contar por categoría
+              </Boton>
+            )}
             {negocio.puede('inventario.importar') && (
               <Boton icono="importar" alTocar={() => ir('#/inventario?importar')}>
                 Importar (Excel o CSV)
@@ -207,6 +246,14 @@ function ListaInventario() {
 
         <p class="inv-suave" aria-live="polite">
           {visibles.length === 1 ? '1 producto' : `${visibles.length} productos`}
+          {f.categorias.length > 0 && totales && (
+            <>
+              {' · '}
+              <span class="inv-total">
+                Total: <strong class="cifras">{totales}</strong>
+              </span>
+            </>
+          )}
         </p>
 
         {todas.length === 0 ? (
@@ -226,7 +273,13 @@ function ListaInventario() {
               <TarjetaProducto
                 key={x.producto.id}
                 nombre={x.producto.nombre}
-                nombreCategoria={x.producto.activo ? x.producto.categoria : `${x.producto.categoria} · archivado`}
+                nombreCategoria={
+                  !x.producto.activo
+                    ? `${x.producto.categoria} · archivado`
+                    : x.producto.descontinuado
+                      ? `${x.producto.categoria} · descontinuado`
+                      : x.producto.categoria
+                }
                 precio={pesos(x.producto.precio)}
                 existencias={textoExistencias(x)}
                 estado={x.estado === 'ok' ? 'ok' : x.estado === 'bajo' ? 'bajo' : 'agotado'}
@@ -257,6 +310,8 @@ function ListaInventario() {
                 celda: (x: FilaInventario) =>
                   !x.producto.activo ? (
                     <Insignia>Archivado</Insignia>
+                  ) : x.producto.descontinuado ? (
+                    <Insignia>Descontinuado</Insignia>
                   ) : x.estado === 'ok' ? (
                     <Insignia tono="exito">Disponible</Insignia>
                   ) : (
@@ -281,6 +336,7 @@ function ListaInventario() {
           }}
         />
       )}
+      {seleccionado && <FichaProducto key={seleccionado} id={seleccionado} lateral />}
     </Pagina>
   );
 }

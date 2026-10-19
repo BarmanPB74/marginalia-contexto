@@ -107,7 +107,7 @@ function PuntoDeVenta() {
   };
   useEffect(() => guardarPedido(negocio, pedido), [negocio, pedido]);
 
-  const activos = useMemo(() => Object.values(estado.productos).filter((p) => p.activo), [estado.productos]);
+  const activos = useMemo(() => Object.values(estado.productos).filter((p) => p.activo && !p.descontinuado), [estado.productos]);
   const categorias = useMemo(() => {
     const cuenta = new Map<string, number>();
     for (const p of activos) cuenta.set(p.categoria, (cuenta.get(p.categoria) ?? 0) + 1);

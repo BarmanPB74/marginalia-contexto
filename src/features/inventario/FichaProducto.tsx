@@ -1,3 +1,4 @@
+import type { ComponentChildren } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { mostrarCantidad, pesos, stockDe, sugerido, milesimas, type MovimientoStock, type Producto } from '../../core/negocio';
 import { useEstado } from '../../app/estado';
@@ -13,6 +14,7 @@ import { Tabla } from '../../ui/Tabla';
 import { useNegocio } from '../negocio/contexto';
 import { ABREV_UNIDAD, estadoStock, fechaHora, ir, mensajeDe, NOMBRE_ESTADO_STOCK, NOMBRE_UNIDAD, nombreUsuario } from './comun';
 import { Aviso, FormularioProducto, HojaAjuste, HojaContar } from './formularios';
+import { textoExistencias } from './copas';
 
 const NOMBRE_MOVIMIENTO: Record<MovimientoStock['tipo'], string> = {
   venta: 'Venta',
@@ -36,10 +38,23 @@ function detalle(m: MovimientoStock): string {
   return resto.length ? `${nombre}:${resto.join(':')}` : nombre;
 }
 
-type Abierta = 'contar' | 'ajustar' | 'editar' | 'archivar' | null;
+type Abierta = 'contar' | 'ajustar' | 'editar' | 'archivar' | 'descontinuar' | null;
 
-/** Ficha de un producto (`#/inventario?producto=<id>`): cifras, datos, acciones e historial. */
-export function FichaProducto({ id }: { id: string }) {
+/** El lienzo de la ficha: página propia (teléfono) o panel al lado de la lista (pantalla dividida). */
+function Lienzo({ lateral, titulo, children }: { lateral: boolean; titulo: string; children: ComponentChildren }) {
+  if (!lateral) return <Pagina ancho="amplio">{children}</Pagina>;
+  return (
+    <aside class="inv-lateral" aria-label={`Ficha de ${titulo}`}>
+      {children}
+    </aside>
+  );
+}
+
+/**
+ * Ficha de un producto (`#/inventario?producto=<id>`): cifras, datos, acciones e historial.
+ * `lateral`: se dibuja como panel a la derecha de la lista (pantalla dividida).
+ */
+export function FichaProducto({ id, lateral = false }: { id: string; lateral?: boolean }) {
   const { negocio, estado } = useNegocio();
   const { avisar } = useEstado();
   const producto = estado.productos[id];
@@ -59,19 +74,32 @@ export function FichaProducto({ id }: { id: string }) {
     };
   }, [negocio, id, estado.eventos]);
 
+  const volver = { etiqueta: lateral ? 'Cerrar' : 'Volver', alTocar: () => ir('#/inventario') };
   if (!producto) {
     return (
-      <Pagina ancho="amplio">
-        <Encabezado titulo="Producto" accion={{ etiqueta: 'Volver', alTocar: () => ir('#/inventario') }} />
+      <Lienzo lateral={lateral} titulo="producto">
+        <Encabezado titulo="Producto" accion={volver} />
         <EstadoVacio mensaje="Ese producto no existe." pista="Vuelve al inventario y búscalo otra vez." />
-      </Pagina>
+      </Lienzo>
     );
   }
   const p: Producto = producto;
   const stock = stockDe(estado, p.id);
   const u = ABREV_UNIDAD[p.unidad];
-  const est = estadoStock(stock, p.stockMinimo);
+  // Descontinuado: sus existencias ya no son alerta
+  const est = p.descontinuado ? 'ok' : estadoStock(stock, p.stockMinimo);
   const verCostos = negocio.puede('inventario.verCostos');
+
+  async function descontinuar(si: boolean) {
+    setError('');
+    try {
+      await negocio.descontinuarProducto(p.id, si);
+      avisar(si ? `«${p.nombre}» descontinuado: ya no se vende ni da alertas.` : `«${p.nombre}» vuelve a la venta.`);
+    } catch (e) {
+      setError(mensajeDe(e));
+    }
+    setAbierta(null);
+  }
 
   async function archivar() {
     setError('');
@@ -87,12 +115,13 @@ export function FichaProducto({ id }: { id: string }) {
   }
 
   return (
-    <Pagina ancho="amplio">
-      <Encabezado titulo={p.nombre} accion={{ etiqueta: 'Volver', alTocar: () => ir('#/inventario') }} />
+    <Lienzo lateral={lateral} titulo={p.nombre}>
+      <Encabezado titulo={p.nombre} accion={volver} />
       <div class="inv-ficha">
         <p class="inv-ficha__estado">
           <span>{p.categoria}</span>
           {!p.activo && <Insignia tono="neutro">Archivado</Insignia>}
+          {p.descontinuado && <Insignia tono="neutro">Descontinuado</Insignia>}
           {est !== 'ok' && (
             <Insignia tono={est === 'bajo' ? 'aviso' : 'peligro'} icono="alerta">
               {NOMBRE_ESTADO_STOCK[est]}
@@ -101,7 +130,7 @@ export function FichaProducto({ id }: { id: string }) {
         </p>
 
         <Rejilla tipo="cifra" etiqueta="Cifras del producto">
-          <Cifra etiqueta="Existencias" icono="inventario" valor={`${mostrarCantidad(stock)} ${u}`} color={est === 'ok' ? 'esmeralda' : 'coral'} />
+          <Cifra etiqueta="Existencias" icono="inventario" valor={textoExistencias(stock, p, u)} color={est === 'ok' ? 'esmeralda' : 'coral'} />
           <Cifra etiqueta="Mínimo" valor={p.stockMinimo === null ? '—' : `${mostrarCantidad(p.stockMinimo)} ${u}`} color="cielo" />
           <Cifra
             etiqueta="Sugerido para pedir"
@@ -122,6 +151,12 @@ export function FichaProducto({ id }: { id: string }) {
             <dt>Código</dt>
             <dd>{p.codigo ?? '—'}</dd>
           </div>
+          {p.copas && (
+            <div>
+              <dt>Copas por botella</dt>
+              <dd class="cifras">{p.copas}</dd>
+            </div>
+          )}
           {verCostos && p.costo !== null && p.precio > 0 && (
             <div>
               <dt>Margen</dt>
@@ -147,6 +182,16 @@ export function FichaProducto({ id }: { id: string }) {
                 Editar
               </Boton>
             )}
+            {negocio.puede('producto.editar') &&
+              (p.descontinuado ? (
+                <Boton variante="tonal" icono="vender" alTocar={() => void descontinuar(false)}>
+                  Volver a vender
+                </Boton>
+              ) : (
+                <Boton variante="texto" icono="cerrar" alTocar={() => setAbierta('descontinuar')}>
+                  Descontinuado
+                </Boton>
+              ))}
             {negocio.puede('producto.archivar') && (
               <Boton variante="texto" icono="papelera" alTocar={() => setAbierta('archivar')}>
                 Archivar
@@ -187,6 +232,19 @@ export function FichaProducto({ id }: { id: string }) {
       {abierta === 'contar' && <HojaContar producto={p} alCerrar={() => setAbierta(null)} />}
       {abierta === 'ajustar' && <HojaAjuste producto={p} alCerrar={() => setAbierta(null)} />}
       {abierta === 'editar' && <FormularioProducto producto={p} alCerrar={() => setAbierta(null)} />}
+      {abierta === 'descontinuar' && (
+        <Dialogo
+          titulo={`¿«${p.nombre}» está descontinuado?`}
+          etiquetaConfirmar="Marcar descontinuado"
+          alCerrar={() => setAbierta(null)}
+          alConfirmar={() => void descontinuar(true)}
+        >
+          <p>
+            Ya no se vende (sale de Vender y de las mesas), no da alertas de existencias ni de pedido y no entra en los conteos por
+            categoría. Su historial se conserva y lo puedes volver a vender cuando quieras.
+          </p>
+        </Dialogo>
+      )}
       {abierta === 'archivar' && (
         <Dialogo
           titulo={`¿Archivar «${p.nombre}»?`}
@@ -198,6 +256,6 @@ export function FichaProducto({ id }: { id: string }) {
           <p>Deja de aparecer para vender y en el inventario activo. Su historial se conserva.</p>
         </Dialogo>
       )}
-    </Pagina>
+    </Lienzo>
   );
 }

@@ -272,3 +272,23 @@
   flex-direction: column;
   gap: var(--esp-2);
 }
+
+/* Nombre de momento (cliente) y reserva del día en la tarjeta de la mesa */
+.mesa__sub {
+  font-size: var(--texto-s);
+  font-weight: var(--peso-medio);
+}
+
+.mesa__reserva {
+  font-size: var(--texto-s);
+  font-weight: var(--peso-medio);
+  color: var(--aviso-tinta);
+}
+
+.cuenta__nombrar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-3);
+  margin-bottom: var(--esp-2);
+}

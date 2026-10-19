@@ -29,7 +29,8 @@ export function filasInventario(estado: EstadoNegocio): FilaInventario[] {
   return Object.values(estado.productos)
     .map((p) => {
       const stock = stockDe(estado, p.id);
-      return { producto: p, stock, estado: estadoStock(stock, p.stockMinimo) };
+      // Descontinuado: sus existencias no son una alerta (no se vuelve a pedir)
+      return { producto: p, stock, estado: p.descontinuado ? 'ok' : estadoStock(stock, p.stockMinimo) };
     })
     .sort((a, b) => a.producto.nombre.localeCompare(b.producto.nombre, 'es'));
 }

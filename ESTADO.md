@@ -5,7 +5,7 @@
 
 ## Ahora
 - **Fase actual:** Stark 1.0 (ADR-015/016, pedido del autor 2026-10-16): inventario, ventas con caja, compras, gastos, contabilidad, usuarios con PIN; Bitácora (notas + calendario); preparada para Play Console. F5 (seguridad) cerrada en código; falta su prueba en el teléfono.
-- **Última sesión:** 2026-10-16 — **pedidos por mesa** (ADR-018: mapa por zonas, cuenta con rondas, cobro que descuenta inventario, cargo Mesero); antes: nombre Stark (017) y versión de Windows.
+- **Última sesión:** 2026-10-19 — **correcciones del bar** (ADR-019): inventario en pantalla dividida, descontinuado, copas por botella, conteo por categoría, clientes y nombre de la mesa, cargo Recepcionista y reservas (contestó/no contestó, demora, tiempo de cancelación con aviso obligatorio).
 - **Siguiente paso concreto:** prueba de varios días en el bar con el instalador de Windows (copia ZIP cada noche); renombrar el repositorio a `stark` en GitHub; luego llave de subida y prueba interna en Play.
 
 ## Decisiones tomadas (ADR en `docs/ARQUITECTURA.md`)
@@ -18,6 +18,7 @@
 - Sin factura electrónica: comprobante interno (LEGAL §1 bis).
 - Pantallas por área registradas en `src/features/registro/{ventas,inventario,gestion}.ts`. Agentes del repo en `.claude/agents/`.
 - Node 24 LTS; el APK solo se compila en GitHub Actions. Acciones fijadas por SHA. Sin `@testing-library`. Vitest con `css: true`.
+- **019 Correcciones del bar:** ficha al lado (≥ 900 px); `producto.descontinuado`; `copas` opcional; `contarVarios`; clientes y `cuenta.cliente`; reservas con tolerancia y `avisado`; permisos `cuenta.sentar`, `cliente.gestionar`, `reserva.gestionar`; `VERSION_ESTADO` 3.
 - **018 Mesas:** una cuenta abierta por mesa; rondas sin tocar inventario; el cobro (`venta.registrada` con `cuentaId`) descuenta y libera; caja no cierra con mesas abiertas; cargo `mesero`. Barra: Inicio · Mesas · Vender · Inventario · Más.
 - **017 Stark + Windows:** Electron 44 sirve `dist/` en `app://stark/`, sin red ni permisos, clave envuelta con safeStorage (DPAPI); NSIS + portable desde `escritorio.yml` (sin firma de código: SmartScreen avisa).
 - Publicación: `release.yml` (AAB + APK firmados con la llave de subida desde secretos `STARK_KEYSTORE_B64/PASS`, versionCode = 100 + ejecución, R8). Guía: `docs/PLAY_CONSOLE.md`.
@@ -32,6 +33,8 @@
 - **Arranque sin INTERNET:** la app abre y funciona (Capacitor sirve la interfaz sin red). Si no abre, avisar: volver a poner INTERNET es el plan B.
 - **Primer uso:** crear dueño con PIN → importar el inventario (.xls del sistema anterior) → revisar vista previa (133 productos, 15 negativos, 1 repetido) → confirmar.
 - **Mesas:** crear Mesa 1–10 → pedir en dos mesas → otra ronda → pidió la cuenta → cobrar una con cambio → quitar con motivo en la otra → no deja cerrar caja hasta cobrarla. Un mesero no ve el botón Cobrar.
+- **Reservas:** crear con aviso → contestó → se demora 15 → llegó y sentarla → el mapa la muestra con su nombre. Una reserva pasada de su tiempo aparece «en tiempo de cancelación» (y en Inicio).
+- **Inventario:** en el PC, abrir varios productos y guardar: la lista no salta. Contar por categoría; un licor con copas.
 - **Caja y venta:** abrir caja con base → vender con efectivo y cambio, y pago mixto → el inventario baja → cerrar caja contando → diferencia.
 - **Compras:** factura con foto desde la **cámara** y con PDF → aplicar → existencias suben → pago parcial. Descargar el PDF desde la ficha.
 - **Usuarios:** crear cajero → cambiar de usuario → el cajero no ve costos, contabilidad ni anular.

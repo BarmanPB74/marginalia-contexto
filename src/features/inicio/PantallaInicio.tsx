@@ -1,5 +1,6 @@
 import { useState } from 'preact/hooks';
-import { alertas, FORMAS_PAGO, mostrarCantidad, NOMBRE_ROL, pesos, type Accion } from '../../core/negocio';
+import { alertas, FORMAS_PAGO, mostrarCantidad, NOMBRE_ROL, nombreDe, pesos, situacionReserva, type Accion } from '../../core/negocio';
+import { diaDe } from '../../core/notas/fechas';
 import type { IdSeccion } from '../../app/rutas';
 import { Boton } from '../../ui/Boton';
 import { Cifra } from '../../ui/Cifra';
@@ -24,7 +25,8 @@ interface Acceso {
 }
 
 const ACCESOS: readonly Acceso[] = [
-  { id: 'mesas', etiqueta: 'Mesas', icono: 'mesa', acciones: ['cuenta.atender'] },
+  { id: 'mesas', etiqueta: 'Mesas', icono: 'mesa', acciones: ['cuenta.atender', 'cuenta.sentar'] },
+  { id: 'reservas', etiqueta: 'Reservas', icono: 'calendario', acciones: ['reserva.gestionar'] },
   { id: 'vender', etiqueta: 'Vender', icono: 'vender', acciones: ['venta.registrar'] },
   { id: 'caja', etiqueta: 'Caja', icono: 'caja', acciones: ['caja.abrir', 'caja.cerrar'] },
   { id: 'inventario', etiqueta: 'Inventario', icono: 'inventario', acciones: ['inventario.ver'] },
@@ -54,6 +56,7 @@ export function PantallaInicio() {
       {sesion && <p class="inicio__rol">{NOMBRE_ROL[sesion.rol]}</p>}
       <div class="inicio">
         {(negocio.puede('caja.abrir') || negocio.puede('venta.registrar')) && <TarjetaCaja />}
+        {negocio.puede('reserva.gestionar') && <TarjetaReservas />}
 
         {negocio.puede('inventario.ver') && (
           <section class="inicio__bloque" aria-labelledby="inicio-alertas">
@@ -173,6 +176,53 @@ function TarjetaCaja() {
           <AbrirCaja alAbrir={() => setAbriendo(false)} />
         </Hoja>
       )}
+    </section>
+  );
+}
+
+/** Reservas de hoy: las pendientes por hora y cuántas están en tiempo de cancelación. */
+function TarjetaReservas() {
+  const { estado } = useNegocio();
+  const ahora = new Date();
+  const hoy = diaDe(ahora);
+  const pendientes = Object.values(estado.reservas)
+    .filter((r) => r.estado === 'pendiente' && r.fecha <= hoy)
+    .sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
+  const vencidas = pendientes.filter((r) => situacionReserva(r, ahora) === 'cancelable').length;
+  return (
+    <section class="inicio__bloque" aria-labelledby="inicio-reservas">
+      <h2 id="inicio-reservas" class="inicio__titulo">
+        Reservas de hoy
+      </h2>
+      {pendientes.length === 0 ? (
+        <p class="inicio__texto">No hay reservas pendientes para hoy.</p>
+      ) : (
+        <ul class="inicio__alertas">
+          {pendientes.slice(0, MAX_ALERTAS).map((r) => {
+            const s = situacionReserva(r, ahora);
+            return (
+              <li key={r.id} class="inicio__alerta">
+                <span class="inicio__nombre">
+                  <span class="cifras">{r.hora}</span> · {nombreDe(estado, r.cliente)} ({r.personas})
+                </span>
+                <span class="inicio__estado">
+                  <Insignia tono={s === 'cancelable' ? 'peligro' : s === 'esperando' ? 'aviso' : 'exito'}>
+                    {s === 'cancelable' ? 'En tiempo de cancelación' : s === 'esperando' ? 'Esperando' : 'A tiempo'}
+                  </Insignia>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {vencidas > 0 && (
+        <p class="inicio__texto" role="status">
+          <strong class="cifras">{vencidas}</strong> {vencidas === 1 ? 'reserva pasó' : 'reservas pasaron'} su tiempo de espera.
+        </p>
+      )}
+      <a class="boton boton--texto inicio__enlace" href="#/reservas">
+        Ver reservas
+      </a>
     </section>
   );
 }

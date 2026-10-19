@@ -14,8 +14,12 @@ import {
   type Mesa,
   type Negocio,
   type Producto,
+  type RefCliente,
+  nombreDe,
   ReglaRota,
 } from '../../core/negocio';
+import { diaDe } from '../../core/notas/fechas';
+import { ElegirCliente } from '../reservas/ElegirCliente';
 import { mesaEnRuta } from '../../app/rutas';
 import { Boton } from '../../ui/Boton';
 import { Buscador } from '../../ui/Buscador';
@@ -49,7 +53,7 @@ import './PantallaMesas.css';
 export function PantallaMesas() {
   const { negocio } = useNegocio();
   const mesaId = mesaEnRuta(location.hash);
-  if (!negocio.puede('cuenta.atender')) {
+  if (!negocio.puede('cuenta.atender') && !negocio.puede('cuenta.sentar')) {
     return (
       <Pagina ancho="amplio">
         <Encabezado titulo="Mesas" />
@@ -123,6 +127,16 @@ function irA(hash: string) {
   location.hash = hash;
 }
 
+/** La próxima reserva pendiente de hoy para esta mesa (para avisarla en el mapa). */
+function proximaReserva(estado: EstadoNegocio, mesaId: string, ahora: number) {
+  const hoy = diaDe(new Date(ahora));
+  return (
+    Object.values(estado.reservas)
+      .filter((r) => r.estado === 'pendiente' && r.mesaId === mesaId && r.fecha === hoy)
+      .sort((a, b) => a.hora.localeCompare(b.hora))[0] ?? null
+  );
+}
+
 // --- Mapa de mesas -----------------------------------------------------------------
 
 function Mapa() {
@@ -143,7 +157,11 @@ function Mapa() {
 
   return (
     <Pagina ancho="amplio">
-      <Encabezado titulo="Mesas" {...(esDueno ? { accion: { etiqueta: 'Crear mesas', alTocar: () => setCreando(true) } } : {})} />
+      <Encabezado
+        titulo="Mesas"
+        {...(esDueno ? { accion: { etiqueta: 'Crear mesas', alTocar: () => setCreando(true) } } : {})}
+        iconos={negocio.puede('reserva.gestionar') ? [{ icono: 'calendario', etiqueta: 'Reservas', alTocar: () => irA('#/reservas') }] : []}
+      />
       {!estado.caja && (
         <div class="mesas__aviso" role="status">
           <p>No hay caja abierta: abre la caja para atender mesas.</p>
@@ -178,11 +196,23 @@ function Mapa() {
                 {lista.map((m) => {
                   const c = cuentaDeMesa(estado, m.id);
                   const e = estadoMesa(c);
+                  const quien = c?.cliente ? nombreDe(estado, c.cliente) : null;
+                  const reserva = c ? null : proximaReserva(estado, m.id, ahora);
                   return (
                     <li key={m.id}>
-                      <a class={`mesa mesa--${e}`} href={`#/mesas?mesa=${m.id}`} aria-label={`${m.nombre}: ${NOMBRE_ESTADO[e]}`}>
-                        <span class="mesa__nombre">{m.nombre}</span>
+                      <a
+                        class={`mesa mesa--${e}`}
+                        href={`#/mesas?mesa=${m.id}`}
+                        aria-label={`${m.nombre}${quien ? ` (${quien})` : ''}: ${NOMBRE_ESTADO[e]}${reserva ? `, reservada a las ${reserva.hora}` : ''}`}
+                      >
+                        <span class="mesa__nombre">{quien ?? m.nombre}</span>
+                        {quien && <span class="mesa__sub">{m.nombre}</span>}
                         <span class="mesa__estado">{NOMBRE_ESTADO[e]}</span>
+                        {reserva && (
+                          <span class="mesa__reserva">
+                            Reservada <span class="cifras">{reserva.hora}</span> · {nombreDe(estado, reserva.cliente)}
+                          </span>
+                        )}
                         {c && (
                           <span class="mesa__detalle">
                             {c.lineas.length > 0 && <span class="cifras">{pesos(totalCuenta(estado, c))}</span>}
@@ -310,6 +340,7 @@ function VistaCuenta({ mesaId }: { mesaId: string }) {
   const [quitando, setQuitando] = useState<string | null>(null);
   const [anulando, setAnulando] = useState(false);
   const [retirando, setRetirando] = useState(false);
+  const [nombrando, setNombrando] = useState(false);
   const [descuento, setDescuento] = useState<Pick<Pedido, 'tipoDescuento' | 'textoDescuento'>>({ tipoDescuento: 'ninguno', textoDescuento: '' });
   const [hecho, setHecho] = useState('');
   const { error, setError, ocupado, correr } = useOperacion();
@@ -321,7 +352,7 @@ function VistaCuenta({ mesaId }: { mesaId: string }) {
   };
   useEffect(() => guardarRonda(negocio, mesaId, ronda), [negocio, mesaId, ronda]);
 
-  const activos = useMemo(() => Object.values(estado.productos).filter((p) => p.activo), [estado.productos]);
+  const activos = useMemo(() => Object.values(estado.productos).filter((p) => p.activo && !p.descontinuado), [estado.productos]);
   const categorias = useMemo(() => [...new Set(activos.map((p) => p.categoria))].sort((a, b) => a.localeCompare(b, 'es')), [activos]);
 
   if (!mesa) {
@@ -346,6 +377,9 @@ function VistaCuenta({ mesaId }: { mesaId: string }) {
   const pedidoCuenta: Pedido = { lineas: cuenta?.lineas ?? [], ...descuento };
   const vistaCuenta = vistaPrevia(pedidoCuenta, estado);
   const e = estadoMesa(cuenta);
+  const quien = cuenta?.cliente ? nombreDe(estado, cuenta.cliente) : null;
+  const atiende = negocio.puede('cuenta.atender');
+  const reservaHoy = cuenta ? null : proximaReserva(estado, mesaId, Date.now());
   const puedeCobrar = negocio.puede('venta.registrar');
   const sinCaja = !estado.caja;
 
@@ -478,7 +512,7 @@ function VistaCuenta({ mesaId }: { mesaId: string }) {
               Cobrar {pesos(vistaCuenta.total)}
             </Boton>
           )}
-          {cuenta.lineas.length > 0 && (
+          {cuenta.lineas.length > 0 && atiende && (
             <Boton
               variante="tonal"
               ancho
@@ -531,14 +565,28 @@ function VistaCuenta({ mesaId }: { mesaId: string }) {
           Mesas
         </Boton>
       </div>
-      <Encabezado titulo={mesa.nombre} />
+      <Encabezado titulo={quien ?? mesa.nombre} />
       <p class="cuenta__estado">
         <Insignia tono={e === 'libre' ? 'exito' : e === 'cuenta' ? 'aviso' : 'primario'}>{NOMBRE_ESTADO[e]}</Insignia>
+        {quien && <span>{mesa.nombre}</span>}
         <span>{mesa.zona}</span>
         {cuenta && <span>Abierta {hora(cuenta.abiertaEn)}</span>}
         {cuenta && cuenta.rondas > 0 && <span>{cuenta.rondas === 1 ? '1 ronda' : `${cuenta.rondas} rondas`}</span>}
         {cuenta && cuenta.lineas.length > 0 && <span>{articulos(estado, cuenta)} productos</span>}
+        {cuenta?.personas && <span>{cuenta.personas === 1 ? '1 persona' : `${cuenta.personas} personas`}</span>}
       </p>
+      {negocio.puede('cuenta.sentar') && (
+        <div class="cuenta__nombrar">
+          <Boton variante="tonal" icono="editar" desactivado={sinCaja && !cuenta} alTocar={() => setNombrando(true)}>
+            {quien ? 'Cambiar nombre' : 'Nombre de la mesa'}
+          </Boton>
+          {reservaHoy && (
+            <span class="mesa__reserva">
+              Reservada <span class="cifras">{reservaHoy.hora}</span> · {nombreDe(estado, reservaHoy.cliente)}
+            </span>
+          )}
+        </div>
+      )}
       {sinCaja && (
         <p class="mesas__aviso" role="status">
           No hay caja abierta: abre la caja para tomar pedidos.
@@ -550,6 +598,7 @@ function VistaCuenta({ mesaId }: { mesaId: string }) {
         </p>
       )}
       <div class={`vender cuenta-mesa${vistaRonda.lineas.length > 0 || (cuenta?.lineas.length ?? 0) > 0 ? ' vender--con-pedido' : ''}`}>
+        {atiende ? (
         <div class="vender__catalogo">
           <Buscador etiqueta="Buscar productos" valor={busqueda} alCambiar={setBusqueda} marcador="Buscar por nombre o código" />
           {categorias.length > 1 && (
@@ -590,6 +639,9 @@ function VistaCuenta({ mesaId }: { mesaId: string }) {
             </Rejilla>
           )}
         </div>
+        ) : (
+          <p class="cuenta__vacia">Tu cargo sienta a la gente y le pone nombre a la mesa; los pedidos los toma el mesero o la caja.</p>
+        )}
 
         <aside class="vender__pedido" aria-label="Cuenta de la mesa">
           <h2 class="vender__titulo-pedido">Cuenta</h2>
@@ -635,6 +687,7 @@ function VistaCuenta({ mesaId }: { mesaId: string }) {
         />
       )}
       {moviendo && cuenta && <Mover cuenta={cuenta} alCerrar={() => setMoviendo(false)} />}
+      {nombrando && <NombreMesa mesaId={mesaId} actual={cuenta?.cliente ?? null} alCerrar={() => setNombrando(false)} />}
       {quitando && cuenta && <Quitar cuenta={cuenta} productoId={quitando} alCerrar={() => setQuitando(null)} />}
       {anulando && cuenta && <Anular cuenta={cuenta} alCerrar={() => setAnulando(false)} />}
       {retirando && (
@@ -787,6 +840,45 @@ function Anular({ cuenta, alCerrar }: { cuenta: Cuenta; alCerrar: () => void }) 
           cortesía (sale del inventario y queda en las ventas).
         </p>
         <CampoTexto etiqueta="Motivo" valor={motivo} alCambiar={setMotivo} marcador="Se fueron sin pagar, error de mesa…" />
+      </div>
+    </Hoja>
+  );
+}
+
+/**
+ * Nombre de momento de la mesa (quién está): un cliente registrado, alguien del equipo, un
+ * nombre escrito o ninguno (la mesa vuelve a su nombre). Si la mesa está libre, la abre.
+ */
+function NombreMesa({ mesaId, actual, alCerrar }: { mesaId: string; actual: RefCliente | null; alCerrar: () => void }) {
+  const { negocio, estado } = useNegocio();
+  const [ref, setRef] = useState<RefCliente | null>(actual);
+  const { error, setError, ocupado, correr } = useOperacion();
+  const libre = !cuentaDeMesa(estado, mesaId);
+  async function guardar() {
+    if (ref?.tipo === 'nombre' && !ref.nombre.trim()) return setError('Escribe el nombre.');
+    if (libre && !ref) return setError('Elige o escribe un nombre para abrir la mesa.');
+    if (await correr(() => negocio.nombrarMesa(mesaId, ref))) alCerrar();
+  }
+  return (
+    <Hoja
+      titulo="Nombre de la mesa"
+      alCerrar={alCerrar}
+      pie={
+        <div class="mesas__pie">
+          {error && (
+            <p class="mesas__error" role="alert">
+              {error}
+            </p>
+          )}
+          <Boton variante="primario" ancho icono="check" desactivado={ocupado} alTocar={() => void guardar()}>
+            {libre ? 'Abrir mesa con este nombre' : 'Guardar'}
+          </Boton>
+        </div>
+      }
+    >
+      <div class="mesas__formulario">
+        <p>Solo mientras la mesa esté abierta: al cobrarla vuelve a su nombre.</p>
+        <ElegirCliente valor={ref} alCambiar={setRef} conNinguno={!libre} conUsuarios />
       </div>
     </Hoja>
   );

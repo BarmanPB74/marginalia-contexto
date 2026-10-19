@@ -87,7 +87,7 @@ for (const t of TAMANOS) {
       // Contar CAFÉ OSCURO: había -2, hay 6
       await page.getByRole('button', { name: 'CAFÉ OSCURO' }).click();
       await expect(page.getByRole('heading', { level: 1, name: 'CAFÉ OSCURO' })).toBeVisible();
-      await page.getByRole('button', { name: 'Contar' }).click();
+      await page.getByRole('button', { name: 'Contar', exact: true }).click();
       const contar = page.getByRole('dialog', { name: 'Contar CAFÉ OSCURO' });
       await contar.getByLabel('¿Cuántas hay?').fill('6');
       await expect(contar.getByText('+8 und')).toBeVisible();

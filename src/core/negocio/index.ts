@@ -44,6 +44,8 @@ export {
   type Usuario,
   type PinGuardado,
   type Mesa,
+  type Cliente,
+  type RefCliente,
 } from './modelo';
 export {
   ReglaRota,
@@ -55,6 +57,7 @@ export {
   leerRegistro,
   diaDe,
   esFecha,
+  esHora,
   type Evento,
   type EventoDe,
   type TipoEvento,
@@ -92,6 +95,12 @@ export {
   type Gasto,
   type Alerta,
   type Cuenta,
+  type Reserva,
+  type EstadoReserva,
+  type SituacionReserva,
+  situacionReserva,
+  horaEsperada,
+  nombreDe,
 } from './estado';
 export { ACCIONES, PERMISOS, NOMBRE_ACCION, puede, accionDe, type Accion } from './permisos';
 export {
@@ -144,6 +153,7 @@ export {
   type NuevoProducto,
   type NuevaCompra,
   type NuevoGasto,
+  type NuevaReserva,
   type ResultadoImportacion,
   type ErrorImportacionFila,
 } from './servicio';

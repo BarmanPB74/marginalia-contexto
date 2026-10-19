@@ -405,3 +405,105 @@
 .inv-espacio-flotante {
   height: calc(var(--toque) + var(--esp-8));
 }
+
+/*
+ * Pantalla dividida (≥ 900 px): la ficha es un panel fijo a la derecha, con su propio
+ * desplazamiento; la lista queda quieta detrás (guardar no la devuelve al principio).
+ */
+.inv-lateral {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 25;
+  width: min(34rem, 46vw);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--esp-6) var(--esp-6) var(--esp-12);
+  background: var(--superficie-alta);
+  border-inline-start: 1px solid var(--borde);
+  box-shadow: var(--sombra-flotante);
+  /* Sin animación con transform: dejaría atrapadas las hojas (Contar, Editar) dentro del panel */
+}
+
+/* La lista deja sitio al panel: no queda tapada */
+.pagina:has(> .inv-lateral) {
+  padding-inline-end: calc(min(34rem, 46vw) + var(--esp-4));
+}
+
+.inv-lateral .encabezado__titulo {
+  font-size: var(--texto-xl);
+}
+
+/* Conteo por categoría: total del grupo arriba y una fila por producto */
+.inv-conteo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+}
+
+.inv-conteo__total {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+  padding: var(--esp-4);
+  background: var(--primario-suave);
+  border-radius: var(--radio-l);
+}
+
+.inv-conteo__total p {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2) var(--esp-5);
+  margin: 0;
+}
+
+.inv-conteo__lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.inv-conteo__fila {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--esp-3);
+  padding: var(--esp-3) var(--esp-4);
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-l);
+}
+
+.inv-conteo__producto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.inv-conteo__campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  gap: var(--esp-3);
+}
+
+@media (min-width: 700px) {
+  .inv-conteo__fila {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    align-items: center;
+  }
+}
+
+/* Con el panel abierto, el botón «Nuevo producto» se corre a su izquierda (no queda tapado) */
+.pagina:has(> .inv-lateral) .boton-flotante--fijo {
+  right: calc(min(34rem, 46vw) + var(--esp-4));
+}
+
+/* Y el aviso («creado», «guardado») va a la izquierda de la lista, lejos del botón */
+body:has(.inv-lateral) .aviso-global {
+  right: calc(min(34rem, 46vw) + var(--esp-4));
+  justify-content: flex-start;
+}
