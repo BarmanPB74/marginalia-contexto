@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@capacitor/android": "8.5.2",
-    "@capacitor/core": "8.5.2",
+    "@capacitor/core": "8.5.3",
     "@capacitor/filesystem": "8.1.4",
     "@codemirror/autocomplete": "6.20.3",
     "@codemirror/commands": "6.11.1",
